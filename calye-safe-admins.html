@@ -63,6 +63,9 @@
       --shadow: 0 2px 16px rgba(30, 58, 95, 0.08);
       --shadow-md: 0 4px 24px rgba(30, 58, 95, 0.12);
       --sidebar-w: 248px;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     html,
@@ -218,7 +221,7 @@
       padding: 10px 10px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, transform 160ms var(--ease-out);
       margin-bottom: 1px;
       color: var(--text2);
       font-size: 13.5px;
@@ -239,6 +242,10 @@
     .nav-item:hover {
       background: var(--surface3);
       color: var(--primary);
+    }
+
+    .nav-item:active {
+      transform: scale(0.97);
     }
 
     .nav-item.active {
@@ -427,13 +434,17 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
       position: relative;
     }
 
     .topbar-btn:hover {
       background: var(--surface3);
       border-color: var(--border2);
+    }
+
+    .topbar-btn:active {
+      transform: scale(0.97);
     }
 
     .topbar-btn svg {
@@ -521,7 +532,7 @@
       position: relative;
       overflow: hidden;
       cursor: default;
-      transition: all 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
       box-shadow: var(--shadow);
     }
 
@@ -818,7 +829,7 @@
       align-items: center;
       justify-content: center;
       gap: 7px;
-      transition: all 0.18s;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.18s, box-shadow 0.18s;
     }
 
     .btn-respond.primary {
@@ -851,6 +862,10 @@
 
     .btn-respond.success:hover {
       background: rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-respond:active {
+      transform: scale(0.97);
     }
 
     .btn-respond svg {
@@ -1107,7 +1122,7 @@
     .bar {
       width: 100%;
       border-radius: 4px 4px 0 0;
-      transition: height 0.5s cubic-bezier(.22, 1, .36, 1);
+      transition: height 0.5s var(--ease-out);
     }
 
     .bar-label {
@@ -1148,7 +1163,7 @@
     .cat-bar {
       height: 100%;
       border-radius: 3px;
-      transition: width 0.6s cubic-bezier(.22, 1, .36, 1);
+      transition: width 0.6s var(--ease-out);
     }
 
     .cat-count {
@@ -1308,7 +1323,7 @@
       font-weight: 700;
       border: none;
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 0.16s;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1316,6 +1331,10 @@
 
     .map-btn:hover {
       background: var(--primary-light);
+    }
+
+    .map-btn:active {
+      transform: scale(0.97);
     }
 
     .map-btn svg {
@@ -1372,6 +1391,7 @@
 
     .modal-overlay.open {
       display: flex;
+      animation: modalFadeIn 0.2s ease both;
     }
 
     .modal-box {
@@ -1439,7 +1459,7 @@
       font-weight: 700;
       cursor: pointer;
       border: none;
-      transition: all 0.18s;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.18s;
     }
 
     .modal-btn.cancel {
@@ -1459,6 +1479,10 @@
 
     .modal-btn.confirm:hover {
       transform: translateY(-1px);
+    }
+
+    .modal-btn:active {
+      transform: scale(0.97);
     }
 
     .modal-select,
@@ -1627,7 +1651,7 @@
       z-index: 200;
       transform: translateY(80px);
       opacity: 0;
-      transition: all 0.3s cubic-bezier(.22, 1, .36, 1);
+      transition: transform 0.3s var(--ease-out), opacity 0.3s var(--ease-out);
       font-size: 13px;
       color: var(--text);
       pointer-events: none;
@@ -1701,7 +1725,7 @@
     .panel,
     .stat-card,
     .priority-card {
-      animation: fadeUp 0.35s ease both;
+      animation: fadeUp 0.35s var(--ease-out) both;
     }
 
     .stat-card:nth-child(1) {
@@ -1733,7 +1757,7 @@
       z-index: 90;
       display: none;
       overflow: hidden;
-      animation: fadeUp 0.2s ease both;
+      animation: fadeUp 0.2s var(--ease-out) both;
     }
 
     #notif-panel.open {
@@ -1923,13 +1947,17 @@
       background: none;
       color: var(--text3);
       cursor: pointer;
-      transition: all 0.18s;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, transform 160ms var(--ease-out);
       font-family: inherit;
     }
 
     .ftab:hover {
       background: var(--surface3);
       color: var(--text2);
+    }
+
+    .ftab:active {
+      transform: scale(0.97);
     }
 
     .ftab.active {
@@ -2143,7 +2171,7 @@
       color: var(--text2);
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
     }
 
     .ann-mini-btn:hover {
@@ -2159,6 +2187,10 @@
       background: var(--danger-light);
     }
 
+    .ann-mini-btn:active {
+      transform: scale(0.97);
+    }
+
     /* ── VERIFY USERS ── */
     .verify-filter {
       font-size: 11.5px;
@@ -2169,7 +2201,7 @@
       border: 1px solid var(--border);
       color: var(--text2);
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
     }
 
     .verify-reload-btn {
@@ -2184,17 +2216,25 @@
       border: 1px solid var(--border);
       color: var(--primary);
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
     }
     .verify-reload-btn:hover {
       background: var(--primary);
       color: #fff;
     }
 
+    .verify-reload-btn:active {
+      transform: scale(0.97);
+    }
+
     .verify-filter.active {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
+    }
+
+    .verify-filter:active {
+      transform: scale(0.97);
     }
 
     .verify-card {
@@ -2204,12 +2244,16 @@
       padding: 13px 14px;
       margin-bottom: 10px;
       cursor: pointer;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
     }
 
     .verify-card:hover {
       border-color: var(--border2);
       background: var(--surface3);
+    }
+
+    .verify-card:active {
+      transform: scale(0.97);
     }
 
     .verify-card.selected {
@@ -2334,7 +2378,7 @@
       align-items: center;
       justify-content: center;
       gap: 7px;
-      transition: all 0.16s;
+      transition: background 0.16s, color 0.16s, border-color 0.16s, transform 160ms var(--ease-out);
     }
 
     .verify-btn.approve {
@@ -2346,6 +2390,10 @@
       background: var(--danger-light);
       color: var(--danger);
       border: 1px solid rgba(229, 57, 53, 0.25);
+    }
+
+    .verify-btn:active {
+      transform: scale(0.97);
     }
 
     .verify-detail-label {
@@ -2495,11 +2543,15 @@
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 4px 14px rgba(30, 58, 95, 0.25);
-      transition: all 0.18s;
+      transition: transform 0.18s;
     }
 
     .settings-save-btn:hover {
       transform: translateY(-1px);
+    }
+
+    .settings-save-btn:active {
+      transform: scale(0.97);
     }
 
     .danger-zone {
@@ -3956,7 +4008,7 @@
       <td>${badgeHtml(r.status)}</td>
       <td>
         ${r.status !== 'resolved'
-          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
+          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
           : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
         }
       </td>
@@ -4029,7 +4081,7 @@
       <td>${badgeHtml(r.status)}</td>
       <td>
         ${r.status !== 'resolved'
-          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
+          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
           : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
         }
       </td>
@@ -4799,7 +4851,7 @@
 
       list.innerHTML = pins.map(p => `
     <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye');showToastMsg('Zoomed to ${p.loc}','info')"
-      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;cursor:pointer;transition:all 0.16s;border-left:3px solid ${catColors[p.cat]};"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
       onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
