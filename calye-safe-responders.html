@@ -1,0 +1,3486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calye Safe – Responder App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #1E3A5F;
+            --primary-light: #2A5298;
+            --accent: #F5A623;
+            --accent-dark: #D4841A;
+            --danger: #E53935;
+            --danger-light: #FDECEA;
+            --success: #2E7D32;
+            --success-light: #E8F5E9;
+            --warning: #F57C00;
+            --warning-light: #FFF3E0;
+            --info: #1565C0;
+            --info-light: #E3F2FD;
+            --bg: #F4F6FA;
+            --card: #FFFFFF;
+            --text: #000000;
+            --text2: #1A1A1A;
+            --text3: #333333;
+            --border: #E2E8F4;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
+            --shadow-lg: 0 8px 32px rgba(30, 58, 95, 0.16);
+            --nav-h: 68px;
+            --status-h: 44px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: #1A2332;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text);
+        }
+
+        #app-shell {
+            width: 360px;
+            height: 800px;
+            background: var(--bg);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            height: var(--status-h);
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .status-bar .time {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .status-bar .icons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .status-bar .icons svg {
+            fill: #fff;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ── SCREENS ── */
+        .screen {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+            flex-direction: column;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .screen::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scroll-content {
+            padding: 16px 20px;
+            flex: 1;
+        }
+
+        /* ── BOTTOM NAV ── */
+        .bottom-nav {
+            height: var(--nav-h);
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: stretch;
+            flex-shrink: 0;
+            box-shadow: 0 -4px 16px rgba(30, 58, 95, 0.08);
+            position: relative;
+            z-index: 5;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text3);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 500;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-item svg {
+            width: 21px;
+            height: 21px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            transition: transform 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item.active svg {
+            transform: scale(1.08);
+        }
+
+        .nav-item .badge-count {
+            position: absolute;
+            top: 4px;
+            right: calc(50% - 20px);
+            background: var(--danger);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            min-width: 15px;
+            height: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            border: 2px solid var(--card);
+        }
+
+        .nav-item.job-btn {
+            color: #fff;
+            margin: -18px 0 0;
+        }
+
+        .nav-item.job-btn .job-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--text3), #7A8699);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(90, 103, 128, 0.35);
+            transition: all 0.3s;
+        }
+
+        .nav-item.job-btn.live .job-circle {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            box-shadow: 0 4px 16px rgba(245, 166, 35, 0.45);
+            animation: jobPulse 1.8s infinite;
+        }
+
+        @keyframes jobPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.45);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(245, 166, 35, 0);
+            }
+        }
+
+        .nav-item.job-btn svg {
+            stroke: #fff;
+            width: 23px;
+            height: 23px;
+        }
+
+        .nav-item.job-btn span {
+            margin-top: 4px;
+            color: var(--text2);
+            font-weight: 600;
+        }
+
+        .nav-item.job-btn.live span {
+            color: var(--accent-dark);
+        }
+
+        /* ── HEADER ── */
+        .screen-header {
+            background: var(--primary);
+            padding: 16px 20px 18px;
+            flex-shrink: 0;
+        }
+
+        .screen-header .head-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .screen-header h2 {
+            color: #fff;
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+        .screen-header p {
+            color: rgba(255, 255, 255, 0.68);
+            font-size: 12.5px;
+            margin-top: 2px;
+        }
+
+        .head-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .head-icon-btn svg {
+            width: 17px;
+            height: 17px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 1.9;
+        }
+
+        .head-icon-btn .dot {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--primary);
+        }
+
+        .back-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .back-btn svg {
+            width: 17px;
+            height: 17px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin: 16px 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .see-all {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        /* ── DUTY CARD ── */
+        .duty-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: -34px;
+            position: relative;
+            z-index: 2;
+            border: 1px solid var(--border);
+        }
+
+        .duty-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .duty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text3);
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+
+        .duty-dot.on {
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+        }
+
+        .duty-info h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .duty-info p {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 1px;
+            font-weight: 500;
+        }
+
+        .toggle {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--success);
+        }
+
+        .toggle input:checked+.toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        /* ── STAT MINI GRID ── */
+        .stat-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-mini {
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            padding: 12px 8px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-mini .val {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .stat-mini .lbl {
+            font-size: 9.5px;
+            color: var(--text3);
+            font-weight: 600;
+            margin-top: 2px;
+            line-height: 1.3;
+        }
+
+        /* ── ACTIVE ASSIGNMENT BANNER ── */
+        .active-banner {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .active-banner .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 9.5px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+
+        .active-banner .tag .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: livedot 1.4s infinite;
+        }
+
+        @keyframes livedot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .active-banner h4 {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .active-banner p {
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .active-banner .arrow {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            stroke: rgba(255, 255, 255, 0.6);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ── QUEUE CARD ── */
+        .queue-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            overflow: hidden;
+            display: flex;
+            border-left: 4px solid var(--text3);
+        }
+
+        .queue-card:active {
+            transform: scale(0.99);
+        }
+
+        .queue-card .qc-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin: 14px 0 14px 14px;
+        }
+
+        .queue-card .qc-icon svg {
+            width: 21px;
+            height: 21px;
+            stroke-width: 1.8;
+            fill: none;
+        }
+
+        .queue-card .qc-body {
+            flex: 1;
+            padding: 13px 14px 13px 12px;
+            min-width: 0;
+        }
+
+        .queue-card .qc-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .queue-card h4 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .queue-card .qc-loc {
+            font-size: 11.5px;
+            color: var(--text2);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .queue-card .qc-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .queue-card .qc-meta {
+            font-size: 10.5px;
+            color: var(--text3);
+            font-weight: 600;
+        }
+
+        .queue-card .qc-note {
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            border-radius: 6px;
+            padding: 5px 8px;
+            line-height: 1.45;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 9.5px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .status-pill::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-pill.assigned {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-pill.en_route {
+            background: var(--info-light);
+            color: var(--info);
+        }
+
+        .status-pill.on_site {
+            background: #FDECC8;
+            color: var(--accent-dark);
+        }
+
+        .status-pill.resolved {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .severity-tag {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 5px;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+        }
+
+        .severity-tag.major {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .severity-tag.minor {
+            background: #EEF1F6;
+            color: var(--text3);
+        }
+
+        /* ── FILTER TABS ── */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 14px 20px 4px;
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+
+        .filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-tab {
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            background: var(--card);
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 50px 30px;
+            color: var(--text3);
+            flex: 1;
+        }
+
+        .empty-state .ic {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .empty-state .ic svg {
+            width: 26px;
+            height: 26px;
+            stroke: var(--text3);
+            fill: none;
+            stroke-width: 1.6;
+        }
+
+        .empty-state h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 12px;
+            color: var(--text3);
+            line-height: 1.5;
+        }
+
+        /* ── MAP ── */
+        .map-frame {
+            width: 100%;
+            height: 176px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #CFD8DC;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .map-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .map-frame-label {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            white-space: nowrap;
+        }
+
+        .map-meta-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .map-meta-item {
+            flex: 1;
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-meta-item svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        .map-meta-item .v {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.1;
+        }
+
+        .map-meta-item .l {
+            font-size: 9px;
+            color: var(--text3);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── NAVIGATE OVERLAY ── */
+        .nav-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg);
+            display: none;
+            flex-direction: column;
+            z-index: 300;
+        }
+
+        .nav-overlay.show {
+            display: flex;
+        }
+
+        .nav-overlay-header {
+            flex-shrink: 0;
+            background: var(--primary);
+            padding: calc(var(--status-h) + 14px) 16px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-overlay-header .back-btn {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .nav-overlay-header .back-btn svg {
+            stroke: #fff;
+        }
+
+        .nav-overlay-header .n-title {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .nav-overlay-header .n-sub {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11.5px;
+            font-weight: 500;
+        }
+
+        .nav-map-wrap {
+            flex: 1;
+            position: relative;
+            background: #CFD8DC;
+        }
+
+        #nav-leaflet-map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .nav-map-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--text2);
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--bg);
+            z-index: 5;
+        }
+
+        .nav-spinner {
+            width: 26px;
+            height: 26px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: navspin 0.7s linear infinite;
+        }
+
+        @keyframes navspin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .nav-bottom-panel {
+            flex-shrink: 0;
+            background: var(--card);
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -6px 24px rgba(30, 58, 95, 0.14);
+            padding: 16px 18px 20px;
+            position: relative;
+            z-index: 6;
+        }
+
+        .nav-eta-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .nav-eta-item {
+            flex: 1;
+        }
+
+        .nav-eta-item .v {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.15;
+        }
+
+        .nav-eta-item .l {
+            font-size: 10.5px;
+            color: var(--text3);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .nav-eta-divider {
+            width: 1px;
+            height: 30px;
+            background: var(--border);
+        }
+
+        .nav-dest-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text2);
+            font-weight: 600;
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .nav-dest-line svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--danger);
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .nav-gmaps-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 13px;
+            font-family: inherit;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .nav-gmaps-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+
+        /* Leaflet marker tweaks */
+        .nav-pulse-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--info);
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.28), 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-dest-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50% 50% 50% 0;
+            background: var(--danger);
+            border: 3px solid #fff;
+            transform: rotate(-45deg);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+        }
+
+        .leaflet-routing-container {
+            display: none;
+        }
+
+        /* ── INFO ROWS ── */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .info-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 9px 11px;
+            border: 1px solid var(--border);
+        }
+
+        .info-item .il {
+            font-size: 9.5px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .info-item .iv {
+            font-size: 12.5px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .desc-box {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .desc-box p {
+            font-size: 12.5px;
+            color: var(--text2);
+            line-height: 1.55;
+            font-weight: 500;
+        }
+
+        .notes-box {
+            background: rgba(245, 166, 35, 0.08);
+            border: 1px solid rgba(245, 166, 35, 0.35);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .notes-box .notes-label {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent, #F5A623);
+            margin-bottom: 4px;
+        }
+
+        .notes-box p {
+            font-size: 12.5px;
+            color: var(--text);
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .evidence-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .evidence-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #D9E2F1, #C3D0E8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .evidence-thumb svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 1.6;
+        }
+
+        .evidence-text h5 {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .evidence-text p {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 1px;
+        }
+
+        .contact-row {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0 4px;
+        }
+
+        .contact-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            background: var(--card);
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .contact-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ── STATUS TIMELINE / STEPPER ── */
+        .status-timeline {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 12px;
+        }
+
+        .status-timeline h5 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timeline-step {
+            display: flex;
+            gap: 12px;
+        }
+
+        .timeline-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timeline-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: var(--bg);
+            transition: all 0.3s;
+        }
+
+        .timeline-circle.done {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .timeline-circle.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            animation: pulse-circle 1.5s infinite;
+        }
+
+        .timeline-circle.pending {
+            background: var(--bg);
+            border-color: var(--border);
+        }
+
+        .timeline-circle svg {
+            width: 12px;
+            height: 12px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.5;
+        }
+
+        .timeline-circle.pending svg {
+            stroke: var(--text3);
+        }
+
+        @keyframes pulse-circle {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.45);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(245, 166, 35, 0);
+            }
+        }
+
+        .timeline-line {
+            width: 2px;
+            flex: 1;
+            min-height: 16px;
+            background: var(--border);
+            margin: 3px 0;
+        }
+
+        .timeline-line.done {
+            background: var(--success);
+        }
+
+        .timeline-right {
+            flex: 1;
+            padding-bottom: 14px;
+        }
+
+        .timeline-right:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-right h6 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .timeline-right .ts {
+            font-size: 10.5px;
+            color: var(--text3);
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        /* ── STICKY ACTION BAR ── */
+        .action-bar {
+            padding: 12px 20px 18px;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .escalate-link {
+            display: block;
+            text-align: center;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text3);
+            margin-top: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn svg {
+            width: 17px;
+            height: 17px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+        }
+
+        .btn:active {
+            transform: scale(0.99);
+        }
+
+        .btn-step-assigned {
+            background: linear-gradient(135deg, var(--info), #1976D2);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(21, 101, 192, 0.35);
+        }
+
+        .btn-step-enroute {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
+        }
+
+        .btn-step-onsite {
+            background: linear-gradient(135deg, var(--success), #1B5E20);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+        }
+
+        .btn-step-done {
+            background: var(--success-light);
+            color: var(--success);
+            border: 1.5px solid rgba(46, 125, 50, 0.25);
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text2);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #C62828);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(229, 57, 53, 0.3);
+        }
+
+        /* ── HISTORY CARD ── */
+        .history-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 13px 14px;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .history-card .hc-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--success-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .history-card .hc-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--success);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .history-card .hc-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .history-card .hc-loc {
+            font-size: 11.5px;
+            color: var(--text2);
+            margin-top: 1px;
+        }
+
+        .history-card .hc-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 7px;
+        }
+
+        .history-card .hc-date {
+            font-size: 10.5px;
+            color: var(--text3);
+            font-weight: 600;
+        }
+
+        .duration-tag {
+            font-size: 9.5px;
+            font-weight: 800;
+            color: var(--success);
+            background: var(--success-light);
+            padding: 2px 7px;
+            border-radius: 20px;
+        }
+
+        /* ── PROFILE ── */
+        .profile-header {
+            background: var(--primary);
+            padding: 30px 20px 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-header h3 {
+            color: #fff;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .profile-header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        .profile-id {
+            font-size: 10.5px;
+            color: var(--accent);
+            font-weight: 700;
+            background: rgba(245, 166, 35, 0.15);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 2px;
+        }
+
+        .profile-menu-item {
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            padding: 13px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .profile-menu-item:active {
+            background: var(--bg);
+        }
+
+        .profile-menu-item svg {
+            width: 19px;
+            height: 19px;
+            stroke: var(--primary);
+            stroke-width: 1.8;
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .profile-menu-item .label {
+            flex: 1;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .profile-menu-item .chevron svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--text3);
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: absolute;
+            bottom: calc(var(--nav-h) + 16px);
+            left: 16px;
+            right: 16px;
+            background: #1A2332;
+            color: #fff;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--accent);
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        /* ── DISPATCH OVERLAY ── */
+        .dispatch-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 16, 28, 0.94);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            padding: 28px;
+        }
+
+        .dispatch-overlay.show {
+            display: flex;
+        }
+
+        .dispatch-card {
+            width: 100%;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .dispatch-eyebrow {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 22px;
+        }
+
+        .dispatch-pulse-wrap {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .dispatch-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(245, 166, 35, 0.5);
+            animation: ringExpand 2s infinite;
+        }
+
+        .dispatch-ring.r1 {
+            width: 70px;
+            height: 70px;
+            animation-delay: 0s;
+        }
+
+        .dispatch-ring.r2 {
+            width: 70px;
+            height: 70px;
+            animation-delay: 0.6s;
+        }
+
+        .dispatch-ring.r3 {
+            width: 70px;
+            height: 70px;
+            animation-delay: 1.2s;
+        }
+
+        @keyframes ringExpand {
+            0% {
+                width: 70px;
+                height: 70px;
+                opacity: 0.9;
+            }
+
+            100% {
+                width: 130px;
+                height: 130px;
+                opacity: 0;
+            }
+        }
+
+        .dispatch-icon {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(245, 166, 35, 0.4);
+            z-index: 1;
+        }
+
+        .dispatch-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 1.8;
+        }
+
+        .dispatch-card h3 {
+            font-size: 19px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .dispatch-card .loc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 500;
+        }
+
+        .dispatch-note {
+            width: 100%;
+            margin-top: 14px;
+            background: rgba(245, 166, 35, 0.12);
+            border: 1px solid rgba(245, 166, 35, 0.4);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.92);
+            font-weight: 600;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .dispatch-meta-row {
+            display: flex;
+            gap: 10px;
+            margin: 18px 0;
+            width: 100%;
+        }
+
+        .dispatch-meta {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: var(--radius-sm);
+            padding: 10px 8px;
+        }
+
+        .dispatch-meta .v {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .dispatch-meta .l {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+        }
+
+        .dispatch-countdown-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 22px;
+        }
+
+        .dispatch-countdown-fill {
+            height: 100%;
+            width: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width linear;
+        }
+
+        .dispatch-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .dispatch-actions .btn {
+            flex: 1;
+        }
+
+        .btn-decline {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-accept {
+            background: linear-gradient(135deg, var(--success), #1B5E20);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(46, 125, 50, 0.4);
+        }
+
+        /* ── SHEET MODAL (resolve / escalate) ── */
+        .sheet-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 16, 28, 0.55);
+            display: none;
+            align-items: flex-end;
+            z-index: 250;
+        }
+
+        .sheet-overlay.show {
+            display: flex;
+        }
+
+        .sheet {
+            width: 100%;
+            background: var(--card);
+            border-radius: 20px 20px 0 0;
+            padding: 10px 20px 22px;
+            max-height: 88%;
+            overflow-y: auto;
+            animation: sheetUp 0.25s ease;
+        }
+
+        @keyframes sheetUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 3px;
+            margin: 6px auto 14px;
+        }
+
+        .sheet h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .sheet .sheet-sub {
+            font-size: 12px;
+            color: var(--text3);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text2);
+            margin-bottom: 6px;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 11px 14px;
+            font-family: inherit;
+            font-size: 13.5px;
+            color: var(--text);
+            background: var(--card);
+            transition: border 0.2s;
+            resize: none;
+            min-height: 72px;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 11px 14px;
+            font-family: inherit;
+            font-size: 13.5px;
+            color: var(--text);
+            background: var(--card);
+            transition: border 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg);
+            margin-bottom: 14px;
+        }
+
+        .upload-area.filled {
+            border-style: solid;
+            border-color: var(--success);
+            background: var(--success-light);
+        }
+
+        .upload-area svg {
+            width: 30px;
+            height: 30px;
+            stroke: var(--text3);
+            stroke-width: 1.5;
+            fill: none;
+        }
+
+        .upload-area.filled svg {
+            stroke: var(--success);
+        }
+
+        .upload-area p {
+            font-size: 12.5px;
+            color: var(--text3);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .upload-area.filled p {
+            color: var(--success);
+        }
+
+        .upload-area span {
+            font-size: 10.5px;
+            color: var(--text3);
+        }
+
+        .reason-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .reason-chip {
+            padding: 8px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            background: var(--card);
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reason-chip.selected {
+            background: var(--danger-light);
+            color: var(--danger);
+            border-color: rgba(229, 57, 53, 0.35);
+        }
+
+        .sheet-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .sheet-actions .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-shell">
+
+        <!-- ===== STATUS BAR ===== -->
+        <div class="status-bar">
+            <span class="time" id="clock-time">9:41</span>
+            <div class="icons">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2 17h2v-5H2v5zm4 0h2V9H6v8zm4 0h2V6h-2v11zm4 0h2V3h-2v14z" />
+                </svg>
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C7 2 2.7 4 2.7 4l1 2S7 4 12 4s8.3 2 8.3 2l1-2S17 2 12 2z" />
+                    <path d="M12 20a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+                <svg viewBox="0 0 24 24">
+                    <rect x="1" y="6" width="20" height="12" rx="2" />
+                    <rect x="22" y="10" width="2" height="4" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- ===== HOME ===== -->
+        <div class="screen active" id="screen-home">
+            <div class="screen-header">
+                <div class="head-row">
+                    <div>
+                        <h2 id="home-greeting">Good morning, Mark</h2>
+                        <p>Santa Rosa, Laguna · Quick Response Team</p>
+                    </div>
+                    <button class="head-icon-btn" onclick="manualDispatch()" title="Simulate incoming dispatch">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 01-3.46 0" />
+                        </svg>
+                        <span class="dot"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="duty-card">
+                <div class="duty-left">
+                    <div class="duty-dot on" id="duty-dot"></div>
+                    <div class="duty-info">
+                        <h4 id="duty-title">On Duty</h4>
+                        <p id="duty-sub">You're visible to dispatch</p>
+                    </div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="duty-toggle" checked onchange="toggleDuty()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="scroll-content" style="padding-top:14px;">
+
+                <div id="home-active-slot"></div>
+
+                <div class="section-label">Today</div>
+                <div class="stat-mini-grid">
+                    <div class="stat-mini">
+                        <div class="val" id="stat-assigned-today">0</div>
+                        <div class="lbl">Assigned<br>Today</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="val" id="stat-resolved-today">0</div>
+                        <div class="lbl">Resolved<br>Today</div>
+                    </div>
+                    <div class="stat-mini">
+                        <div class="val" id="stat-avg-response">0m</div>
+                        <div class="lbl">Avg.<br>Response</div>
+                    </div>
+                </div>
+
+                <div class="section-label">
+                    <span>Your Queue</span>
+                    <span class="see-all" onclick="switchScreen('queue')">See all</span>
+                </div>
+                <div id="home-queue-preview"></div>
+
+            </div>
+        </div>
+
+        <!-- ===== QUEUE ===== -->
+        <div class="screen" id="screen-queue">
+            <div class="screen-header">
+                <h2>Assignment Queue</h2>
+                <p id="queue-sub">4 incidents assigned to you</p>
+            </div>
+            <div class="filter-tabs">
+                <div class="filter-tab active" onclick="filterQueue(this,'all')">All</div>
+                <div class="filter-tab" onclick="filterQueue(this,'assigned')">Assigned</div>
+                <div class="filter-tab" onclick="filterQueue(this,'en_route')">En Route</div>
+                <div class="filter-tab" onclick="filterQueue(this,'on_site')">On-Site</div>
+            </div>
+            <div class="scroll-content" id="queue-list"></div>
+        </div>
+
+        <!-- ===== JOB DETAIL ===== -->
+        <div class="screen" id="screen-job">
+            <div id="job-content"></div>
+        </div>
+
+        <!-- ===== HISTORY ===== -->
+        <div class="screen" id="screen-history">
+            <div class="screen-header">
+                <h2>Resolved History</h2>
+                <p>Your completed assignments</p>
+            </div>
+            <div class="scroll-content" id="history-list"></div>
+        </div>
+
+        <!-- ===== PROFILE ===== -->
+        <div class="screen" id="screen-profile">
+            <div class="profile-header">
+                <div class="avatar">MR</div>
+                <h3>Mark Anthony Reyes</h3>
+                <p>Field Responder · Santa Rosa QRT</p>
+                <div class="profile-id">ID: RES-014</div>
+                <div style="display:flex;gap:28px;margin-top:10px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:19px;font-weight:700;color:#fff;">31</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.6);">Resolved</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:19px;font-weight:700;color:#fff;">36m</div>
+                        <div style="font-size:10px;color:rgba(255,255,255,0.6);">Avg. Response</div>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-content">
+                <span class="section-label">Duty</span>
+                <div class="profile-menu-item" style="cursor:default;">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="2" />
+                        <path
+                            d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49m11.31-2.82a10 10 0 010 14.14m-14.14 0a10 10 0 010-14.14" />
+                    </svg>
+                    <span class="label">On Duty Status</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="duty-toggle-2" checked onchange="toggleDuty(true)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <span class="section-label">Account</span>
+                <div class="profile-menu-item" onclick="openResponderSheet('rpi-overlay')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span class="label">Personal Information</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+                <div class="profile-menu-item" onclick="openResponderSheet('rshift-overlay')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                    <span class="label">Unit &amp; Shift Schedule</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+                <div class="profile-menu-item" onclick="openResponderSheet('rnotif-overlay')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                        <path d="M13.73 21a2 2 0 01-3.46 0" />
+                    </svg>
+                    <span class="label">Notification Settings</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+
+                <span class="section-label">About</span>
+                <div class="profile-menu-item" onclick="openResponderStatic('about')">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v4m0 4h.01" />
+                    </svg>
+                    <span class="label">About Calye Safe</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+                <div class="profile-menu-item" onclick="openResponderStatic('terms')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4" />
+                        <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+                    </svg>
+                    <span class="label">Terms &amp; Conditions</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+
+                <div class="profile-menu-item" onclick="resetDemoData()" style="color:var(--danger);">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2">
+                        <path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                    <span class="label">Reset Demo Data</span>
+                    <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M9 18l6-6-6-6" />
+                        </svg></div>
+                </div>
+
+                <div style="height:10px;"></div>
+                <button class="btn btn-danger" onclick="logOut()">
+                    <svg viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Log Out
+                </button>
+                <div style="height:16px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== BOTTOM NAV ===== -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchScreen('home')" id="nav-home">
+                <svg viewBox="0 0 24 24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Home</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('queue')" id="nav-queue">
+                <svg viewBox="0 0 24 24">
+                    <line x1="8" y1="6" x2="21" y2="6" />
+                    <line x1="8" y1="12" x2="21" y2="12" />
+                    <line x1="8" y1="18" x2="21" y2="18" />
+                    <line x1="3" y1="6" x2="3.01" y2="6" />
+                    <line x1="3" y1="12" x2="3.01" y2="12" />
+                    <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                <span>Queue</span>
+                <span class="badge-count" id="queue-badge">4</span>
+            </button>
+            <button class="nav-item job-btn" onclick="openMostRelevantJob()" id="nav-job">
+                <div class="job-circle">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                </div>
+                <span>Active</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('history')" id="nav-history">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+                </svg>
+                <span>History</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('profile')" id="nav-profile">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Profile</span>
+            </button>
+        </nav>
+
+        <!-- ===== TOAST ===== -->
+        <div class="toast" id="toast">
+            <svg viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4" />
+                <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+            </svg>
+            <span id="toast-msg"></span>
+        </div>
+
+        <!-- ===== DISPATCH OVERLAY ===== -->
+        <div class="dispatch-overlay" id="dispatch-overlay">
+            <div class="dispatch-card">
+                <div class="dispatch-eyebrow">New Report!</div>
+                <div class="dispatch-pulse-wrap">
+                    <div class="dispatch-ring r1"></div>
+                    <div class="dispatch-ring r2"></div>
+                    <div class="dispatch-ring r3"></div>
+                    <div class="dispatch-icon" id="dispatch-icon"></div>
+                </div>
+                <h3 id="dispatch-type">Flooding</h3>
+                <div class="loc" id="dispatch-loc">Mercado Village</div>
+                <div class="dispatch-note" id="dispatch-note" style="display:none;"></div>
+                <div class="dispatch-meta-row">
+                    <div class="dispatch-meta">
+                        <div class="v" id="dispatch-distance">1.2 km</div>
+                        <div class="l">Distance</div>
+                    </div>
+                    <div class="dispatch-meta">
+                        <div class="v" id="dispatch-severity">Major</div>
+                        <div class="l">Severity</div>
+                    </div>
+                    <div class="dispatch-meta">
+                        <div class="v" id="dispatch-eta">6 min</div>
+                        <div class="l">Est. Travel</div>
+                    </div>
+                </div>
+                <div class="dispatch-countdown-bar">
+                    <div class="dispatch-countdown-fill" id="dispatch-countdown"></div>
+                </div>
+                <div class="dispatch-actions">
+                    <button class="btn btn-decline" onclick="declineDispatch()">Decline</button>
+                    <button class="btn btn-accept" onclick="acceptDispatch()">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESOLVE SHEET ===== -->
+        <div class="sheet-overlay" id="resolve-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Confirm Resolution</h3>
+                <p class="sheet-sub">Attach proof of completion so the resident and barangay office can verify the fix.
+                </p>
+
+                <div class="upload-area" id="proof-upload" onclick="attachProof()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <p id="proof-text">Tap to take a photo of the resolved site</p>
+                    <span>JPEG or PNG · required</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Resolution Notes</label>
+                    <textarea id="resolve-notes"
+                        placeholder="e.g. Drainage cleared, debris removed, area inspected safe."></textarea>
+                </div>
+
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('resolve-overlay')">Cancel</button>
+                    <button class="btn btn-step-onsite" onclick="submitResolution()">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Mark Resolved
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ESCALATE SHEET ===== -->
+        <div class="sheet-overlay" id="escalate-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Report an Issue</h3>
+                <p class="sheet-sub">Let Barangay Ops know why this assignment can't proceed as planned.</p>
+
+                <div class="reason-chips" id="reason-chips">
+                    <div class="reason-chip" onclick="selectReason(this)">Location inaccessible</div>
+                    <div class="reason-chip" onclick="selectReason(this)">Needs additional unit</div>
+                    <div class="reason-chip" onclick="selectReason(this)">Duplicate report</div>
+                    <div class="reason-chip" onclick="selectReason(this)">False alarm</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Additional Notes</label>
+                    <textarea id="escalate-notes" placeholder="Add any details for the barangay office..."></textarea>
+                </div>
+
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('escalate-overlay')">Cancel</button>
+                    <button class="btn btn-danger" onclick="submitEscalation()">Submit Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESPONDER PERSONAL INFO SHEET ===== -->
+        <div class="sheet-overlay" id="rpi-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Personal Information</h3>
+                <p class="sheet-sub">Update the details shown to Barangay Ops and residents.</p>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input id="rpi-name" type="text" placeholder="e.g. Mark Anthony Reyes">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input id="rpi-phone" type="tel" placeholder="e.g. 0917 123 4567">
+                </div>
+                <div class="form-group">
+                    <label>Unit / Team ID</label>
+                    <input id="rpi-unit" type="text" placeholder="e.g. RES-014">
+                </div>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('rpi-overlay')">Cancel</button>
+                    <button class="btn btn-step-onsite" onclick="saveResponderProfile()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESPONDER UNIT & SHIFT SHEET ===== -->
+        <div class="sheet-overlay" id="rshift-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Unit &amp; Shift Schedule</h3>
+                <p class="sheet-sub">Set your duty window so dispatches can match your availability.</p>
+                <div class="form-group">
+                    <label>Shift Schedule</label>
+                    <select id="rshift">
+                        <option>Morning (6AM – 2PM)</option>
+                        <option>Afternoon (2PM – 10PM)</option>
+                        <option>Night (10PM – 6AM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assigned Sector</label>
+                    <input id="rshift-sector" type="text" placeholder="e.g. Purok 1–3, Phase 1">
+                </div>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('rshift-overlay')">Cancel</button>
+                    <button class="btn btn-step-onsite" onclick="saveResponderShift()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESPONDER NOTIFICATION SETTINGS SHEET ===== -->
+        <div class="sheet-overlay" id="rnotif-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Notification Settings</h3>
+                <p class="sheet-sub">Choose which alerts you receive while on duty.</p>
+                <div class="profile-menu-item">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" /><path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49m11.31-2.82a10 10 0 010 14.14m-14.14 0a10 10 0 010-14.14" /></svg>
+                    <span class="label">New Dispatch Alerts</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="rn-dispatch" checked onchange="setResponderPref('dispatch', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="profile-menu-item">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" /></svg>
+                    <span class="label">Status Reminders</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="rn-remind" checked onchange="setResponderPref('reminders', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="profile-menu-item">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" /></svg>
+                    <span class="label">Barangay Ops Updates</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="rn-ops" checked onchange="setResponderPref('ops', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('rnotif-overlay')">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RESPONDER STATIC INFO SHEET ===== -->
+        <div class="sheet-overlay" id="rinfo-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3 id="rinfo-title">About Calye Safe</h3>
+                <p class="sheet-sub" id="rinfo-body"></p>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('rinfo-overlay')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== NAVIGATE OVERLAY ===== -->
+        <div class="nav-overlay" id="nav-overlay">
+            <div class="nav-overlay-header">
+                <button class="back-btn" onclick="closeNavOverlay()">
+                    <svg viewBox="0 0 24 24">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </button>
+                <div>
+                    <div class="n-title" id="nav-overlay-title">Route to Incident</div>
+                    <div class="n-sub" id="nav-overlay-sub">Calculating best route…</div>
+                </div>
+            </div>
+            <div class="nav-map-wrap">
+                <div class="nav-map-loading" id="nav-map-loading">
+                    <div class="nav-spinner"></div>
+                    <span>Finding your location &amp; plotting route…</span>
+                </div>
+                <div id="nav-leaflet-map"></div>
+            </div>
+            <div class="nav-bottom-panel">
+                <div class="nav-eta-row">
+                    <div class="nav-eta-item">
+                        <div class="v" id="nav-eta-time">--</div>
+                        <div class="l">Est. Travel Time</div>
+                    </div>
+                    <div class="nav-eta-divider"></div>
+                    <div class="nav-eta-item">
+                        <div class="v" id="nav-eta-dist">--</div>
+                        <div class="l">Distance</div>
+                    </div>
+                    <div class="nav-eta-divider"></div>
+                    <div class="nav-eta-item">
+                        <div class="v" id="nav-eta-mode">Driving</div>
+                        <div class="l">Fastest Route</div>
+                    </div>
+                </div>
+                <div class="nav-dest-line">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    <span id="nav-dest-label">Destination</span>
+                </div>
+                <button class="nav-gmaps-btn" id="nav-gmaps-btn" onclick="openInGoogleMaps()">
+                    <svg viewBox="0 0 24 24">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                    Start Turn-by-Turn in Google Maps
+                </button>
+            </div>
+        </div>
+
+        <input type="file" id="proof-file-input" accept="image/*" capture="environment" style="display:none;">
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="santarosa-boundary.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="supabase-data.js"></script>
+    <script src="supabase-auth.js"></script>
+    <script>
+        // ══════════════════════════ PERSISTENCE (localStorage) ══════════════════════════
+        const LS_VERSION = '2';
+        // Demo: start the app with zero records. Mock data is preserved in
+        // calye-safe_database/backup-live-2026-08-02.json and supabase-seed.sql.
+        const FORCE_EMPTY_RECORDS = true;
+        const LS_KEY_JOBS = 'calye_safe_responder_jobs';
+        const LS_KEY_HISTORY = 'calye_safe_responder_history';
+
+        function loadStoredData(key, fallback) {
+            try {
+                if (FORCE_EMPTY_RECORDS) return [];
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
+                return fallback;
+            } catch (e) { return fallback; }
+        }
+
+        function saveStoredData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify({ v: LS_VERSION, data: data }));
+            } catch (e) { /* ignore */ }
+        }
+
+        function resetDemoData() {
+            try {
+                localStorage.removeItem(LS_KEY_JOBS);
+                localStorage.removeItem(LS_KEY_HISTORY);
+            } catch (e) { /* ignore */ }
+            showToast('Demo data has been reset');
+            setTimeout(() => location.reload(), 900);
+        }
+
+        // ══════════════════════════ DATA ══════════════════════════
+        // Same report IDs / locations used in the Admin Dashboard and
+        // Community App drafts, viewed here from the responder's side.
+        const CAT = {
+            flood: { color: 'var(--danger)', bg: 'var(--danger-light)', icon: '<path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>' },
+            fire: { color: 'var(--danger)', bg: 'var(--danger-light)', icon: '<path d="M12 22c4.97 0 9-4.03 9-9 0-4-3-6.5-3-6.5S14.5 8 14.5 12c0 1.5.7 2.6 1.5 3.5-.8 1-2 1.5-3.5 1.5-2.8 0-4-2-4-4 0-3 3-5 3-8.5C11.5 4.5 12 3 12 3S7 6.5 7 13c0 4.97 4.03 9 9 9z" transform="rotate(90 12 12)"/>' },
+            crime: { color: 'var(--danger)', bg: 'var(--danger-light)', icon: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' },
+            accident: { color: 'var(--warning)', bg: 'var(--warning-light)', icon: '<path d="M14 16H9m2 0V9m6-6l-7 8h5l-2 4"/><circle cx="12" cy="12" r="10"/>' },
+            hazard: { color: 'var(--warning)', bg: 'var(--warning-light)', icon: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
+            garbage: { color: 'var(--success)', bg: 'var(--success-light)', icon: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>' },
+            other: { color: 'var(--text3)', bg: '#EEF1F6', icon: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>' },
+        };
+
+        let jobs = loadStoredData(LS_KEY_JOBS, [
+            {
+                id: '#BRGY-2026-0047', type: 'Flooding', cat: 'flood', severity: 'major',
+                loc: 'Rizal Blvd. near Balibago Elem.', barangay: 'Barangay Balibago', reportedBy: 'Juan Dela Cruz',
+                reportedTime: 'Today · 10:14 AM', distanceKm: 1.2, etaMin: 6,
+                lat: 14.2989, lng: 121.1163, status: 'assigned',
+                desc: 'Ankle-deep floodwater near the covered court entrance. Residents are unable to pass safely on foot.',
+                timeline: [
+                    { label: 'Reported', ts: '10:14 AM', state: 'done' },
+                    { label: 'Verified & Assigned to you', ts: '10:18 AM', state: 'done' },
+                    { label: 'En Route', ts: '—', state: 'pending' },
+                    { label: 'On-Site', ts: '—', state: 'pending' },
+                    { label: 'Resolved', ts: '—', state: 'pending' },
+                ]
+            },
+            {
+                id: '#BRGY-2026-0046', type: 'Road Hazard', cat: 'hazard', severity: 'minor',
+                loc: 'Sta. Rosa-Tagaytay Rd.', barangay: 'Barangay Tagapo', reportedBy: 'Ana Santos',
+                reportedTime: 'Today · 9:50 AM', distanceKm: 2.4, etaMin: 9,
+                lat: 14.3097, lng: 121.1210, status: 'assigned',
+                desc: 'Large pothole exposed after yesterday\'s rain. Motorcycles swerving into the oncoming lane to avoid it.',
+                timeline: [
+                    { label: 'Reported', ts: '9:50 AM', state: 'done' },
+                    { label: 'Verified & Assigned to you', ts: '9:58 AM', state: 'done' },
+                    { label: 'En Route', ts: '—', state: 'pending' },
+                    { label: 'On-Site', ts: '—', state: 'pending' },
+                    { label: 'Resolved', ts: '—', state: 'pending' },
+                ]
+            },
+            {
+                id: '#BRGY-2026-0044', type: 'Uncollected Garbage', cat: 'garbage', severity: 'minor',
+                loc: 'Publiko Night Market area', barangay: 'Barangay Pooc', reportedBy: 'Resident (anonymous)',
+                reportedTime: 'Today · 8:30 AM', distanceKm: 0.6, etaMin: 3,
+                lat: 14.3145, lng: 121.1121, status: 'en_route',
+                desc: 'Uncollected garbage bags piling up near the corner sari-sari store, attracting stray animals.',
+                timeline: [
+                    { label: 'Reported', ts: '8:30 AM', state: 'done' },
+                    { label: 'Verified & Assigned to you', ts: '8:36 AM', state: 'done' },
+                    { label: 'En Route', ts: '9:02 AM', state: 'done' },
+                    { label: 'On-Site', ts: '—', state: 'pending' },
+                    { label: 'Resolved', ts: '—', state: 'pending' },
+                ]
+            },
+            {
+                id: '#BRGY-2026-0043', type: 'Broken Streetlight', cat: 'hazard', severity: 'minor',
+                loc: 'City Hall Drive', barangay: 'Barangay Pooc', reportedBy: 'Rico Fernandez',
+                reportedTime: 'Yesterday · 6:40 PM', distanceKm: 0.9, etaMin: 4,
+                lat: 14.3178, lng: 121.1103, status: 'on_site',
+                desc: 'Streetlight along the park pathway has been flickering and is now completely out, area is unlit at night.',
+                timeline: [
+                    { label: 'Reported', ts: 'Yesterday · 6:40 PM', state: 'done' },
+                    { label: 'Verified & Assigned to you', ts: 'Yesterday · 7:05 PM', state: 'done' },
+                    { label: 'En Route', ts: 'Today · 8:10 AM', state: 'done' },
+                    { label: 'On-Site', ts: 'Today · 8:22 AM', state: 'active' },
+                    { label: 'Resolved', ts: '—', state: 'pending' },
+                ]
+            },
+        ]);
+
+        let history = loadStoredData(LS_KEY_HISTORY, [
+            { id: '#BRGY-2026-0040', type: 'Clogged Drains', cat: 'flood', loc: 'Sinalhan Bridge', resolvedDate: 'May 18 · 2:40 PM', duration: '1h 10m' },
+            { id: '#BRGY-2026-0033', type: 'Vandalism Cleanup', cat: 'other', loc: 'Caingin Basketball Court', resolvedDate: 'May 15 · 4:05 PM', duration: '55m' },
+            { id: '#BRGY-2026-0029', type: 'Uncollected Garbage', cat: 'garbage', loc: 'Malusak Purok 2', resolvedDate: 'May 10 · 9:20 AM', duration: '40m' },
+        ]);
+
+        let onDuty = true;
+        let currentJobId = null;
+        let currentQueueFilter = 'all';
+        let proofAttached = false;
+        let selectedReason = null;
+        let dispatchTimer = null;
+        let incomingJob = null;
+
+        // Fallback responder position (Barangay Hall / patrol base) used if
+        // live geolocation isn't available or permission is denied.
+        const RESPONDER_BASE = { lat: 14.3122, lng: 121.1114 };
+        let navMap = null;
+        let navRouter = null;
+        let navWatchId = null;
+
+        // ══════════════════════════ NAV ══════════════════════════
+        function switchScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + name).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const navBtn = document.getElementById('nav-' + name);
+            if (navBtn) navBtn.classList.add('active');
+
+            if (name === 'home') renderHome();
+            if (name === 'queue') renderQueue();
+            if (name === 'history') renderHistory();
+        }
+
+        function openMostRelevantJob() {
+            const live = jobs.find(j => j.status === 'en_route' || j.status === 'on_site');
+            const target = live || jobs.find(j => j.status === 'assigned');
+            if (!target) {
+                switchScreen('queue');
+                showToast('No active assignment right now');
+                return;
+            }
+            openJob(target.id);
+        }
+
+        function updateJobNavIndicator() {
+            const hasLive = jobs.some(j => j.status === 'en_route' || j.status === 'on_site');
+            document.getElementById('nav-job').classList.toggle('live', hasLive);
+            document.getElementById('queue-badge').textContent = jobs.filter(j => j.status !== 'resolved').length;
+        }
+
+        // ══════════════════════════ HOME ══════════════════════════
+        function timeGreeting() {
+            const h = new Date().getHours();
+            if (h >= 5 && h < 12) return 'Good morning';
+            if (h >= 12 && h < 17) return 'Good afternoon';
+            return 'Good evening';
+        }
+
+        function renderHome() {
+            const greetEl = document.getElementById('home-greeting');
+            if (greetEl) {
+                const first = (rProfile.name || '').split(' ')[0] || 'there';
+                greetEl.textContent = timeGreeting() + ', ' + first;
+            }
+            const slot = document.getElementById('home-active-slot');
+            const active = jobs.find(j => j.status === 'en_route' || j.status === 'on_site');
+            if (active && onDuty) {
+                const label = active.status === 'en_route' ? 'En route · ETA ' + active.etaMin + ' min' : 'Currently on-site';
+                slot.innerHTML = `
+          <div class="active-banner" onclick="openJob('${active.id}')">
+            <div class="tag"><span class="live-dot"></span> ${label}</div>
+            <h4>${active.type} — ${active.loc}</h4>
+            <p>${active.id} · Tap to view assignment</p>
+            <svg class="arrow" viewBox="0 0 24 24" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div style="height:16px;"></div>
+        `;
+            } else {
+                slot.innerHTML = '';
+            }
+
+            const preview = document.getElementById('home-queue-preview');
+            const upcoming = jobs.filter(j => j.status === 'assigned').slice(0, 2);
+            preview.innerHTML = upcoming.length
+                ? upcoming.map(j => queueCardHtml(j)).join('')
+                : `<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-weight:600;">No pending assignments in your queue.</div>`;
+
+            const elAssigned = document.getElementById('stat-assigned-today');
+            const elResolved = document.getElementById('stat-resolved-today');
+            const elAvg = document.getElementById('stat-avg-response');
+            const assignedCount = jobs.filter(j => j.status !== 'resolved').length;
+            const resolvedCount = jobs.filter(j => j.status === 'resolved').length;
+            if (elAssigned) elAssigned.textContent = assignedCount;
+            if (elResolved) elResolved.textContent = resolvedCount;
+            if (elAvg) {
+                const durMin = history.map(h => {
+                    const m = /(\d+)h\s*(\d+)?m?/.exec(h.duration || '');
+                    const m2 = /^(\d+)m$/.exec(h.duration || '');
+                    if (m) return (+m[1]) * 60 + (+(m[2] || 0));
+                    if (m2) return +m2[1];
+                    return 0;
+                }).filter(n => n > 0);
+                elAvg.textContent = durMin.length ? Math.round(durMin.reduce((a, b) => a + b, 0) / durMin.length) + 'm' : '0m';
+            }
+        }
+
+        // ══════════════════════════ DUTY TOGGLE ══════════════════════════
+        function toggleDuty(fromProfile) {
+            const box1 = document.getElementById('duty-toggle');
+            const box2 = document.getElementById('duty-toggle-2');
+            if (fromProfile) {
+                onDuty = box2.checked;
+                box1.checked = onDuty;
+            } else {
+                onDuty = box1.checked;
+                box2.checked = onDuty;
+            }
+            document.getElementById('duty-dot').classList.toggle('on', onDuty);
+            document.getElementById('duty-title').textContent = onDuty ? 'On Duty' : 'Off Duty';
+            document.getElementById('duty-sub').textContent = onDuty ? "You're visible to dispatch" : "You won't receive new assignments";
+            showToast(onDuty ? 'You are now On Duty' : 'You are now Off Duty');
+            if (!onDuty && dispatchTimer) { clearTimeout(dispatchTimer); }
+        }
+
+        // ══════════════════════════ QUEUE ══════════════════════════
+        function queueCardHtml(j) {
+            const c = CAT[j.cat] || CAT.other;
+            const statusLabels = { assigned: 'Assigned', en_route: 'En Route', on_site: 'On-Site', resolved: 'Resolved' };
+            const borderColor = j.status === 'en_route' ? 'var(--info)' : j.status === 'on_site' ? 'var(--accent)' : j.status === 'resolved' ? 'var(--success)' : 'var(--warning)';
+            return `
+        <div class="queue-card" style="border-left-color:${borderColor};" onclick="openJob('${j.id}')">
+          <div class="qc-icon" style="background:${c.bg};">
+            <svg viewBox="0 0 24 24" stroke="${c.color}">${c.icon}</svg>
+          </div>
+          <div class="qc-body">
+            <div class="qc-top">
+              <div>
+                <h4>${j.type}</h4>
+                <div class="qc-loc">📍 ${j.loc}</div>
+              </div>
+              <span class="severity-tag ${j.severity}">${j.severity.toUpperCase()}</span>
+            </div>
+            <div class="qc-footer">
+              <span class="status-pill ${j.status}">${statusLabels[j.status]}</span>
+              <span class="qc-meta">${j.distanceKm} km · ${j.reportedTime.split('·')[1] || j.reportedTime}</span>
+            </div>
+            ${j.notes ? `<div class="qc-note">📌 ${j.notes}</div>` : ''}
+          </div>
+        </div>
+      `;
+        }
+
+        function renderQueue() {
+            const filtered = currentQueueFilter === 'all' ? jobs : jobs.filter(j => j.status === currentQueueFilter);
+            document.getElementById('queue-sub').textContent = jobs.filter(j => j.status !== 'resolved').length + ' incidents assigned to you';
+            const list = document.getElementById('queue-list');
+            list.innerHTML = filtered.length
+                ? filtered.map(j => queueCardHtml(j)).join('')
+                : `<div class="empty-state"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg></div><h4>All clear</h4><p>No assignments match this filter right now.</p></div>`;
+        }
+
+        function filterQueue(btn, val) {
+            document.querySelectorAll('#screen-queue .filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            currentQueueFilter = val;
+            renderQueue();
+        }
+
+        // ══════════════════════════ JOB DETAIL ══════════════════════════
+        function openJob(id) {
+            currentJobId = id;
+            switchScreen('job');
+            renderJob();
+        }
+
+        function renderJob() {
+            const j = jobs.find(x => x.id === currentJobId);
+            const wrap = document.getElementById('job-content');
+            if (!j) {
+                wrap.innerHTML = `<div class="empty-state" style="padding-top:80px;"><div class="ic"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h4>No active assignment</h4><p>Accepted assignments will appear here with live status tracking.</p></div>`;
+                return;
+            }
+            const c = CAT[j.cat] || CAT.other;
+            const d = 0.01;
+            const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${j.lng - d}%2C${j.lat - d * 0.7}%2C${j.lng + d}%2C${j.lat + d * 0.7}&layer=mapnik&marker=${j.lat}%2C${j.lng}`;
+
+            const stepBtn = {
+                assigned: `<button class="btn btn-step-assigned" onclick="advanceStatus()"><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Start — Mark En Route</button>`,
+                en_route: `<button class="btn btn-step-enroute" onclick="advanceStatus()"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Mark Arrived — On-Site</button>`,
+                on_site: `<button class="btn btn-step-onsite" onclick="openSheet('resolve-overlay')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Resolve Incident</button>`,
+                resolved: `<button class="btn btn-step-done" disabled><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Resolved</button>`,
+            };
+
+            wrap.innerHTML = `
+        <div class="screen-header">
+          <div class="back-row">
+            <button class="back-btn" onclick="switchScreen('queue')">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <div>
+              <h2 style="font-size:17px;">${j.type}</h2>
+              <p>${j.id} · ${j.barangay}</p>
+            </div>
+          </div>
+        </div>
+        <div class="scroll-content">
+
+          <div class="map-frame">
+            <iframe src="${mapSrc}" loading="lazy"></iframe>
+            <div class="map-frame-label">📍 ${j.loc}</div>
+          </div>
+          <div class="map-meta-row">
+            <div class="map-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div><div class="v">${j.distanceKm} km</div><div class="l">Distance</div></div>
+            </div>
+            <div class="map-meta-item">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <div><div class="v">${j.etaMin} min</div><div class="l">Est. Travel</div></div>
+            </div>
+          </div>
+
+          <div style="height:14px;"></div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div class="qc-icon" style="background:${c.bg};margin:0;">
+                <svg viewBox="0 0 24 24" stroke="${c.color}">${c.icon}</svg>
+              </div>
+              <div style="flex:1;">
+                <h4 style="font-size:15px;">${j.type}</h4>
+                <div style="font-size:11.5px;color:var(--text2);">📍 ${j.loc}</div>
+              </div>
+              <span class="severity-tag ${j.severity}">${j.severity.toUpperCase()}</span>
+            </div>
+
+            <div class="info-grid">
+              <div class="info-item"><div class="il">Reported By</div><div class="iv">${j.reportedBy}</div></div>
+              <div class="info-item"><div class="il">Reported</div><div class="iv">${j.reportedTime}</div></div>
+            </div>
+
+            <div class="desc-box"><p>${j.desc}</p></div>
+            ${j.notes ? `<div class="notes-box"><div class="notes-label">Admin's note</div><p>${j.notes}</p></div>` : ''}
+
+            <div class="evidence-row" onclick="showToast('Opening submitted photo…')">
+              <div class="evidence-thumb">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="evidence-text">
+                <h5>Resident's submitted photo</h5>
+                <p>GPS-tagged at time of report</p>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <button class="contact-btn" onclick="showToast('Calling ${j.reportedBy}…')">
+                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                Call Resident
+              </button>
+              <button class="contact-btn" onclick="openNavOverlay('${j.id}')">
+                <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                Navigate
+              </button>
+            </div>
+          </div>
+
+          <div style="height:14px;"></div>
+          <div class="status-timeline">
+            <h5>Status Tracking</h5>
+            ${j.timeline.map((t, i) => `
+              <div class="timeline-step">
+                <div class="timeline-left">
+                  <div class="timeline-circle ${t.state}">
+                    ${t.state === 'done' ? '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' : t.state === 'active' ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>' : ''}
+                  </div>
+                  ${i < j.timeline.length - 1 ? `<div class="timeline-line ${t.state === 'done' ? 'done' : ''}"></div>` : ''}
+                </div>
+                <div class="timeline-right">
+                  <h6>${t.label}</h6>
+                  <div class="ts">${t.ts}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div style="height:8px;"></div>
+        </div>
+
+        <div class="action-bar">
+          ${stepBtn[j.status]}
+          ${j.status !== 'resolved' ? `<span class="escalate-link" onclick="openSheet('escalate-overlay')">Unable to respond? Report an issue</span>` : ''}
+        </div>
+      `;
+        }
+
+        // ══════════════════════════ NAVIGATE OVERLAY ══════════════════════════
+        function openNavOverlay(id) {
+            const j = jobs.find(x => x.id === id);
+            if (!j) return;
+            currentJobId = id;
+
+            document.getElementById('nav-overlay-title').textContent = 'Route to ' + j.type;
+            document.getElementById('nav-overlay-sub').textContent = j.id + ' · ' + j.barangay;
+            document.getElementById('nav-dest-label').textContent = j.loc + ', ' + j.barangay;
+            document.getElementById('nav-eta-time').textContent = '--';
+            document.getElementById('nav-eta-dist').textContent = '--';
+            document.getElementById('nav-map-loading').style.display = 'flex';
+
+            document.getElementById('nav-overlay').classList.add('show');
+
+            // Try to get the responder's live location for the most accurate
+            // route; fall back to the known base position if unavailable.
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => startNavRoute({ lat: pos.coords.latitude, lng: pos.coords.longitude }, j),
+                    () => startNavRoute(RESPONDER_BASE, j),
+                    { enableHighAccuracy: true, timeout: 6000 }
+                );
+            } else {
+                startNavRoute(RESPONDER_BASE, j);
+            }
+        }
+
+        function closeNavOverlay() {
+            document.getElementById('nav-overlay').classList.remove('show');
+            if (navWatchId !== null && navigator.geolocation) {
+                navigator.geolocation.clearWatch(navWatchId);
+                navWatchId = null;
+            }
+        }
+
+        function startNavRoute(origin, j) {
+            if (!navMap) {
+                navMap = L.map('nav-leaflet-map', { zoomControl: false, attributionControl: false });
+                L.control.zoom({ position: 'bottomright' }).addTo(navMap);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(navMap);
+                drawCityBoundary(navMap);
+            }
+
+            if (navRouter) {
+                navMap.removeControl(navRouter);
+                navRouter = null;
+            }
+
+            const startIcon = L.divIcon({ className: '', html: '<div class="nav-pulse-icon"></div>', iconSize: [18, 18] });
+            const destIcon = L.divIcon({ className: '', html: '<div class="nav-dest-icon"></div>', iconSize: [20, 20], iconAnchor: [10, 18] });
+
+            navRouter = L.Routing.control({
+                waypoints: [
+                    L.latLng(origin.lat, origin.lng),
+                    L.latLng(j.lat, j.lng)
+                ],
+                createMarker: (i, wp) => L.marker(wp.latLng, { icon: i === 0 ? startIcon : destIcon }),
+                lineOptions: { styles: [{ color: '#1565C0', weight: 5, opacity: 0.85 }] },
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                show: false,
+                router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
+            }).addTo(navMap);
+
+            navRouter.on('routesfound', e => {
+                const r = e.routes[0];
+                const mins = Math.max(1, Math.round(r.summary.totalTime / 60));
+                const km = (r.summary.totalDistance / 1000).toFixed(1);
+                document.getElementById('nav-eta-time').textContent = mins + ' min';
+                document.getElementById('nav-eta-dist').textContent = km + ' km';
+                document.getElementById('nav-map-loading').style.display = 'none';
+            });
+
+            navRouter.on('routingerror', () => {
+                // Fall back to a straight-line view if the routing service
+                // can't be reached, so the responder still sees a map.
+                document.getElementById('nav-map-loading').style.display = 'none';
+                navMap.fitBounds(L.latLngBounds([[origin.lat, origin.lng], [j.lat, j.lng]]), { padding: [40, 40] });
+                document.getElementById('nav-eta-time').textContent = j.etaMin + ' min';
+                document.getElementById('nav-eta-dist').textContent = j.distanceKm + ' km';
+                showToast('Live routing unavailable — showing straight-line path');
+            });
+
+            setTimeout(() => navMap.invalidateSize(), 150);
+            window.__navDestGmaps = { lat: j.lat, lng: j.lng, label: j.loc };
+        }
+
+        function openInGoogleMaps() {
+            const j = jobs.find(x => x.id === currentJobId);
+            if (!j) return;
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lng}&travelmode=driving`;
+            window.open(url, '_blank');
+        }
+
+        function advanceStatus() {
+            const j = jobs.find(x => x.id === currentJobId);
+            if (!j) return;
+            const now = nowStr();
+            if (j.status === 'assigned') {
+                j.status = 'en_route';
+                j.timeline[2] = { label: 'En Route', ts: now, state: 'done' };
+                j.timeline[3].state = 'active';
+                showToast('Status updated: En Route');
+                markAsnStep(j.asnId, 3, 'done', now);
+            } else if (j.status === 'en_route') {
+                j.status = 'on_site';
+                j.timeline[3] = { label: 'On-Site', ts: now, state: 'done' };
+                j.timeline[4].state = 'active';
+                showToast('Status updated: On-Site');
+                markAsnStep(j.asnId, 4, 'done', now);
+                markReportStep(j.reportId, 4, 'done', now);
+            }
+            saveStoredData(LS_KEY_JOBS, jobs);
+            renderJob();
+            updateJobNavIndicator();
+            if (CalyeDB.isOnline() && j.asnId) {
+                CalyeDB.update('assignments', { id: j.asnId }, { status: j.status });
+                if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: j.status === 'en_route' ? 'responding' : 'on_site' });
+            }
+        }
+
+        // Persist a status change into the responder's assignment_timeline.
+        function markAsnStep(asnId, step, state, timeStr) {
+            if (!CalyeDB.isOnline() || !asnId) return;
+            const patch = { state: state };
+            if (timeStr) patch.happened_at = timeStr;
+            CalyeDB.update('assignment_timeline', [['assignment_id', asnId], ['step', step]], patch);
+        }
+
+        // Persist a status change into the resident's report_timeline tracker.
+        function markReportStep(reportId, step, state, timeStr) {
+            if (!CalyeDB.isOnline() || !reportId) return;
+            const patch = { state: state };
+            if (timeStr) patch.happened_at = timeStr;
+            CalyeDB.update('report_timeline', [['report_id', reportId], ['step', step]], patch);
+        }
+
+        // ══════════════════════════ RESOLVE FLOW ══════════════════════════
+        function attachProof() {
+            document.getElementById('proof-file-input').click();
+        }
+        document.getElementById('proof-file-input').addEventListener('change', function () {
+            proofAttached = true;
+            const area = document.getElementById('proof-upload');
+            area.classList.add('filled');
+            document.getElementById('proof-text').textContent = 'Photo attached ✓';
+        });
+
+        function submitResolution() {
+            if (!proofAttached) {
+                showToast('Please attach a photo before resolving');
+                return;
+            }
+            const j = jobs.find(x => x.id === currentJobId);
+            if (!j) return;
+            const now = nowStr();
+            j.status = 'resolved';
+            j.timeline[4] = { label: 'Resolved', ts: now, state: 'done' };
+            j.timeline[3].state = 'done';
+
+            history.unshift({ id: j.id, type: j.type, cat: j.cat, loc: j.loc, resolvedDate: now, duration: '—' });
+            saveStoredData(LS_KEY_JOBS, jobs);
+            saveStoredData(LS_KEY_HISTORY, history);
+
+            if (CalyeDB.isOnline() && j.asnId) {
+                CalyeDB.update('assignments', { id: j.asnId }, { status: 'resolved', resolved_at: new Date().toISOString() });
+                if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: 'resolved' });
+                markAsnStep(j.asnId, 5, 'done', now);
+                markReportStep(j.reportId, 5, 'done', now);
+                CalyeDB.insert('resolved_history', [{
+                    assignment_id: j.asnId, responder_id: null, report_no: j.id,
+                    type: j.type, location: j.loc, resolved_at: new Date().toISOString(), duration_min: null
+                }]);
+            }
+
+            closeSheet('resolve-overlay');
+            showToast('Incident marked as resolved');
+            renderJob();
+            updateJobNavIndicator();
+            proofAttached = false;
+            document.getElementById('proof-upload').classList.remove('filled');
+            document.getElementById('proof-text').textContent = 'Tap to take a photo of the resolved site';
+        }
+
+        // ══════════════════════════ ESCALATE FLOW ══════════════════════════
+        function selectReason(chip) {
+            document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('selected'));
+            chip.classList.add('selected');
+            selectedReason = chip.textContent;
+        }
+
+        function submitEscalation() {
+            if (!selectedReason) {
+                showToast('Please select a reason first');
+                return;
+            }
+            closeSheet('escalate-overlay');
+            showToast('Reported to Barangay Ops: ' + selectedReason);
+            selectedReason = null;
+            document.querySelectorAll('.reason-chip').forEach(c => c.classList.remove('selected'));
+            document.getElementById('escalate-notes').value = '';
+        }
+
+        function logOut() {
+            try { sessionStorage.removeItem('calye_safe_role'); } catch (e) { /* ignore */ }
+            CalyeAuth.signOut().then(() => { location.href = 'responder-login.html'; });
+        }
+
+        // ══════════════════════════ SHEETS ══════════════════════════
+        function openSheet(id) { document.getElementById(id).classList.add('show'); }
+        function closeSheet(id) { document.getElementById(id).classList.remove('show'); }
+        document.querySelectorAll('.sheet-overlay').forEach(o => {
+            o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+        });
+
+        // ══════════════════════════ RESPONDER PROFILE ══════════════════════════
+        const LS_KEY_RPROFILE = 'calye_safe_responder_profile';
+
+        function loadResponderProfile() {
+            try {
+                const raw = localStorage.getItem(LS_KEY_RPROFILE);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.v === LS_VERSION && parsed.data) return parsed.data;
+                return null;
+            } catch (e) { return null; }
+        }
+
+        function saveResponderProfileData(data) {
+            try {
+                localStorage.setItem(LS_KEY_RPROFILE, JSON.stringify({ v: LS_VERSION, data: data }));
+            } catch (e) { /* ignore */ }
+        }
+
+        let rProfile = Object.assign({
+            name: 'Mark Anthony Reyes', phone: '0917 123 4567', unit: 'RES-014',
+            role: 'Field Responder · Santa Rosa QRT',
+            shift: 'Morning (6AM – 2PM)', sector: 'Purok 1–3, Phase 1',
+            notif: { dispatch: true, reminders: true, ops: true }
+        }, loadResponderProfile() || {});
+
+        function renderResponderProfile() {
+            const avatar = document.querySelector('#screen-profile .avatar');
+            const nameEl = document.querySelector('#screen-profile .profile-header h3');
+            const subEl = document.querySelector('#screen-profile .profile-header p');
+            const idEl = document.querySelector('#screen-profile .profile-id');
+            if (avatar) avatar.textContent = rProfile.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'U';
+            if (nameEl) nameEl.textContent = rProfile.name;
+            if (subEl) subEl.textContent = rProfile.role;
+            if (idEl) idEl.textContent = 'ID: ' + rProfile.unit;
+        }
+
+        function openResponderSheet(id) {
+            if (id === 'rpi-overlay') {
+                document.getElementById('rpi-name').value = rProfile.name;
+                document.getElementById('rpi-phone').value = rProfile.phone;
+                document.getElementById('rpi-unit').value = rProfile.unit;
+            } else if (id === 'rshift-overlay') {
+                document.getElementById('rshift').value = rProfile.shift;
+                document.getElementById('rshift-sector').value = rProfile.sector;
+            } else if (id === 'rnotif-overlay') {
+                document.getElementById('rn-dispatch').checked = rProfile.notif.dispatch;
+                document.getElementById('rn-remind').checked = rProfile.notif.reminders;
+                document.getElementById('rn-ops').checked = rProfile.notif.ops;
+            }
+            openSheet(id);
+        }
+
+        function saveResponderProfile() {
+            const name = document.getElementById('rpi-name').value.trim();
+            if (!name) { showToast('Full name is required.'); return; }
+            rProfile.name = name;
+            rProfile.phone = document.getElementById('rpi-phone').value.trim() || rProfile.phone;
+            rProfile.unit = document.getElementById('rpi-unit').value.trim() || rProfile.unit;
+            saveResponderProfileData(rProfile);
+            renderResponderProfile();
+            closeSheet('rpi-overlay');
+            showToast('Personal information updated.');
+        }
+
+        function saveResponderShift() {
+            rProfile.shift = document.getElementById('rshift').value;
+            rProfile.sector = document.getElementById('rshift-sector').value.trim() || rProfile.sector;
+            saveResponderProfileData(rProfile);
+            closeSheet('rshift-overlay');
+            showToast('Shift schedule updated.');
+        }
+
+        function setResponderPref(field, val) {
+            rProfile.notif[field] = val;
+            saveResponderProfileData(rProfile);
+            const labels = { dispatch: 'New dispatch alerts', reminders: 'Status reminders', ops: 'Barangay Ops updates' };
+            showToast((labels[field] || field) + (val ? ' enabled' : ' disabled'));
+        }
+
+        const RSTATIC_INFO = {
+            about: {
+                title: 'About Calye Safe',
+                body: 'Calye-Safe is a GPS-enabled incident reporting and response management system for the barangays of Santa Rosa, Laguna. This responder app receives verified assignments, navigates to incident sites, and submits proof of resolution back to Barangay Ops.<br><br><strong>Version:</strong> 1.0 (Prototype)<br><strong>Role:</strong> Field Responder'
+            },
+            terms: {
+                title: 'Terms & Conditions',
+                body: 'By using the responder app you agree to respond to assigned incidents in accordance with Barangay Ops procedures, to provide truthful updates, and to submit genuine proof of resolution.<br><br>Assignments are dispatched based on proximity and on-duty availability. You may decline an assignment, and it will be reassigned to the nearest available unit.<br><br>Misuse of the platform may result in the revocation of your responder credentials.'
+            }
+        };
+
+        function openResponderStatic(key) {
+            const info = RSTATIC_INFO[key] || RSTATIC_INFO.about;
+            document.getElementById('rinfo-title').textContent = info.title;
+            document.getElementById('rinfo-body').innerHTML = info.body;
+            openSheet('rinfo-overlay');
+        }
+
+        // ══════════════════════════ HISTORY ══════════════════════════
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.map(h => {
+                const c = CAT[h.cat] || CAT.other;
+                return `
+          <div class="history-card">
+            <div class="hc-icon"><svg viewBox="0 0 24 24" stroke="var(--success)">${c.icon}</svg></div>
+            <div class="hc-body">
+              <h4>${h.type}</h4>
+              <div class="hc-loc">📍 ${h.loc} · ${h.id}</div>
+              <div class="hc-footer">
+                <span class="hc-date">${h.resolvedDate}</span>
+                <span class="duration-tag">Resolved in ${h.duration}</span>
+              </div>
+            </div>
+          </div>
+        `;
+            }).join('');
+        }
+
+        // ══════════════════════════ DISPATCH SIMULATION ══════════════════════════
+        function manualDispatch() {
+            if (!onDuty) { showToast('Go On Duty to receive assignments'); return; }
+            triggerDispatch({
+                id: '#BRGY-2026-0051', type: 'Clogged Drain', cat: 'flood', severity: 'minor',
+                loc: 'Purok 5', barangay: 'Barangay Calye', reportedBy: 'Liza Ramos',
+                reportedTime: 'Today · ' + nowStr(), distanceKm: 0.8, etaMin: 4,
+                lat: 14.3128, lng: 121.1112, status: 'assigned',
+                desc: 'Water backing up along the drainage canal behind the covered court.',
+                timeline: [
+                    { label: 'Reported', ts: nowStr(), state: 'done' },
+                    { label: 'Verified & Assigned to you', ts: nowStr(), state: 'done' },
+                    { label: 'En Route', ts: '—', state: 'pending' },
+                    { label: 'On-Site', ts: '—', state: 'pending' },
+                    { label: 'Resolved', ts: '—', state: 'pending' },
+                ]
+            });
+        }
+
+        function triggerDispatch(job) {
+            incomingJob = job;
+            const c = CAT[job.cat] || CAT.other;
+            document.getElementById('dispatch-icon').innerHTML = `<svg viewBox="0 0 24 24" stroke="#fff">${c.icon}</svg>`;
+            document.getElementById('dispatch-type').textContent = job.type;
+            document.getElementById('dispatch-loc').textContent = job.loc + ' · ' + job.id;
+            document.getElementById('dispatch-distance').textContent = job.distanceKm + ' km';
+            document.getElementById('dispatch-severity').textContent = job.severity.charAt(0).toUpperCase() + job.severity.slice(1);
+            document.getElementById('dispatch-eta').textContent = job.etaMin + ' min';
+            const noteEl = document.getElementById('dispatch-note');
+            if (job.notes) { noteEl.textContent = '📌 ' + job.notes; noteEl.style.display = 'block'; }
+            else { noteEl.style.display = 'none'; }
+
+            const overlay = document.getElementById('dispatch-overlay');
+            const fill = document.getElementById('dispatch-countdown');
+            fill.style.transition = 'none';
+            fill.style.width = '100%';
+            overlay.classList.add('show');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    fill.style.transition = 'width 15s linear';
+                    fill.style.width = '0%';
+                });
+            });
+
+            dispatchTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                showToast('No response — assignment reassigned');
+                incomingJob = null;
+            }, 15000);
+        }
+
+        function acceptDispatch() {
+            clearTimeout(dispatchTimer);
+            document.getElementById('dispatch-overlay').classList.remove('show');
+            if (incomingJob) {
+                jobs.unshift(incomingJob);
+                saveStoredData(LS_KEY_JOBS, jobs);
+                showToast('Assignment accepted — added to queue');
+                updateJobNavIndicator();
+                renderHome();
+                renderQueue();
+                incomingJob = null;
+            }
+        }
+
+        function declineDispatch() {
+            clearTimeout(dispatchTimer);
+            document.getElementById('dispatch-overlay').classList.remove('show');
+            showToast('Assignment declined — reassigning to nearest unit');
+            incomingJob = null;
+        }
+
+        // ══════════════════════════ UTIL ══════════════════════════
+        function nowStr() {
+            const n = new Date();
+            let h = n.getHours(); const m = n.getMinutes();
+            const ap = h >= 12 ? 'PM' : 'AM';
+            h = h % 12; if (h === 0) h = 12;
+            return `${h}:${m < 10 ? '0' : ''}${m} ${ap}`;
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+        }
+
+        // ══════════════════════════ CLOCK ══════════════════════════
+        (function tick() {
+            const now = new Date();
+            let h = now.getHours(); const m = now.getMinutes();
+            h = h % 12; if (h === 0) h = 12;
+            document.getElementById('clock-time').textContent = `${h}:${m < 10 ? '0' : ''}${m}`;
+            setTimeout(tick, 30000);
+        })();
+
+        // ══════════════════════════ SUPABASE SYNC ══════════════════════════
+        CALYE_SUPABASE.init();
+
+        function fmtTime(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+                ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function syncFromSupabase() {
+            if (!CalyeDB.isOnline()) return;
+            CalyeAuth.getStatus().then(function (g) {
+                if (!g.session || !g.profile) return;
+                const p = g.profile;
+                const changed = {};
+                if (p.full_name && rProfile.name !== p.full_name) { rProfile.name = p.full_name; changed.name = p.full_name; }
+                if (p.unit_id && rProfile.unit !== p.unit_id) { rProfile.unit = p.unit_id; changed.unit = p.unit_id; }
+                if (p.shift && rProfile.shift !== p.shift) { rProfile.shift = p.shift; changed.shift = p.shift; }
+                if (p.sector && rProfile.sector !== p.sector) { rProfile.sector = p.sector; changed.sector = p.sector; }
+                if (Object.keys(changed).length || !localStorage.getItem(LS_KEY_RPROFILE)) {
+                    saveResponderProfileData(rProfile);
+                    renderResponderProfile();
+                }
+            });
+            CalyeDB.fetch('reports', { limit: 100 }).then(dbReports => {
+                CalyeDB.fetch('assignments', { limit: 100 }).then(dbAssignments => {
+                    if (!dbReports || !dbReports.length || !dbAssignments || !dbAssignments.length) return;
+                    const reportById = dbReports.reduce((m, r) => { m[r.id] = r; return m; }, {});
+                    // Match assignments to this responder via the responders table.
+                    let myAsn = dbAssignments;
+                    CalyeDB.fetch('responders', { limit: 100 }).then(responders => {
+                        if (responders && responders.length) {
+                            const match = responders.find(x => x.unit_id === rProfile.unit) || responders[0];
+                            if (match) myAsn = dbAssignments.filter(a => !a.responder_id || a.responder_id === match.id);
+                        }
+                        const activeAsn = myAsn.filter(a => a.status !== 'resolved');
+                        if (!activeAsn.length) return;
+                        const asnIds = activeAsn.map(a => a.id);
+                        CalyeDB.fetch('assignment_timeline', { filters: [['assignment_id', 'in', asnIds]], limit: 250 }).then(tlRows => {
+                            const tlByAsn = (tlRows || []).reduce((m, t) => {
+                                (m[t.assignment_id] = m[t.assignment_id] || []).push(t);
+                                return m;
+                            }, {});
+                            const mapped = activeAsn.map(a => {
+                                const r = reportById[a.report_id] || {};
+                                return {
+                                    asnId: a.id,
+                                    reportId: r.id || null,
+                                    id: r.report_no || '#BRGY',
+                                    type: r.type || 'Incident',
+                                    cat: r.category || 'other',
+                                    severity: r.severity || 'minor',
+                                    loc: r.location || 'Barangay Calye',
+                                    barangay: 'Barangay Calye',
+                                    reportedBy: r.reporter_name || 'Resident',
+                                    reportedTime: fmtTime(r.created_at),
+                                    distanceKm: a.distance_km != null ? a.distance_km : '—',
+                                    etaMin: a.eta_min != null ? a.eta_min : '—',
+                                    lat: r.lat || RESPONDER_BASE.lat,
+                                    lng: r.lng || RESPONDER_BASE.lng,
+                                    status: a.status,
+                                    desc: r.description || '',
+                                    notes: a.resolution_notes || '',
+                                    timeline: (tlByAsn[a.id] || [])
+                                        .slice().sort((x, y) => x.step - y.step)
+                                        .map(t => ({ label: t.label, ts: t.happened_at, state: t.state }))
+                                };
+                            });
+                            if (mapped.length) {
+                                // Merge DB jobs with existing local seed jobs (keep seeds without asnId).
+                                const existing = jobs.filter(j => !j.asnId);
+                                jobs = mapped.concat(existing);
+                                saveStoredData(LS_KEY_JOBS, jobs);
+                                renderHome();
+                                renderQueue();
+                                updateJobNavIndicator();
+                                if (currentJobId) renderJob();
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // ══════════════════════════ INIT ══════════════════════════
+        renderHome();
+        renderQueue();
+        renderHistory();
+        renderResponderProfile();
+        updateJobNavIndicator();
+        syncFromSupabase();
+        setInterval(syncFromSupabase, 10000);
+
+        // Demo: auto-trigger an incoming dispatch shortly after load (only when no real assignments to show)
+        // Disabled when running with zero records (FORCE_EMPTY_RECORDS).
+        setTimeout(() => { if (!FORCE_EMPTY_RECORDS && onDuty && !jobs.length) manualDispatch(); }, 8000);
+
+        // ══════════════════════════ VERIFICATION GATE ══════════════════════════
+        // Only enforced when there is a real Supabase session. Demo access
+        // (no session) and approved accounts use the app as normal.
+        CalyeAuth.init();
+        CalyeAuth.getStatus().then(function (gate) {
+            if (!gate.session) return;
+            if (gate.status === 'approved') return;
+            var shell = document.getElementById('app-shell');
+            if (!shell) return;
+            shell.innerHTML = `
+            <div style="background:#F4F6FA;height:100%;display:flex;align-items:center;justify-content:center;">
+              <div style="text-align:center;padding:28px;max-width:300px;">
+                <div style="width:84px;height:84px;border-radius:50%;background:${gate.status === 'rejected' ? '#FFEBEE' : '#FFF8E1'};display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="${gate.status === 'rejected' ? '#C62828' : '#F57C00'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    ${gate.status === 'rejected' ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' : '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'}
+                  </svg>
+                </div>
+                <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;${gate.status === 'rejected' ? 'background:#FFEBEE;color:#C62828;' : 'background:#FFF8E1;color:#F57C00;'}">${gate.status === 'rejected' ? 'Rejected' : 'Pending Approval'}</span>
+                <h2 style="font-size:18px;margin:10px 0 6px;color:#1A2332;">${gate.status === 'rejected' ? 'Verification not approved' : 'Account under review'}</h2>
+                <p style="font-size:13px;color:#5A6780;line-height:1.6;">${gate.status === 'rejected'
+                    ? 'Your valid ID could not be verified. Please sign out and upload a clearer photo.'
+                    : 'A barangay staff member is reviewing your valid ID to confirm you are an authorized responder.'}
+                </p>
+                ${gate.status === 'rejected' && gate.profile && gate.profile.review_note
+                    ? '<div style="background:#FFEBEE;border-radius:10px;padding:12px;font-size:12.5px;color:#C62828;font-weight:600;margin:14px 0;">Rejected: ' + gate.profile.review_note + '</div>'
+                    : ''}
+                ${!(gate.profile && gate.profile.id_doc_url)
+                    ? '<button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="location.href=\'responder-login.html\'">Complete Verification</button>'
+                    : ''}
+                <button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
+              </div>
+            </div>`;
+
+            // Auto-refresh while waiting: reload into the app once approved.
+            var gateTimer = setInterval(function () {
+              CalyeAuth.getStatus().then(function (gs) {
+                if (gs.status === 'approved') {
+                  clearInterval(gateTimer);
+                  location.reload();
+                }
+              });
+            }, 8000);
+        });
+    </script>
+
+</body>
+
+</html>

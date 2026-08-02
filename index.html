@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Calye-Safe — Resident Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-data.js"></script>
+  <script src="supabase-auth.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --primary: #1E3A5F;
+      --primary-light: #2A5298;
+      --accent: #F5A623;
+      --accent-dark: #D4841A;
+      --danger: #E53935;
+      --success: #2E7D32;
+      --warning: #F57C00;
+      --info: #1565C0;
+      --bg: #F4F6FA;
+      --card: #FFFFFF;
+      --text: #000000;
+      --text2: #1A1A1A;
+      --text3: #333333;
+      --border: #E2E8F4;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
+      --shadow-lg: 0 8px 32px rgba(30, 58, 95, 0.16);
+      --status-h: 44px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: #1A2332;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text);
+    }
+
+    #app-shell {
+      width: 360px;
+      height: 800px;
+      background: var(--bg);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      height: var(--status-h);
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 5;
+    }
+
+    .status-bar .time {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .status-bar .icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .status-bar .icons svg {
+      fill: #fff;
+      width: 16px;
+      height: 16px;
+    }
+
+    .login-header {
+      background: var(--primary);
+      padding: 18px 20px 26px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-header::after {
+      content: '';
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 166, 35, 0.18), transparent 70%);
+      top: -120px;
+      right: -80px;
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-logo svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .login-header h1 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    .login-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .login-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #E3F2FD;
+      color: #1565C0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+      background: var(--card);
+    }
+
+    .err-msg {
+      display: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--danger);
+      background: #FFEBEE;
+      border: 1px solid rgba(229, 57, 53, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 13px;
+      margin-bottom: 14px;
+    }
+
+    .err-msg.show {
+      display: block;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(245, 166, 35, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.985);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    .demo-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 11.5px;
+      color: var(--text3);
+      margin-top: 16px;
+    }
+
+    .demo-hint b {
+      color: var(--primary);
+    }
+
+    .foot-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.7;
+      padding: 0 8px 8px;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.5);
+      animation: pulse 1.6s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.45); }
+      70% { box-shadow: 0 0 0 8px rgba(46, 125, 50, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+    }
+
+    /* ── Sign-in / register tabs ── */
+    .auth-tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 18px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: var(--card);
+      color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    .auth-panel {
+      display: none;
+    }
+
+    .auth-panel.active {
+      display: block;
+    }
+
+    /* ── ID upload box ── */
+    .upload-box {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg);
+    }
+
+    .upload-box.filled {
+      border-style: solid;
+      border-color: var(--success);
+      background: #E8F5E9;
+    }
+
+    .upload-box svg {
+      width: 30px;
+      height: 30px;
+      stroke: var(--text3);
+      margin-bottom: 6px;
+    }
+
+    .upload-box p {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text2);
+    }
+
+    .upload-box span {
+      display: block;
+      font-size: 10.5px;
+      color: var(--text3);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .form-group select {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .btn-secondary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(30, 58, 95, 0.3);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1.5px solid var(--border);
+      box-shadow: none;
+      margin-top: 10px;
+    }
+
+    /* ── Status / gate screen ── */
+    .status-screen {
+      text-align: center;
+      padding: 24px 10px;
+    }
+
+    .status-icon {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      margin: 8px auto 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .status-screen h2 {
+      font-size: 18px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .status-screen p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    .status-chip {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      margin: 12px 0;
+      letter-spacing: 0.02em;
+    }
+
+    .status-chip.pending {
+      background: #FFF8E1;
+      color: #F57C00;
+    }
+
+    .status-chip.approved {
+      background: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .status-chip.rejected {
+      background: #FFEBEE;
+      color: #C62828;
+    }
+
+    .reason-box {
+      background: #FFEBEE;
+      border: 1px solid rgba(229, 57, 53, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12.5px;
+      color: #C62828;
+      font-weight: 600;
+      margin: 10px 0 16px;
+    }
+
+    .status-detail {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin: 16px 0;
+      text-align: left;
+    }
+
+    .status-detail .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      padding: 5px 0;
+    }
+
+    .status-detail .row span:first-child {
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    .status-detail .row span:last-child {
+      color: var(--text);
+      font-weight: 700;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-shell">
+    <div class="status-bar">
+      <div class="time" id="clock-time">9:41</div>
+      <div class="icons">
+        <svg viewBox="0 0 24 24"><path d="M2 16.76h18.5v2.74H2z"/><path d="M2 12h14.5v2.74H2z"/><path d="M2 7.24h9.5v2.74H2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M3 12l3 3 3-9 3 14 3-8 3 6 3-3"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="1" y="7" width="4" height="10" rx="1"/><rect x="7" y="4" width="4" height="16" rx="1"/><rect x="13" y="9" width="4" height="6" rx="1"/></svg>
+      </div>
+    </div>
+
+    <div class="login-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-3.6 8-10V5l-8-3-8 3v7c0 6.4 8 10 8 10z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">Calye-Safe</div>
+          <div class="brand-sub">Barangay Community App</div>
+        </div>
+      </div>
+      <h1>Resident Sign In</h1>
+      <p>Sign in to report incidents, track their live status, and receive barangay alerts.</p>
+    </div>
+
+    <div class="login-content">
+      <div class="login-card" id="auth-card">
+        <div class="role-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+          Resident account
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-signin" onclick="showPanel('signin')">Sign In</button>
+          <button class="auth-tab" id="tab-register" onclick="showPanel('register')">Create Account</button>
+        </div>
+
+        <!-- ── SIGN IN ── -->
+        <div class="auth-panel active" id="panel-signin">
+          <div class="err-msg" id="login-error">Please enter your email and password to continue.</div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input id="login-email" type="email" placeholder="resident@email.com" value="">
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input id="login-pass" type="password" placeholder="Enter your password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+          </div>
+
+          <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+            Sign In
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <div class="demo-hint">
+            <span class="pulse"></span> New here? Switch to <b onclick="showPanel('register')" style="cursor:pointer;text-decoration:underline;">Create Account</b>
+          </div>
+        </div>
+
+        <!-- ── CREATE ACCOUNT ── -->
+        <div class="auth-panel" id="panel-register">
+          <div class="err-msg" id="reg-error">Please complete the form to register.</div>
+
+          <div class="form-group">
+            <label>Full name</label>
+            <input id="reg-name" type="text" placeholder="Juan Dela Cruz">
+          </div>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input id="reg-email" type="email" placeholder="resident@email.com">
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <input id="reg-pass" type="password" placeholder="At least 6 characters">
+          </div>
+
+          <div class="form-group">
+            <label>Address / Purok</label>
+            <input id="reg-address" type="text" placeholder="e.g. Purok 3, Mercado St.">
+          </div>
+
+          <div class="form-group">
+            <label>Valid ID type</label>
+            <select id="reg-idtype">
+              <option value="National ID">National ID</option>
+              <option value="Driver's License">Driver's License</option>
+              <option value="Passport">Passport</option>
+              <option value="UMID">UMID</option>
+              <option value="Postal ID">Postal ID</option>
+              <option value="Other Government ID">Other Government ID</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Upload a photo of your valid ID</label>
+            <div class="upload-box" id="id-upload-box" onclick="document.getElementById('id-file').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p id="id-upload-text">Tap to upload a photo of your ID</p>
+              <span>JPG, PNG or WebP</span>
+            </div>
+            <input type="file" id="id-file" accept="image/*" style="display:none;" onchange="handleIdFile(this)">
+          </div>
+
+          <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
+            Create Account
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </button>
+
+          <div class="demo-hint">
+            Accounts are approved by the barangay before you can report incidents.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VERIFICATION STATUS / GATE ── -->
+      <div class="login-card" id="status-card" style="display:none;"></div>
+
+      <div class="foot-note">
+        Barangay staff and responder dashboards are accessed<br>through their own authorized devices only.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    CalyeAuth.init();
+    let selectedIdFile = null;
+    let gatePollTimer = null;
+
+    function showErr(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    function clearErr(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    function showPanel(name) {
+      document.getElementById('tab-signin').classList.toggle('active', name === 'signin');
+      document.getElementById('tab-register').classList.toggle('active', name === 'register');
+      document.getElementById('panel-signin').classList.toggle('active', name === 'signin');
+      document.getElementById('panel-register').classList.toggle('active', name === 'register');
+      clearErr('login-error');
+      clearErr('reg-error');
+    }
+
+    function setBtn(id, busy, text) {
+      const btn = document.getElementById(id);
+      btn.disabled = busy;
+      btn.textContent = text;
+    }
+
+    function handleIdFile(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const ext = (file.name || '').split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'webp'].indexOf(ext) === -1) {
+        showErr('reg-error', 'Please upload a JPG, PNG or WebP image of your ID.');
+        input.value = '';
+        return;
+      }
+      selectedIdFile = file;
+      const box = document.getElementById('id-upload-box');
+      box.classList.add('filled');
+      document.getElementById('id-upload-text').textContent = file.name;
+    }
+
+    let gateProfile = null;
+    let gateIdFile = null;
+
+    function handleGateIdFile(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      gateIdFile = file;
+      const box = document.getElementById('gate-upload-box');
+      if (box) box.classList.add('filled');
+      const txt = document.getElementById('gate-upload-text');
+      if (txt) txt.textContent = file.name;
+    }
+
+    function submitGateVerification() {
+      const address = document.getElementById('gate-address').value.trim();
+      const idType = document.getElementById('gate-idtype').value;
+      if (!gateIdFile) { showErr('gate-error', 'Please upload a photo of your valid ID.'); return; }
+      clearErr('gate-error');
+      const prof = gateProfile || {};
+      CalyeAuth.uploadId(gateIdFile).then(up => {
+        if (up.error) { showErr('gate-error', 'Upload failed: ' + up.error); return; }
+        CalyeAuth.submitVerification({
+          role: 'resident',
+          full_name: prof.full_name || '',
+          email: prof.email || '',
+          address: address,
+          employment_info: null,
+          id_doc_url: up.url,
+          id_type: idType
+        }).then(sub => {
+          if (sub.error) { showErr('gate-error', 'Could not submit: ' + sub.error); return; }
+          CalyeAuth.getStatus().then(st => showGate(st.status, st.profile, (st.profile && st.profile.review_note) || ''));
+        });
+      });
+    }
+
+    function showGate(status, profile, reason) {
+      document.getElementById('auth-card').style.display = 'none';
+      const card = document.getElementById('status-card');
+      card.style.display = 'block';
+      const st = status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'pending';
+      gateProfile = profile || null;
+      const chip = { approved: 'Approved', pending: 'Pending Approval', rejected: 'Rejected' }[st];
+      const iconBg = { approved: '#E8F5E9', pending: '#FFF8E1', rejected: '#FFEBEE' }[st];
+      const iconColor = { approved: '#2E7D32', pending: '#F57C00', rejected: '#C62828' }[st];
+      const icon = st === 'approved'
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="' + iconColor + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : st === 'rejected'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="' + iconColor + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="' + iconColor + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+      const reasonHtml = st === 'rejected' && reason
+        ? '<div class="reason-box">Rejected: ' + reason + '</div>'
+        : '';
+
+      const detailRows = [
+        profile && profile.full_name ? '<div class="row"><span>Name</span><span>' + profile.full_name + '</span></div>' : '',
+        '<div class="row"><span>Status</span><span>' + chip + '</span></div>'
+      ].join('');
+
+      // If pending/rejected with no ID on file yet, show the upload form so the
+      // resident can complete verification (needed when email confirmation
+      // interrupted the register flow before the ID was submitted).
+      const needsUpload = st !== 'approved' && !(profile && profile.id_doc_url);
+
+      let bodyHtml = '';
+      if (needsUpload) {
+        bodyHtml = `
+          <p>${st === 'rejected'
+            ? 'Your valid ID could not be verified. Upload a clearer photo to resubmit.'
+            : 'Upload your valid ID to complete your verification. A barangay staff member will review it.'}</p>
+          ${st === 'rejected' ? reasonHtml : ''}
+          <div class="form-group" style="margin-top:14px;">
+            <label>Address / Purok</label>
+            <input id="gate-address" type="text" value="${profile && profile.address ? profile.address : ''}" placeholder="e.g. Purok 3, Mercado St.">
+          </div>
+          <div class="form-group">
+            <label>Valid ID type</label>
+            <select id="gate-idtype">
+              <option value="National ID">National ID</option>
+              <option value="Driver's License">Driver's License</option>
+              <option value="Passport">Passport</option>
+              <option value="UMID">UMID</option>
+              <option value="Postal ID">Postal ID</option>
+              <option value="Other Government ID">Other Government ID</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Upload a photo of your valid ID</label>
+            <div class="upload-box" id="gate-upload-box" onclick="document.getElementById('gate-id-file').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p id="gate-upload-text">Tap to upload a photo of your ID</p>
+              <span>JPG, PNG or WebP</span>
+            </div>
+            <input type="file" id="gate-id-file" accept="image/*" style="display:none;" onchange="handleGateIdFile(this)">
+            <div class="form-error" id="gate-error"></div>
+          </div>
+          <button class="btn btn-primary" onclick="submitGateVerification()" style="margin-top:6px;">Submit for Review</button>`;
+      } else if (st === 'pending') {
+        bodyHtml = '<p>A barangay staff member is reviewing your valid ID to confirm your residency in Barangay Calye. This usually takes a few minutes.</p>';
+      } else if (st === 'approved') {
+        bodyHtml = '<p>Your identity has been verified. You can now report incidents and track their live status.</p>';
+      }
+
+      card.innerHTML = `
+        <div class="status-screen">
+          <div class="status-icon" style="background:${iconBg};">${icon}</div>
+          <span class="status-chip ${st}">${chip}</span>
+          <h2>${st === 'approved' ? 'Welcome!' : st === 'rejected' ? 'Verification not approved' : needsUpload ? 'Complete your verification' : 'Account under review'}</h2>
+          ${bodyHtml}
+          ${st === 'pending' && !needsUpload ? '<div class="status-detail">' + detailRows + '</div>' : ''}
+          ${!needsUpload ? '<button class="btn btn-ghost" onclick="doLogout()">Sign Out</button>' : ''}
+        </div>
+      `;
+      if (profile && profile.id_type && needsUpload) {
+        const sel = document.getElementById('gate-idtype');
+        if (sel) sel.value = profile.id_type;
+      }
+
+      // Auto-refresh while waiting: re-check status until approved/rejected.
+      if (gatePollTimer) { clearInterval(gatePollTimer); gatePollTimer = null; }
+      if (st === 'pending' && !needsUpload) {
+        gatePollTimer = setInterval(function () {
+          CalyeAuth.getStatus().then(function (gs) {
+            if (gs.status === 'approved') {
+              clearInterval(gatePollTimer);
+              gatePollTimer = null;
+              location.href = 'calye-safe-community.html';
+            } else if (gs.status === 'rejected') {
+              clearInterval(gatePollTimer);
+              gatePollTimer = null;
+              showGate(gs.status, gs.profile, (gs.profile && gs.profile.review_note) || '');
+            }
+          });
+        }, 8000);
+      }
+    }
+
+    function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      if (!email || !pass) { showErr('login-error', 'Please enter your email and password to continue.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('login-error', 'Please enter a valid email address.'); return; }
+      clearErr('login-error');
+      setBtn('login-btn', true, 'Signing in…');
+
+      CalyeAuth.signIn(email, pass).then(res => {
+        if (res.error) {
+          setBtn('login-btn', false, 'Sign In');
+          showErr('login-error', res.error);
+          return;
+        }
+        // Fall back to the demo role so the prototype always reaches the app.
+        try { sessionStorage.setItem('calye_safe_role', 'resident'); } catch (e) { /* ignore */ }
+        CalyeAuth.getStatus().then(st => {
+          if (st.status === 'approved') {
+            location.href = 'calye-safe-community.html';
+          } else {
+            showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
+          }
+        });
+      });
+    }
+
+    function doRegister() {
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const address = document.getElementById('reg-address').value.trim();
+      const idType = document.getElementById('reg-idtype').value;
+
+      if (!name) { showErr('reg-error', 'Please enter your full name.'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('reg-error', 'Please enter a valid email address.'); return; }
+      if (!pass || pass.length < 6) { showErr('reg-error', 'Password must be at least 6 characters.'); return; }
+      if (!address) { showErr('reg-error', 'Please enter your address / purok.'); return; }
+      if (!selectedIdFile) { showErr('reg-error', 'Please upload a photo of your valid ID.'); return; }
+      clearErr('reg-error');
+
+      setBtn('reg-btn', true, 'Creating account…');
+      CalyeAuth.signUp({ role: 'resident', full_name: name, email: email, password: pass }).then(reg => {
+        if (reg.error) { setBtn('reg-btn', false, 'Create Account'); showErr('reg-error', reg.error); return; }
+
+        // If email confirmation is enabled, there is no session yet — the
+        // user must confirm by email and then sign in to continue.
+        if (!reg.session) {
+          setBtn('reg-btn', false, 'Create Account');
+          showErr('reg-error', 'Check your email to confirm your account, then sign in.');
+          return;
+        }
+
+        CalyeAuth.uploadId(selectedIdFile).then(up => {
+          CalyeAuth.submitVerification({
+            role: 'resident', full_name: name, email: email, address: address,
+            employment_info: null, id_doc_url: up.error ? '' : up.url, id_type: idType
+          }).then(() => {
+            try { sessionStorage.setItem('calye_safe_role', 'resident'); } catch (e) { /* ignore */ }
+            CalyeAuth.getStatus().then(st => showGate(st.status, st.profile, (st.profile && st.profile.review_note) || ''));
+          });
+        });
+      });
+    }
+
+    function doLogout() {
+      CalyeAuth.signOut().then(() => location.reload());
+    }
+
+    (function tick() {
+      const now = new Date();
+      let h = now.getHours(); const m = now.getMinutes();
+      const ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12; if (h === 0) h = 12;
+      document.getElementById('clock-time').textContent = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
+      setTimeout(tick, 30000);
+    })();
+
+    // If a verified session already exists, go straight to the app.
+    CalyeAuth.getStatus().then(st => {
+      if (st.status === 'approved') {
+        location.href = 'calye-safe-community.html';
+      } else if (st.session) {
+        showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
+      }
+    });
+  </script>
+</body>
+</html>

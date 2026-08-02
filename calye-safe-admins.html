@@ -1,0 +1,5170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calye Safe — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-data.js"></script>
+  <script src="supabase-auth.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="santarosa-boundary.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #1E3A5F;
+      --primary-light: #2A5298;
+      --primary-dark: #1E3A5F;
+      --accent: #F5A623;
+      --accent-dark: #D4841A;
+      --accent-light: #FDE9BB;
+      --danger: #E53935;
+      --danger-light: #FDECEA;
+      --success: #2E7D32;
+      --success-light: #E8F5E9;
+      --warning: #F57C00;
+      --warning-light: #FFF3E0;
+      --info: #1565C0;
+      --info-light: #E3F0FF;
+      --crime: #7B2CBF;
+      --crime-light: #F1E6FB;
+      --fire: #D84315;
+      --fire-light: #FBE6E0;
+      --accident: #AD1457;
+      --accident-light: #FBE3ED;
+
+      --bg: #F4F6FA;
+      --surface: #FFFFFF;
+      --surface2: #F4F6FA;
+      --surface3: #EAF0FB;
+      --border: #E2E8F4;
+      --border2: rgba(30, 58, 95, 0.18);
+      --card: #FFFFFF;
+      --text: #000000;
+      --text2: #1A1A1A;
+      --text3: #333333;
+
+      --radius: 14px;
+      --radius-sm: 9px;
+      --shadow: 0 2px 16px rgba(30, 58, 95, 0.08);
+      --shadow-md: 0 4px 24px rgba(30, 58, 95, 0.12);
+      --sidebar-w: 248px;
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Nunito Sans', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── LIVE PULSE — signals the incident network is actively monitoring ── */
+    .pulse-dot {
+      position: relative;
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .pulse-dot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(1);
+        opacity: 0.55;
+      }
+
+      100% {
+        transform: scale(3.6);
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .pulse-dot::after {
+        animation: none;
+        display: none;
+      }
+    }
+
+    /* ── LAYOUT ── */
+    #shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+      box-shadow: 2px 0 12px rgba(26, 86, 219, 0.05);
+    }
+
+    #sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 60%, transparent 100%);
+      opacity: 0.18;
+    }
+
+    .sidebar-logo {
+      padding: 26px 20px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo .badge-logo {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .sidebar-logo .icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(26, 86, 219, 0.35);
+    }
+
+    .sidebar-logo .icon-wrap svg {
+      width: 20px;
+      height: 20px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .sidebar-logo .brand {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      font-size: 17px;
+      color: var(--primary);
+      letter-spacing: -0.03em;
+    }
+
+    .sidebar-logo .sub {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .nav-section {
+      padding: 16px 12px 8px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-section::-webkit-scrollbar {
+      width: 0;
+    }
+
+    .nav-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0 10px;
+      margin-bottom: 5px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.16s;
+      margin-bottom: 1px;
+      color: var(--text2);
+      font-size: 13.5px;
+      font-weight: 600;
+      position: relative;
+      user-select: none;
+    }
+
+    .nav-item svg {
+      width: 17px;
+      height: 17px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      flex-shrink: 0;
+    }
+
+    .nav-item:hover {
+      background: var(--surface3);
+      color: var(--primary);
+    }
+
+    .nav-item.active {
+      background: rgba(30, 58, 95, 0.08);
+      color: var(--primary);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 60%;
+      background: var(--accent);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .nav-item .badge-count {
+      margin-left: auto;
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .admin-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--surface3);
+    }
+
+    .admin-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .admin-info .name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .admin-info .role {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    /* ── MAIN ── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── TOPBAR ── */
+    #topbar {
+      height: 62px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      flex-shrink: 0;
+      box-shadow: 0 1px 8px rgba(26, 86, 219, 0.05);
+      position: relative;
+    }
+
+    #topbar::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 40%, var(--accent) 75%, transparent 100%);
+      opacity: 0.22;
+    }
+
+    .topbar-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar-left .page-title {
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-left .breadcrumb {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-left .breadcrumb .pulse-dot {
+      color: var(--success);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      cursor: text;
+      transition: border 0.2s;
+      width: 220px;
+    }
+
+    .topbar-search:focus-within {
+      border-color: var(--primary);
+    }
+
+    .topbar-search svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text3);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .topbar-search input {
+      background: none;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      width: 100%;
+      font-weight: 600;
+    }
+
+    .topbar-search input::placeholder {
+      color: var(--text3);
+    }
+
+    .topbar-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.16s;
+      position: relative;
+    }
+
+    .topbar-btn:hover {
+      background: var(--surface3);
+      border-color: var(--border2);
+    }
+
+    .topbar-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text2);
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .topbar-btn .dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--danger);
+      border: 2px solid var(--surface);
+    }
+
+    /* ── CONTENT AREA ── */
+    #content {
+      flex: 1;
+      overflow: hidden;
+      padding: 22px 26px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #content:has(#page-map.active-page) {
+      padding: 16px 20px;
+    }
+
+    .col-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .col-left::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .col-left::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    .col-right {
+      width: 400px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+    }
+
+    .col-right::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .col-right::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 18px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      transition: all 0.2s;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-card:hover {
+      border-color: var(--border2);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .stat-card .glow {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      opacity: 0.07;
+      filter: blur(25px);
+    }
+
+    .stat-card .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .stat-card .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-card .icon svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 1.8;
+      fill: none;
+    }
+
+    .stat-card .trend {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .trend.up {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .trend.down {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .stat-card .val {
+      font-family: 'Nunito', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .stat-card .lbl {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 5px;
+      font-weight: 700;
+    }
+
+    .stat-card .sub {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    /* ── SECTION HEADER ── */
+    .sec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sec-title {
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .sec-action {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .sec-action:hover {
+      opacity: 0.7;
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    /* ── PRIORITY CARD ── */
+    .priority-card {
+      background: var(--surface);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 2px 16px rgba(239, 68, 68, 0.06);
+    }
+
+    .priority-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--danger), #FB923C);
+    }
+
+    .priority-header {
+      padding: 14px 18px;
+      background: rgba(239, 68, 68, 0.04);
+      border-bottom: 1px solid rgba(239, 68, 68, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .priority-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .priority-id {
+      font-family: 'Nunito', sans-serif;
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 700;
+    }
+
+    .priority-body {
+      padding: 18px;
+    }
+
+    .priority-type-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .priority-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--danger-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .priority-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--danger);
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .priority-type-info h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .priority-type-info p {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    .priority-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .meta-item {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+    }
+
+    .meta-item .meta-label {
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .meta-item .meta-val {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .priority-desc {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .priority-desc .desc-label {
+      font-size: 10px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .priority-desc p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .response-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-respond {
+      flex: 1;
+      padding: 11px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.18s;
+    }
+
+    .btn-respond.primary {
+      background: linear-gradient(135deg, var(--danger), #DC2626);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-respond.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-respond.secondary {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-respond.secondary:hover {
+      background: var(--surface3);
+      color: var(--text);
+    }
+
+    .btn-respond.success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-respond.success:hover {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-respond svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-step {
+      display: flex;
+      gap: 12px;
+      position: relative;
+    }
+
+    .tl-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 26px;
+      flex-shrink: 0;
+    }
+
+    .tl-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface2);
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    .tl-circle.done {
+      background: var(--success-light);
+      border-color: var(--success);
+    }
+
+    .tl-circle.done svg {
+      stroke: var(--success);
+    }
+
+    .tl-circle.active {
+      background: var(--info-light);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0 rgba(30, 58, 95, 0.25);
+      animation: borderPulse 2s infinite;
+    }
+
+    .tl-circle.active svg {
+      stroke: var(--primary);
+    }
+
+    @keyframes borderPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(30, 58, 95, 0.25);
+      }
+
+      50% {
+        box-shadow: 0 0 0 5px rgba(30, 58, 95, 0);
+      }
+    }
+
+    .tl-circle svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--text3);
+      fill: none;
+      stroke-width: 2.5;
+    }
+
+    .tl-line {
+      flex: 1;
+      width: 2px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .tl-line.done {
+      background: rgba(16, 185, 129, 0.35);
+    }
+
+    .tl-content {
+      padding: 3px 0 18px;
+    }
+
+    .tl-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .tl-time {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .tl-note {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    .badge.urgent {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .badge.urgent::before {
+      animation: pulse-fade 1.4s ease-in-out infinite;
+    }
+
+    .badge.responding {
+      background: var(--info-light);
+      color: var(--primary);
+    }
+
+    .badge.responding::before {
+      animation: pulse-fade 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse-fade {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .badge.resolved {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge.pending {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    /* ── REPORT TABLE ── */
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .report-table th {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 8px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .report-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .report-table tr:hover td {
+      background: var(--surface3);
+    }
+
+    .report-table .report-num {
+      font-family: 'Nunito', sans-serif;
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 700;
+    }
+
+    .report-table .report-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .report-table .report-loc {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .report-table .report-time {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 7px;
+      height: 80px;
+      padding: 0 4px;
+    }
+
+    .bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.5s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .bar-label {
+      font-size: 9px;
+      color: var(--text3);
+      font-weight: 700;
+    }
+
+    /* ── CATEGORY PILLS ── */
+    .cat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cat-label {
+      font-size: 12px;
+      color: var(--text2);
+      width: 110px;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .cat-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--surface3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .cat-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .cat-count {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 700;
+      width: 20px;
+      text-align: right;
+    }
+
+    /* ── RESPONDER LIST ── */
+    .responder-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .responder-item:last-child {
+      border-bottom: none;
+    }
+
+    .responder-av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .responder-info .rname {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .responder-info .rstatus {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    .r-badge {
+      margin-left: auto;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 800;
+    }
+
+    .r-badge.on-duty {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .r-badge.responding {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .r-badge.off {
+      background: var(--surface3);
+      color: var(--text3);
+    }
+
+    /* ── ALERT BANNER ── */
+    .alert-strip {
+      background: var(--warning-light);
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .alert-strip svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--warning);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .alert-strip p {
+      font-size: 12px;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .alert-strip strong {
+      color: var(--warning);
+      font-weight: 800;
+    }
+
+    /* ── MAP SECTION ── */
+    .map-container {
+      width: 100%;
+      height: 480px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+    }
+
+    .map-container #dash-map-leaflet {
+      width: 100%;
+      height: 100%;
+      border: none;
+      z-index: 1;
+    }
+
+    .map-search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .map-input {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      font-weight: 600;
+    }
+
+    .map-input:focus {
+      border-color: var(--primary);
+    }
+
+    .map-input::placeholder {
+      color: var(--text3);
+    }
+
+    .map-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--primary);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.16s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .map-btn:hover {
+      background: var(--primary-light);
+    }
+
+    .map-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .map-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface3);
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-loading p {
+      font-size: 12px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    .map-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 18px;
+      width: 520px;
+      max-width: 90vw;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(26, 86, 219, 0.15);
+    }
+
+    .modal-head {
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h3 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--surface3);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text2);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .modal-body {
+      padding: 22px;
+    }
+
+    .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+    }
+
+    .modal-btn.cancel {
+      background: var(--surface3);
+      color: var(--text2);
+    }
+
+    .modal-btn.cancel:hover {
+      background: var(--surface2);
+    }
+
+    .modal-btn.confirm {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+    }
+
+    .modal-btn.confirm:hover {
+      transform: translateY(-1px);
+    }
+
+    .modal-select,
+    .modal-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border 0.2s;
+      font-weight: 600;
+    }
+
+    .modal-select:focus,
+    .modal-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .modal-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .modal-label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .modal-form-group {
+      margin-bottom: 14px;
+    }
+
+    /* dispatch modal report info */
+    .dispatch-report {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .dispatch-report-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .dispatch-report-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .dispatch-report-id {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      background: rgba(30, 58, 95, 0.08);
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .dispatch-report-row {
+      display: flex;
+      gap: 10px;
+      padding: 7px 0;
+      border-top: 1px solid var(--border);
+    }
+    .dispatch-report-row:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+    .dispatch-report-row-label {
+      width: 92px;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-top: 1px;
+    }
+    .dispatch-report-row-val {
+      font-size: 12.5px;
+      color: var(--text);
+      font-weight: 600;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .dispatch-report-photo {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      margin-top: 10px;
+      display: block;
+      background: var(--bg);
+      cursor: zoom-in;
+    }
+    .dispatch-report-photo-empty {
+      margin-top: 10px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+    }
+
+    /* dispatch success message */
+    .dispatch-success {
+      background: var(--success-light);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dispatch-success svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--success);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .dispatch-success .ds-text {
+      font-size: 13px;
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .dispatch-success .ds-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 26px;
+      right: 26px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-md);
+      z-index: 200;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(.22, 1, .36, 1);
+      font-size: 13px;
+      color: var(--text);
+      pointer-events: none;
+      max-width: 300px;
+      font-weight: 600;
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #toast .toast-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #toast.success .toast-icon {
+      background: var(--success-light);
+    }
+
+    #toast.success .toast-icon svg {
+      stroke: var(--success);
+    }
+
+    #toast.info .toast-icon {
+      background: var(--info-light);
+    }
+
+    #toast.info .toast-icon svg {
+      stroke: var(--primary);
+    }
+
+    /* ── SCROLLBAR ── */
+    .scroll-area {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .scroll-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scroll-area::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    /* ── FADE IN ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel,
+    .stat-card,
+    .priority-card {
+      animation: fadeUp 0.35s ease both;
+    }
+
+    .stat-card:nth-child(1) {
+      animation-delay: 0.05s;
+    }
+
+    .stat-card:nth-child(2) {
+      animation-delay: 0.10s;
+    }
+
+    .stat-card:nth-child(3) {
+      animation-delay: 0.15s;
+    }
+
+    .stat-card:nth-child(4) {
+      animation-delay: 0.20s;
+    }
+
+    /* ── NOTIFICATIONS PANEL ── */
+    #notif-panel {
+      position: fixed;
+      top: 62px;
+      right: 12px;
+      width: 340px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      z-index: 90;
+      display: none;
+      overflow: hidden;
+      animation: fadeUp 0.2s ease both;
+    }
+
+    #notif-panel.open {
+      display: block;
+    }
+
+    .notif-panel-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .notif-panel-head h4 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .notif-mark-read {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .notif-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .notif-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .notif-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .notif-item:last-child {
+      border-bottom: none;
+    }
+
+    .notif-item:hover {
+      background: var(--surface3);
+    }
+
+    .notif-item.unread {
+      background: rgba(30, 58, 95, 0.03);
+    }
+
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .notif-dot.read {
+      background: var(--border);
+    }
+
+    .notif-icon-wrap {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .notif-icon-wrap svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .notif-text .ntitle {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .notif-text .ntime {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .notif-text .nbody {
+      font-size: 11px;
+      color: var(--text2);
+      font-weight: 500;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* ── PAGE PANELS (for sidebar nav click) ── */
+    .page-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .page-panel.active-page {
+      display: flex;
+    }
+
+    #page-dashboard {
+      display: none;
+      gap: 22px;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+    }
+
+    #page-dashboard.active-page {
+      display: flex;
+    }
+
+    #page-map.active-page {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 1000%;
+    }
+
+    .page-coming {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--text3);
+    }
+
+    .page-coming svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--border);
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    .page-coming h2 {
+      font-family: 'Nunito', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text2);
+    }
+
+    .page-coming p {
+      font-size: 13px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    .ftab {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.18s;
+      font-family: inherit;
+    }
+
+    .ftab:hover {
+      background: var(--surface3);
+      color: var(--text2);
+    }
+
+    .ftab.active {
+      background: rgba(30, 58, 95, 0.08);
+      color: var(--primary);
+      border-color: rgba(30, 58, 95, 0.25);
+    }
+
+    /* ── SCROLLABLE FULL PAGES ── */
+    .page-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-right: 6px;
+    }
+
+    .page-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .page-scroll::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    /* ── REPORTS PAGE: category groups ── */
+    .report-group-label {
+      padding: 11px 18px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-group-label .grp-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .report-group-label .grp-count {
+      margin-left: auto;
+      background: var(--surface3);
+      color: var(--text2);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    .cat-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .cat-tag.major {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .cat-tag.minor {
+      background: var(--info-light);
+      color: var(--primary);
+    }
+
+    /* ── ANNOUNCEMENTS ── */
+    .ann-layout {
+      display: flex;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .ann-composer {
+      width: 380px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ann-list-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .ann-list-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ann-list-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .ann-list-scroll::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    .ann-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+    }
+
+    .ann-item-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .ann-item-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .ann-item-body {
+      font-size: 12px;
+      color: var(--text2);
+      font-weight: 500;
+      line-height: 1.55;
+      margin-bottom: 9px;
+    }
+
+    .ann-item-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ann-item-date {
+      font-size: 10.5px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    .ann-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ann-cat-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    .ann-cat-badge.general {
+      background: var(--info-light);
+      color: var(--primary);
+    }
+
+    .ann-cat-badge.advisory {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .ann-cat-badge.emergency {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .ann-cat-badge.event {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .ann-mini-btn {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.16s;
+    }
+
+    .ann-mini-btn:hover {
+      background: var(--surface3);
+    }
+
+    .ann-mini-btn.danger {
+      color: var(--danger);
+      border-color: rgba(229, 57, 53, 0.25);
+    }
+
+    .ann-mini-btn.danger:hover {
+      background: var(--danger-light);
+    }
+
+    /* ── VERIFY USERS ── */
+    .verify-filter {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 13px;
+      border-radius: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.16s;
+    }
+
+    .verify-reload-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.16s;
+    }
+    .verify-reload-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .verify-filter.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .verify-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.16s;
+    }
+
+    .verify-card:hover {
+      border-color: var(--border2);
+      background: var(--surface3);
+    }
+
+    .verify-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+    }
+
+    .verify-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .verify-card-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .verify-card-email {
+      font-size: 10.5px;
+      color: var(--text3);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .verify-chip {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .verify-chip.pending {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .verify-chip.approved {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .verify-chip.rejected {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .verify-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 9px;
+      flex-wrap: wrap;
+    }
+
+    .verify-meta-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+
+    .verify-meta-tag.role-resident {
+      color: var(--info);
+      background: var(--info-light);
+      border-color: rgba(21, 101, 192, 0.18);
+    }
+
+    .verify-meta-tag.role-responder {
+      color: var(--success);
+      background: var(--success-light);
+      border-color: rgba(46, 125, 50, 0.18);
+    }
+
+    .id-photo {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      object-fit: cover;
+      max-height: 300px;
+    }
+
+    .id-photo-placeholder {
+      width: 100%;
+      height: 180px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      border: 2px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text3);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .verify-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .verify-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.16s;
+    }
+
+    .verify-btn.approve {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .verify-btn.reject {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid rgba(229, 57, 53, 0.25);
+    }
+
+    .verify-detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 5px;
+    }
+
+    .verify-detail-value {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    /* ── FORM INPUTS (shared) ── */
+    .modal-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border 0.2s;
+      font-weight: 600;
+    }
+
+    .modal-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* ── TOGGLE SWITCH ── */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--border2);
+      border-radius: 24px;
+      transition: 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+      background: var(--primary);
+    }
+
+    .toggle-switch input:checked+.toggle-slider::before {
+      transform: translateX(18px);
+    }
+
+    /* ── SETTINGS ── */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-row .srow-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .settings-row .srow-sub {
+      font-size: 11.5px;
+      color: var(--text3);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .settings-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .settings-form-grid.full {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-field-label {
+      font-size: 11px;
+      color: var(--text3);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .settings-save-row {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 14px;
+      margin-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .settings-save-btn {
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(30, 58, 95, 0.25);
+      transition: all 0.18s;
+    }
+
+    .settings-save-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .danger-zone {
+      border: 1px solid rgba(229, 57, 53, 0.25) !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="shell">
+
+    <!-- ── SIDEBAR ── -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="badge-logo">
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div>
+            <div class="brand">Calye Safe</div>
+            <div class="sub">Admin Console</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <div class="nav-item active" onclick="navTo('dashboard',this)">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          Overview
+        </div>
+        <div class="nav-item" onclick="navTo('reports',this)">
+          <svg viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          All Reports
+          <span class="badge-count" id="reports-nav-count">0</span>
+        </div>
+        <div class="nav-item" onclick="navTo('map',this); showIncidentMap()">
+          <svg viewBox="0 0 24 24">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+            <line x1="8" y1="2" x2="8" y2="18" />
+            <line x1="16" y1="6" x2="16" y2="22" />
+          </svg>
+          Incident Map
+        </div>
+        <div class="nav-item" onclick="navTo('announcements',this)">
+          <svg viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 01-3.46 0" />
+          </svg>
+          Announcements
+        </div>
+        <div class="nav-item" onclick="navTo('verify',this); loadVerifyQueue()">
+          <svg viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <path d="M17 11l2 2 4-4" />
+          </svg>
+          Verify Users
+          <span class="badge-count verify-badge" style="display:none;">0</span>
+        </div>
+
+        <div class="nav-label" style="margin-top:14px;">Management</div>
+        <div class="nav-item" onclick="navTo('analytics',this)">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+          Analytics
+        </div>
+        <div class="nav-item" onclick="navTo('settings',this)">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4M20 12h2M17.66 18.66l1.41-1.41M5.34 5.34L3.93 3.93M12 2v2M12 20v2" />
+          </svg>
+          Settings
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="admin-chip">
+          <div class="admin-avatar">BA</div>
+          <div class="admin-info">
+            <div class="name">Brgy. Admin</div>
+            <div class="role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN AREA ── -->
+    <div id="main">
+
+      <!-- TOPBAR -->
+      <div id="topbar">
+        <div class="topbar-left">
+          <div class="page-title">Dashboard Overview</div>
+          <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-search">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input placeholder="Search reports…" oninput="searchReports(this.value)">
+          </div>
+          <div class="topbar-btn" id="notif-btn" onclick="toggleNotifPanel()">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" />
+            </svg>
+            <div class="dot"></div>
+          </div>
+          <div class="topbar-btn" onclick="navTo('settings',this)" title="Settings">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4M20 12h2M17.66 18.66l1.41-1.41M5.34 5.34L3.93 3.93M12 2v2M12 20v2" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div id="content">
+
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page-panel active-page">
+
+          <!-- LEFT COLUMN -->
+          <div class="col-left">
+
+            <!-- STAT CARDS -->
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="glow" style="background:var(--accent);"></div>
+                <div class="top">
+                  <div class="icon" style="background:rgba(245,158,11,0.12);">
+                    <svg viewBox="0 0 24 24" style="stroke:var(--accent);">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <span class="trend up">+12%</span>
+                </div>
+                <div class="val" id="dash-total-reports">0</div>
+                <div class="lbl">Total Reports</div>
+                <div class="sub">All time · Barangay Calye</div>
+              </div>
+              <div class="stat-card">
+                <div class="glow" style="background:var(--primary);"></div>
+                <div class="top">
+                  <div class="icon" style="background:var(--info-light);">
+                    <svg viewBox="0 0 24 24" style="stroke:var(--primary);">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <span class="trend up">Fast</span>
+                </div>
+                <div class="val" id="dash-avg-response">0m</div>
+                <div class="lbl">Avg. Response</div>
+                <div class="sub">Last 7 days</div>
+              </div>
+              <div class="stat-card">
+                <div class="glow" style="background:var(--success);"></div>
+                <div class="top">
+                  <div class="icon" style="background:var(--success-light);">
+                    <svg viewBox="0 0 24 24" style="stroke:var(--success);">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <span class="trend up">89%</span>
+                </div>
+                <div class="val" id="dash-resolved">0</div>
+                <div class="lbl">Resolved</div>
+                <div class="sub">This month</div>
+              </div>
+            </div>
+
+            <!-- ACTIVE ALERT -->
+            <div class="alert-strip">
+              <svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <p><strong>Flood Advisory Active</strong> — PAGASA warns of possible flooding in Mercado Village. 3
+                related reports pending response.</p>
+            </div>
+
+            <!-- PRIORITY REPORT -->
+            <div>
+              <div class="sec-header">
+                <div class="sec-title">Current Report Needing Response</div>
+              </div>
+              <div class="priority-card" id="priority-card">
+                <!-- filled by renderPriorityCard() -->
+              </div>
+            </div>
+
+            <!-- ALL REPORTS TABLE -->
+            <div class="panel" style="animation-delay:0.25s;">
+              <div class="panel-header">
+                <div class="sec-title">All Reports</div>
+                <div class="filter-tabs">
+                  <button class="ftab active" onclick="filterTable('all',this)">All</button>
+                  <button class="ftab" onclick="filterTable('urgent',this)">Urgent</button>
+                  <button class="ftab" onclick="filterTable('responding',this)">Responding</button>
+                  <button class="ftab" onclick="filterTable('resolved',this)">Resolved</button>
+                </div>
+              </div>
+              <table class="report-table" id="report-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Incident</th>
+                    <th>Location</th>
+                    <th>Filed</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="table-body">
+                </tbody>
+              </table>
+            </div>
+
+          </div><!-- /col-left -->
+
+          <!-- RIGHT COLUMN -->
+          <div class="col-right">
+
+            <!-- INCIDENT MAP -->
+            <div class="panel" style="animation-delay:0.05s;">
+              <div class="panel-header">
+                <div class="sec-title">Incident Map</div>
+                <div class="sec-action" onclick="loadDefaultMap()">Reset View</div>
+              </div>
+              <div class="panel-body" style="padding:14px;">
+                <div class="map-search-bar">
+                  <input class="map-input" id="map-search-input" placeholder="Search location (e.g. Mercado Village)…"
+                    onkeydown="if(event.key==='Enter')searchMap()">
+                  <button class="map-btn" onclick="searchMap()">
+                    <svg viewBox="0 0 24 24">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="M21 21l-4.35-4.35" />
+                    </svg>
+                    Go
+                  </button>
+                </div>
+                <div class="map-container" id="map-wrap">
+                  <div class="map-loading" id="map-loading">
+                    <div class="map-spinner"></div>
+                    <p>Loading map…</p>
+                  </div>
+                  <div id="dash-map-leaflet" style="width:100%;height:100%;"></div>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:var(--text3);font-weight:600;">📍 Showing: <span
+                    id="map-location-label">Santa Rosa, Laguna, Philippines</span></div>
+              </div>
+            </div>
+
+            <!-- RESPONSE TIMELINE -->
+            <div class="panel" style="animation-delay:0.1s;">
+              <div class="panel-header">
+                <div class="sec-title">Response Timeline</div>
+                <div class="sec-action">#BRGY-2026-0047</div>
+              </div>
+              <div class="panel-body">
+                <div class="timeline" id="response-timeline">
+                  <div class="tl-step">
+                    <div class="tl-left">
+                      <div class="tl-circle done"><svg viewBox="0 0 24 24">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                      <div class="tl-line done"></div>
+                    </div>
+                    <div class="tl-content">
+                      <div class="tl-title">Report Submitted</div>
+                      <div class="tl-time">10:14 AM · Maria Santos</div>
+                      <div class="tl-note">Flooding on Mercado Village road. 12 households affected.</div>
+                    </div>
+                  </div>
+                  <div class="tl-step">
+                    <div class="tl-left">
+                      <div class="tl-circle done"><svg viewBox="0 0 24 24">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                      <div class="tl-line done"></div>
+                    </div>
+                    <div class="tl-content">
+                      <div class="tl-title">Received by Admin</div>
+                      <div class="tl-time">10:15 AM · Auto-assigned</div>
+                      <div class="tl-note">Flagged as high priority due to immediate danger response.</div>
+                    </div>
+                  </div>
+                  <div class="tl-step" id="tl-dispatch-step">
+                    <div class="tl-left">
+                      <div class="tl-circle active" id="tl-dispatch-circle"><svg viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="3" />
+                        </svg></div>
+                      <div class="tl-line" id="tl-dispatch-line"></div>
+                    </div>
+                    <div class="tl-content" id="tl-dispatch-content">
+                      <div class="tl-title">Awaiting Dispatch</div>
+                      <div class="tl-time">Now · Pending action</div>
+                      <div class="tl-note">Admin needs to assign a responder or team.</div>
+                    </div>
+                  </div>
+                  <div class="tl-step" id="tl-sent-step">
+                    <div class="tl-left">
+                      <div class="tl-circle" id="tl-sent-circle"><svg viewBox="0 0 24 24">
+                          <path d="M5 12h14" />
+                          <path d="M12 5l7 7-7 7" />
+                        </svg></div>
+                      <div class="tl-line" id="tl-sent-line"></div>
+                    </div>
+                    <div class="tl-content" id="tl-sent-content">
+                      <div class="tl-title">Responder Dispatched</div>
+                      <div class="tl-time" id="tl-sent-time">—</div>
+                    </div>
+                  </div>
+                  <div class="tl-step">
+                    <div class="tl-left">
+                      <div class="tl-circle" id="tl-resolved-circle"><svg viewBox="0 0 24 24">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg></div>
+                    </div>
+                    <div class="tl-content">
+                      <div class="tl-title">Resolved</div>
+                      <div class="tl-time" id="tl-resolved-time">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INCIDENT BREAKDOWN -->
+            <div class="panel" style="animation-delay:0.15s;">
+              <div class="panel-header">
+                <div class="sec-title">By Category (This Week)</div>
+              </div>
+              <div class="panel-body" style="padding-bottom:10px;">
+                <div style="margin-bottom:12px;">
+                  <div class="chart-bars">
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:60%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Mon</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:40%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Tue</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:75%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Wed</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:30%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Thu</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:90%;background:var(--accent);"></div>
+                      <div class="bar-label" style="color:var(--accent);">Today</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:20%;background:var(--border2);"></div>
+                      <div class="bar-label">Sat</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:20%;background:var(--border2);"></div>
+                      <div class="bar-label">Sun</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="cat-list">
+                  <div class="cat-row">
+                    <span class="cat-label">Flooding</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:70%;background:var(--primary);"></div>
+                    </div>
+                    <span class="cat-count">7</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-label">Garbage</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:50%;background:var(--success);"></div>
+                    </div>
+                    <span class="cat-count">5</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-label">Vandalism</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:40%;background:var(--warning);"></div>
+                    </div>
+                    <span class="cat-count">4</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-label">Road Hazards</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:30%;background:var(--danger);"></div>
+                    </div>
+                    <span class="cat-count">3</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-label">Streetlights</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:25%;background:var(--accent);"></div>
+                    </div>
+                    <span class="cat-count">3</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-label">Others</span>
+                    <div class="cat-bar-wrap">
+                      <div class="cat-bar" style="width:20%;background:var(--text3);"></div>
+                    </div>
+                    <span class="cat-count">2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /col-right -->
+
+        </div><!-- /page-dashboard -->
+
+        <!-- ALL REPORTS PAGE -->
+        <div id="page-reports" class="page-panel">
+
+          <!-- Summary stats -->
+          <div class="stat-grid" style="flex-shrink:0;">
+            <div class="stat-card">
+              <div class="glow" style="background:var(--primary);"></div>
+              <div class="top">
+                <div class="icon" style="background:var(--info-light);">
+                  <svg viewBox="0 0 24 24" style="stroke:var(--primary);">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+              </div>
+              <div class="val" id="reports-total-count">14</div>
+              <div class="lbl">Total Reports</div>
+              <div class="sub">All categories</div>
+            </div>
+            <div class="stat-card">
+              <div class="glow" style="background:var(--danger);"></div>
+              <div class="top">
+                <div class="icon" style="background:var(--danger-light);">
+                  <svg viewBox="0 0 24 24" style="stroke:var(--danger);">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </div>
+              </div>
+              <div class="val" id="reports-major-count-stat">6</div>
+              <div class="lbl">Major Incidents</div>
+              <div class="sub">Crime · Fire · Flooding · Accidents</div>
+            </div>
+            <div class="stat-card">
+              <div class="glow" style="background:var(--warning);"></div>
+              <div class="top">
+                <div class="icon" style="background:var(--warning-light);">
+                  <svg viewBox="0 0 24 24" style="stroke:var(--warning);">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4m0 4h.01" />
+                  </svg>
+                </div>
+              </div>
+              <div class="val" id="reports-minor-count-stat">8</div>
+              <div class="lbl">Minor Incidents</div>
+              <div class="sub">Drains · Streetlights · Garbage · more</div>
+            </div>
+          </div>
+
+          <!-- Reports table panel -->
+          <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <div class="panel-header">
+              <div class="sec-title">All Reports</div>
+              <div class="filter-tabs" style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="ftab active" onclick="filterReportsPage('all',this)">All</button>
+                <button class="ftab" onclick="filterReportsPage('major',this)">Major Incidents</button>
+                <button class="ftab" onclick="filterReportsPage('minor',this)">Minor Incidents</button>
+                <button class="ftab" onclick="filterReportsPage('urgent',this)">Urgent</button>
+                <button class="ftab" onclick="filterReportsPage('pending',this)">Pending</button>
+                <button class="ftab" onclick="filterReportsPage('responding',this)">Responding</button>
+                <button class="ftab" onclick="filterReportsPage('resolved',this)">Resolved</button>
+              </div>
+            </div>
+            <div class="page-scroll" style="padding:0;gap:0;">
+
+              <!-- MAJOR INCIDENTS GROUP -->
+              <div id="reports-major-group">
+                <div class="report-group-label">
+                  <span class="grp-dot" style="background:var(--danger);"></span>
+                  Major Incidents — Crime, Fire, Flooding, Accidents
+                  <span class="grp-count" id="reports-major-count">6 reports</span>
+                </div>
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Incident</th>
+                      <th>Location</th>
+                      <th>Filed</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-major-body"></tbody>
+                </table>
+              </div>
+
+              <!-- MINOR INCIDENTS GROUP -->
+              <div id="reports-minor-group">
+                <div class="report-group-label">
+                  <span class="grp-dot" style="background:var(--warning);"></span>
+                  Minor Incidents — Clogged Drains, Broken Streetlights, Uncollected Garbage, Vandalism, Public
+                  Disturbance, Road Hazards
+                  <span class="grp-count" id="reports-minor-count">8 reports</span>
+                </div>
+                <table class="report-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Incident</th>
+                      <th>Location</th>
+                      <th>Filed</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-minor-body"></tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MAP PAGE -->
+        <div id="page-map" class="page-panel">
+
+          <!-- Toolbar row -->
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <div style="display:flex;gap:8px;flex:1;">
+              <input class="map-input" id="page-map-search"
+                placeholder="Search location… (e.g. Mercado Village, Division Road)" style="flex:1;font-size:13px;"
+                onkeydown="if(event.key==='Enter')pageMapSearch()">
+              <button class="map-btn" onclick="pageMapSearch()">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                Search
+              </button>
+              <button class="map-btn" onclick="pageMapReset()"
+                style="background:var(--surface2);color:var(--text2);border:1px solid var(--border);">
+                <svg viewBox="0 0 24 24" style="stroke:var(--text2);">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 101.82-4.59" />
+                </svg>
+                Reset
+              </button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="ftab active" id="mf-all" onclick="pageMapFilter('all',this)">All</button>
+              <button class="ftab" id="mf-major" onclick="pageMapFilter('major',this)"
+                style="border-color:rgba(229,57,53,0.35);">Major Incidents</button>
+              <button class="ftab" id="mf-flood" onclick="pageMapFilter('flood',this)">Flooding</button>
+              <button class="ftab" id="mf-crime" onclick="pageMapFilter('crime',this)">Crime</button>
+              <button class="ftab" id="mf-fire" onclick="pageMapFilter('fire',this)">Fire</button>
+              <button class="ftab" id="mf-accident" onclick="pageMapFilter('accident',this)">Accidents</button>
+              <button class="ftab" id="mf-hazard" onclick="pageMapFilter('hazard',this)">Hazards</button>
+              <button class="ftab" id="mf-garbage" onclick="pageMapFilter('garbage',this)">Garbage</button>
+            </div>
+          </div>
+
+          <!-- Map + incident list — fixed height based on viewport -->
+          <div style="display:flex;gap:14px;flex:1;min-height:0;height:100%;overflow:hidden;">
+
+            <!-- Map frame -->
+            <div
+              style="flex:1;min-width:0;position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface3);height:100%;">
+              <div id="page-map-loading"
+                style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--surface3);z-index:5;">
+                <div class="map-spinner"></div>
+                <p style="font-size:12px;color:var(--text3);font-weight:600;" id="page-map-loading-txt">Loading incident
+                  map…</p>
+              </div>
+              <div id="page-map-leaflet"
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"></div>
+              <div id="page-map-badge"
+                style="position:absolute;top:12px;left:12px;background:var(--primary);color:#fff;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;font-family:'Nunito',sans-serif;z-index:4;box-shadow:0 2px 8px rgba(30,58,95,0.25);display:none;">
+                📍 <span id="page-map-badge-txt">8 incidents</span>
+              </div>
+              <div
+                style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,0.9);backdrop-filter:blur(4px);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:10px;color:var(--text2);font-weight:600;z-index:4;">
+                📌 Santa Rosa, Laguna, Philippines
+              </div>
+            </div>
+
+            <!-- Incident list sidebar -->
+            <div
+              style="width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0;">
+              <div
+                style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;flex-shrink:0;">
+                Active Incidents</div>
+              <div id="page-map-incident-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+
+          </div>
+
+          <!-- Legend -->
+          <div
+            style="display:flex;align-items:center;gap:14px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;row-gap:6px;">
+            <span
+              style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
+            <span
+              style="font-size:9.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;background:var(--danger-light);padding:2px 8px;border-radius:20px;">Major</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--danger);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Flooding</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--crime);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Crime</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--fire);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Fire</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--accident);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Accident</span>
+            </div>
+            <span
+              style="font-size:9.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:2px 8px;border-radius:20px;">Minor</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--warning);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Road Hazard</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--success);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Garbage</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--text3);"></div><span
+                style="font-size:11px;color:var(--text2);font-weight:600;">Other</span>
+            </div>
+            <div style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600;">📍 <span
+                id="page-map-loc-label">Santa Rosa, Laguna, Philippines</span></div>
+          </div>
+
+        </div>
+
+        <!-- ANNOUNCEMENTS PAGE -->
+        <div id="page-announcements" class="page-panel">
+          <div class="ann-layout">
+
+            <!-- COMPOSER -->
+            <div class="ann-composer">
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;">
+                <div class="panel-header">
+                  <div class="sec-title">New Announcement</div>
+                </div>
+                <div class="panel-body" style="flex:1;overflow-y:auto;">
+                  <div class="modal-form-group">
+                    <div class="modal-label">Title</div>
+                    <input type="text" class="modal-input" id="ann-title"
+                      placeholder="e.g. Flood Advisory — Mercado Village">
+                  </div>
+                  <div class="modal-form-group">
+                    <div class="modal-label">Message</div>
+                    <textarea class="modal-textarea" id="ann-body"
+                      placeholder="Write the announcement residents will see on the mobile app…"
+                      style="min-height:120px;"></textarea>
+                  </div>
+                  <div class="modal-form-group">
+                    <div class="modal-label">Category</div>
+                    <select class="modal-select" id="ann-category">
+                      <option value="general">General</option>
+                      <option value="advisory">Advisory</option>
+                      <option value="emergency">Emergency Alert</option>
+                      <option value="event">Community Event</option>
+                    </select>
+                  </div>
+                  <div class="modal-form-group"
+                    style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;">
+                    <div>
+                      <div style="font-size:12.5px;font-weight:700;color:var(--text);">Push to mobile app</div>
+                      <div style="font-size:10.5px;color:var(--text3);font-weight:600;margin-top:2px;">Publish instantly
+                        to residents' devices</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="ann-push-toggle" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <button class="settings-save-btn"
+                    style="width:100%;justify-content:center;display:flex;align-items:center;gap:8px;"
+                    onclick="publishAnnouncement()">
+                    <svg viewBox="0 0 24 24" width="15" height="15" style="stroke:#fff;fill:none;stroke-width:2;">
+                      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                      <path d="M13.73 21a2 2 0 01-3.46 0" />
+                    </svg>
+                    Post Announcement
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- LIST -->
+            <div class="ann-list-col">
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                <div class="panel-header">
+                  <div class="sec-title">Published Announcements</div>
+                  <div class="sec-action" id="ann-count-label">3 total</div>
+                </div>
+                <div class="ann-list-scroll" id="ann-list"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VERIFY USERS PAGE -->
+        <div id="page-verify" class="page-panel">
+          <div style="display:flex;flex-direction:row;gap:22px;flex:1;min-height:0;overflow:hidden;">
+
+            <!-- QUEUE LIST -->
+            <div class="col-left" style="max-width:380px;flex:0 0 380px;">
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                <div class="panel-header">
+                  <div class="sec-title">Verification Queue</div>
+                  <div class="sec-action" style="display:flex;align-items:center;gap:8px;">
+                    <button class="verify-reload-btn" onclick="loadVerifyQueue()" title="Reload pending verifications">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                      Refresh
+                    </button>
+                    <span id="verify-count-label">0 pending</span>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;padding:0 18px 12px;">
+                  <div class="verify-filter active" data-f="pending" onclick="verifyFilter('pending',this)">Pending</div>
+                  <div class="verify-filter" data-f="approved" onclick="verifyFilter('approved',this)">Approved</div>
+                  <div class="verify-filter" data-f="rejected" onclick="verifyFilter('rejected',this)">Rejected</div>
+                  <div class="verify-filter" data-f="all" onclick="verifyFilter('all',this)">All</div>
+                </div>
+                <div style="padding:0 18px 12px;">
+                  <input type="text" class="map-input" id="verify-search" placeholder="Search name or email…"
+                    oninput="verifySearch(this.value)" style="width:100%;">
+                </div>
+                <div style="flex:1;overflow-y:auto;padding:0 18px 18px;" id="verify-list"></div>
+              </div>
+            </div>
+
+            <!-- DETAIL / REVIEW -->
+            <div style="flex:1;min-height:0;">
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                <div class="panel-header">
+                  <div class="sec-title" id="verify-detail-title">Select an account to review</div>
+                </div>
+                <div class="panel-body" id="verify-detail" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;font-weight:600;">
+                  Click an account in the queue to review their valid ID.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ANALYTICS PAGE -->
+        <div id="page-analytics" class="page-panel">
+          <div style="display:flex;flex-direction:row;gap:22px;flex:1;min-height:0;overflow:hidden;">
+
+            <!-- LEFT COLUMN -->
+            <div class="col-left">
+
+              <!-- STAT CARDS -->
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="glow" style="background:var(--danger);"></div>
+                  <div class="top">
+                    <div class="icon" style="background:var(--danger-light);">
+                      <svg viewBox="0 0 24 24" style="stroke:var(--danger);">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                    </div>
+                    <span class="trend up">+5%</span>
+                  </div>
+                  <div class="val" style="font-size:22px;">Mercado Village</div>
+                  <div class="lbl">Top High-Risk Zone</div>
+                  <div class="sub">Highest flood recurrence</div>
+                </div>
+                <div class="stat-card">
+                  <div class="glow" style="background:var(--accent);"></div>
+                  <div class="top">
+                    <div class="icon" style="background:var(--accent-light);">
+                      <svg viewBox="0 0 24 24" style="stroke:var(--accent-dark);">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <span class="trend down">-2%</span>
+                  </div>
+                  <div class="val" style="font-size:22px;">Flooding</div>
+                  <div class="lbl">Top Recurring Issue</div>
+                  <div class="sub">Accounts for 35% of reports</div>
+                </div>
+                <div class="stat-card">
+                  <div class="glow" style="background:var(--primary);"></div>
+                  <div class="top">
+                    <div class="icon" style="background:var(--info-light);">
+                      <svg viewBox="0 0 24 24" style="stroke:var(--primary);">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                    </div>
+                    <span class="trend up">-4m</span>
+                  </div>
+                  <div class="val">18m</div>
+                  <div class="lbl">Avg. Time to Resolution</div>
+                  <div class="sub">Improved vs last month</div>
+                </div>
+              </div>
+
+              <!-- GEOSPATIAL HOTSPOT MAP -->
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+                <div class="panel-header">
+                  <div class="sec-title">Geospatial Hotspot Map</div>
+                  <div class="sec-action"
+                    onclick="document.querySelector('.nav-item[onclick*=\'map\']').click()">View Full Map</div>
+                </div>
+                <div class="panel-body"
+                  style="flex:1;display:flex;flex-direction:column;min-height:0;position:relative;padding:14px;">
+                  <div id="analytics-heatmap-box"
+                    style="flex:1;min-height:0;border-radius:var(--radius-sm);overflow:hidden;position:relative;z-index:0;background:#E9EDF3;">
+                    <div id="analytics-heatmap-loading"
+                      style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);background:#E9EDF3;z-index:500;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"
+                        stroke-width="2.5" style="animation:spin 0.8s linear infinite;">
+                        <path d="M21 12a9 9 0 11-9-9" />
+                      </svg>
+                      Loading heatmap…
+                    </div>
+                  </div>
+                  <div
+                    style="position:absolute;left:26px;bottom:26px;background:rgba(255,255,255,0.96);border-radius:20px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:6px;box-shadow:var(--shadow);z-index:600;">
+                    🔥 High incident concentration shown in red (e.g. Mercado Village)
+                  </div>
+                </div>
+              </div>
+
+              <!-- INCIDENT TRENDS -->
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="sec-title">Incident Trends (Last 6 Months)</div>
+                  <button class="settings-save-btn" onclick="showToastMsg('Report exported','success')">Export
+                    Report</button>
+                </div>
+                <div class="panel-body">
+                  <div class="chart-bars" style="height:140px;">
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:45%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Jan</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:55%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Feb</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:38%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Mar</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:62%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Apr</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:95%;background:var(--accent);"></div>
+                      <div class="bar-label" style="color:var(--accent-dark);">May</div>
+                    </div>
+                    <div class="bar-wrap">
+                      <div class="bar" style="height:50%;background:rgba(30,58,95,0.45);"></div>
+                      <div class="bar-label">Jun</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /col-left -->
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-right">
+
+              <!-- ACTIONABLE INSIGHTS -->
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="sec-title">Actionable Insights</div>
+                </div>
+                <div class="panel-body" style="display:flex;flex-direction:column;gap:12px;">
+                  <div
+                    style="display:flex;gap:10px;background:var(--danger-light);border:1px solid rgba(229,57,53,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
+                    <div
+                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(229,57,53,0.15);display:flex;align-items:center;justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="14" height="14"
+                        style="stroke:var(--danger);fill:none;stroke-width:2;">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </div>
+                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
+                      <strong style="color:var(--danger);">Flooding Alert</strong> — Mercado Village requires additional
+                      flood response personnel. 35% of all incidents originate here.
+                    </div>
+                  </div>
+                  <div
+                    style="display:flex;gap:10px;background:var(--warning-light);border:1px solid rgba(245,124,0,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
+                    <div
+                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(245,124,0,0.15);display:flex;align-items:center;justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="14" height="14"
+                        style="stroke:var(--warning);fill:none;stroke-width:2;">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </div>
+                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
+                      <strong style="color:var(--warning);">Garbage Collection</strong> — Uncollected garbage incidents
+                      are rising in Zone 4. Recommend increasing collection frequency to twice a week.
+                    </div>
+                  </div>
+                  <div
+                    style="display:flex;gap:10px;background:var(--success-light);border:1px solid rgba(46,125,50,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
+                    <div
+                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(46,125,50,0.15);display:flex;align-items:center;justify-content:center;">
+                      <svg viewBox="0 0 24 24" width="14" height="14"
+                        style="stroke:var(--success);fill:none;stroke-width:2;">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
+                      <strong style="color:var(--success);">Resource Allocation</strong> — Road hazards have decreased
+                      by 20% in the last month. Current road maintenance schedule is effective.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DEPARTMENT ALLOCATION -->
+              <div class="panel">
+                <div class="panel-header">
+                  <div class="sec-title">Department Allocation</div>
+                </div>
+                <div class="panel-body">
+                  <div class="cat-list">
+                    <div class="cat-row">
+                      <span class="cat-label" style="width:150px;">Disaster Risk (BDRRM)</span>
+                      <div class="cat-bar-wrap">
+                        <div class="cat-bar" style="width:45%;background:var(--danger);"></div>
+                      </div>
+                      <span class="cat-count" style="width:32px;">45%</span>
+                    </div>
+                    <div class="cat-row">
+                      <span class="cat-label" style="width:150px;">Sanitation</span>
+                      <div class="cat-bar-wrap">
+                        <div class="cat-bar" style="width:30%;background:var(--accent);"></div>
+                      </div>
+                      <span class="cat-count" style="width:32px;">30%</span>
+                    </div>
+                    <div class="cat-row">
+                      <span class="cat-label" style="width:150px;">Engineering/Public Works</span>
+                      <div class="cat-bar-wrap">
+                        <div class="cat-bar" style="width:15%;background:var(--primary);"></div>
+                      </div>
+                      <span class="cat-count" style="width:32px;">15%</span>
+                    </div>
+                    <div class="cat-row">
+                      <span class="cat-label" style="width:150px;">Barangay Tanods</span>
+                      <div class="cat-bar-wrap">
+                        <div class="cat-bar" style="width:10%;background:var(--success);"></div>
+                      </div>
+                      <span class="cat-count" style="width:32px;">10%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /col-right -->
+
+          </div>
+        </div>
+
+        <!-- SETTINGS PAGE -->
+        <div id="page-settings" class="page-panel">
+          <div class="page-scroll">
+
+            <!-- BARANGAY PROFILE -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="sec-title">Barangay Profile</div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-form-grid">
+                  <div>
+                    <label class="settings-field-label">Barangay Name</label>
+                    <input type="text" class="modal-input" id="set-brgy-name" value="Barangay Calye">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Contact Number</label>
+                    <input type="text" class="modal-input" id="set-brgy-contact" value="(049) 555-0142">
+                  </div>
+                  <div style="grid-column:1/-1;">
+                    <label class="settings-field-label">Address</label>
+                    <input type="text" class="modal-input" id="set-brgy-address"
+                      value="Barangay Hall, Calye, Santa Rosa, Laguna">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Official Email</label>
+                    <input type="text" class="modal-input" id="set-brgy-email"
+                      value="brgycalye.safe@santarosalaguna.gov.ph">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Emergency Hotline</label>
+                    <input type="text" class="modal-input" id="set-brgy-hotline" value="(049) 555-0911">
+                  </div>
+                </div>
+                <div class="settings-save-row">
+                  <button class="settings-save-btn" onclick="saveProfileSettings()">Save Profile</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ADMIN ACCOUNT -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="sec-title">Admin Account</div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-form-grid">
+                  <div>
+                    <label class="settings-field-label">Full Name</label>
+                    <input type="text" class="modal-input" id="set-admin-name" value="Brgy. Admin">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Email Address</label>
+                    <input type="text" class="modal-input" id="set-admin-email" value="admin@calyesafe.ph">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">New Password</label>
+                    <input type="password" class="modal-input" id="set-newpass"
+                      placeholder="Leave blank to keep current">
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Confirm New Password</label>
+                    <input type="password" class="modal-input" id="set-confirmpass" placeholder="Re-enter new password">
+                  </div>
+                </div>
+                <div class="settings-save-row">
+                  <button class="settings-save-btn" onclick="saveAccountSettings()">Save Account</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- NOTIFICATION PREFERENCES -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="sec-title">Notification Preferences</div>
+              </div>
+              <div class="panel-body" style="padding-top:4px;padding-bottom:4px;">
+                <div class="settings-row">
+                  <div>
+                    <div class="srow-label">Urgent report alerts</div>
+                    <div class="srow-sub">Get notified instantly for major incidents (Crime, Fire, Flooding, Accidents)
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked onchange="toggleSetting(this,'Urgent report alerts')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="srow-label">Email notifications</div>
+                    <div class="srow-sub">Receive a daily digest of new reports by email</div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked onchange="toggleSetting(this,'Email notifications')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="srow-label">SMS alerts</div>
+                    <div class="srow-sub">Send SMS to the on-duty admin for urgent incidents</div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" onchange="toggleSetting(this,'SMS alerts')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="srow-label">Sound alerts</div>
+                    <div class="srow-sub">Play a sound in the dashboard when a new report is filed</div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" checked onchange="toggleSetting(this,'Sound alerts')">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- GENERAL PREFERENCES -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="sec-title">General Preferences</div>
+              </div>
+              <div class="panel-body">
+                <div class="settings-form-grid">
+                  <div>
+                    <label class="settings-field-label">Language</label>
+                    <select class="modal-select" id="set-language">
+                      <option value="en">English</option>
+                      <option value="fil">Filipino</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Time Zone</label>
+                    <select class="modal-select" id="set-timezone">
+                      <option value="ph">(GMT+8) Philippine Standard Time</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Default Landing Page</label>
+                    <select class="modal-select" id="set-landing">
+                      <option value="dashboard">Dashboard Overview</option>
+                      <option value="reports">All Reports</option>
+                      <option value="map">Incident Map</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="settings-field-label">Auto-refresh Interval</label>
+                    <select class="modal-select" id="set-refresh">
+                      <option value="30">30 seconds</option>
+                      <option value="60" selected>1 minute</option>
+                      <option value="300">5 minutes</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-save-row">
+                  <button class="settings-save-btn" onclick="saveGeneralSettings()">Save Preferences</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- DEMO DATA -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="sec-title">Demo Data</div>
+              </div>
+              <div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:16px;">
+                <div style="font-size:12.5px;color:var(--text2);line-height:1.55;font-weight:600;">
+                  Restore the original sample reports, announcements and incident pins.<br>
+                  <span style="color:var(--text3);font-size:11.5px;">This clears locally stored demo data and reloads the page.</span>
+                </div>
+                <button class="settings-save-btn" style="background:var(--danger);" onclick="resetDemoData()">Reset Demo Data</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /content -->
+
+    </div><!-- /main -->
+
+  </div><!-- /shell -->
+
+  <!-- NOTIFICATIONS PANEL -->
+  <div id="notif-panel">
+    <div class="notif-panel-head">
+      <h4>Notifications</h4>
+      <span class="notif-mark-read" onclick="markAllRead()">Mark all read</span>
+    </div>
+    <div class="notif-list" id="notif-list">
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-icon-wrap" style="background:var(--danger-light);color:var(--danger);">
+          <svg viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">New flood report — Mercado Village</div>
+          <div class="nbody">Maria Santos filed Report #BRGY-2026-0047. Immediate danger flagged.</div>
+          <div class="ntime">10:14 AM · Just now</div>
+        </div>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-icon-wrap" style="background:var(--warning-light);color:var(--warning);">
+          <svg viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">Road hazard on Division Road</div>
+          <div class="nbody">Report #BRGY-2026-0046 submitted. Awaiting response.</div>
+          <div class="ntime">9:50 AM · 24 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item unread">
+        <div class="notif-dot"></div>
+        <div class="notif-icon-wrap" style="background:var(--info-light);color:var(--info);">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">Jose Reyes now responding</div>
+          <div class="nbody">BDRRM Officer assigned to Barangay Hall disturbance #0041.</div>
+          <div class="ntime">9:32 AM · 42 min ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-dot read"></div>
+        <div class="notif-icon-wrap" style="background:var(--success-light);color:var(--success);">
+          <svg viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">Report #BRGY-2026-0042 resolved</div>
+          <div class="nbody">Flooding at Calye Creek successfully addressed by response team.</div>
+          <div class="ntime">Yesterday · 4:15 PM</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-dot read"></div>
+        <div class="notif-icon-wrap" style="background:var(--accent-light);color:var(--accent-dark);">
+          <svg viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 01-3.46 0" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">PAGASA flood advisory issued</div>
+          <div class="nbody">Active advisory for Mercado Village area. 3 related reports filed.</div>
+          <div class="ntime">Yesterday · 2:00 PM</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <div class="notif-dot read"></div>
+        <div class="notif-icon-wrap" style="background:var(--surface3);color:var(--text3);">
+          <svg viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </div>
+        <div class="notif-text">
+          <div class="ntitle">5 new reports this morning</div>
+          <div class="nbody">Daily summary: 5 reports filed since midnight. 2 pending response.</div>
+          <div class="ntime">Today · 8:00 AM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISPATCH MODAL -->
+  <div class="modal-overlay" id="modal-dispatch">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Dispatch Responder</h3>
+        <button class="modal-close" onclick="closeModal('modal-dispatch')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="dispatch-modal-body">
+        <div
+          style="background:var(--danger-light);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"
+            style="flex-shrink:0;margin-top:1px;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Flooding — Mercado Village</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;font-weight:600;">Report #BRGY-2026-0047 ·
+              Filed 32 min ago · Immediate Danger</div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Response Notes</div>
+          <textarea class="modal-textarea" id="dispatch-notes"
+            placeholder="Provide instructions or notes for the responder…"></textarea>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Estimated Arrival</div>
+          <select class="modal-select" id="dispatch-eta">
+            <option>5 minutes</option>
+            <option>10 minutes</option>
+            <option>15 minutes</option>
+            <option>30 minutes</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-dispatch')">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmDispatch()">Assign Responder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOLVE MODAL -->
+  <div class="modal-overlay" id="modal-resolve">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Mark Report as Resolved</h3>
+        <button class="modal-close" onclick="closeModal('modal-resolve')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-form-group">
+          <div class="modal-label">Resolution Summary</div>
+          <textarea class="modal-textarea" placeholder="Describe how the incident was resolved…"></textarea>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Resolved By</div>
+          <select class="modal-select">
+            <option>Pedro Dela Cruz — Barangay Tanod</option>
+            <option>Jose Reyes — BDRRM Officer</option>
+            <option>Ana Mercado — Health Worker</option>
+            <option>Admin (Direct)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-resolve')">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmResolve()">Mark Resolved</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast">
+    <div class="toast-icon">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </div>
+    <span id="toast-text"></span>
+  </div>
+
+  <script>
+    // ── PERSISTENCE (localStorage) ──
+    const LS_VERSION = '2';
+    // Demo: start the app with zero records. Mock data is preserved in
+    // calye-safe_database/backup-live-2026-08-02.json and supabase-seed.sql.
+    const FORCE_EMPTY_RECORDS = true;
+    const LS_KEY_REPORTS = 'calye_safe_admin_reports';
+    const LS_KEY_FULL_REPORTS = 'calye_safe_admin_full_reports';
+    const LS_KEY_ANNOUNCEMENTS = 'calye_safe_admin_announcements';
+    const LS_KEY_PINS = 'calye_safe_admin_pins';
+
+    function loadStoredData(key, fallback) {
+      try {
+        if (FORCE_EMPTY_RECORDS) return [];
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
+        return fallback;
+      } catch (e) { return fallback; }
+    }
+
+    function saveStoredData(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify({ v: LS_VERSION, data: data }));
+      } catch (e) { /* ignore */ }
+    }
+
+    function resetDemoData() {
+      try {
+        [LS_KEY_REPORTS, LS_KEY_FULL_REPORTS, LS_KEY_ANNOUNCEMENTS, LS_KEY_PINS].forEach(k => localStorage.removeItem(k));
+      } catch (e) { /* ignore */ }
+      showToastMsg('Demo data has been reset', 'success');
+      setTimeout(() => location.reload(), 900);
+    }
+
+    // ── SAMPLE DATA ──
+    let reports = loadStoredData(LS_KEY_REPORTS, [
+      { id: '#BRGY-2026-0047', type: 'Flooding', loc: 'Mercado Village', filed: '10:14 AM', status: 'urgent', category: 'flood' },
+      { id: '#BRGY-2026-0046', type: 'Road Hazard', loc: 'Division Road', filed: '9:50 AM', status: 'urgent', category: 'hazard' },
+      { id: '#BRGY-2026-0045', type: 'Vandalism', loc: 'Calye Street', filed: '9:02 AM', status: 'pending', category: 'vandal' },
+      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', loc: 'Bankley Area', filed: '8:30 AM', status: 'responding', category: 'garbage' },
+      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', loc: 'Calye Park', filed: 'Yesterday', status: 'responding', category: 'hazard' },
+      { id: '#BRGY-2026-0042', type: 'Flooding', loc: 'Calye Creek', filed: 'Yesterday', status: 'resolved', category: 'flood' },
+      { id: '#BRGY-2026-0041', type: 'Public Disturbance', loc: 'Barangay Hall', filed: 'May 19', status: 'resolved', category: 'crime' },
+      { id: '#BRGY-2026-0040', type: 'Clogged Drains', loc: 'Mercado St.', filed: 'May 18', status: 'resolved', category: 'flood' },
+    ]);
+
+    function badgeHtml(status) {
+      const labels = { urgent: 'Urgent', pending: 'Pending', responding: 'Responding', resolved: 'Resolved' };
+      return `<span class="badge ${status}">${labels[status]}</span>`;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('table-body');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-weight:600;font-size:13px;">No reports found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map(r => `
+    <tr>
+      <td><span class="report-num">${r.id}</span></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo)}</div></td>
+      <td><div class="report-loc">${r.loc}</div></td>
+      <td><span class="report-time">${r.filed}</span></td>
+      <td>${badgeHtml(r.status)}</td>
+      <td>
+        ${r.status !== 'resolved'
+          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
+          : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
+        }
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    function photoTag(photo) {
+      if (!photo) return '';
+      return ` <span title="Has resident photo" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(30,58,95,0.1);color:var(--primary);vertical-align:middle;margin-left:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>`;
+    }
+
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    function getFilteredData() {
+      let data = currentFilter === 'all' ? reports : reports.filter(r => r.status === currentFilter);
+      if (currentSearch) data = data.filter(r =>
+        r.type.toLowerCase().includes(currentSearch) ||
+        r.loc.toLowerCase().includes(currentSearch) ||
+        r.id.toLowerCase().includes(currentSearch)
+      );
+      return data;
+    }
+
+    function filterTable(f, btn) {
+      document.querySelectorAll('#report-table .ftab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      currentFilter = f;
+      renderTable(getFilteredData());
+    }
+
+    function searchReports(val) {
+      currentSearch = val.toLowerCase();
+      renderTable(getFilteredData());
+    }
+
+    renderTable(reports);
+
+    // ── ALL REPORTS PAGE (Major / Minor categorized) ──
+    let fullReports = loadStoredData(LS_KEY_FULL_REPORTS, [
+      { id: '#BRGY-2026-0047', type: 'Flooding', category: 'major', loc: 'Mercado Village', filed: '10:14 AM', status: 'urgent' },
+      { id: '#BRGY-2026-0039', type: 'Crime', category: 'major', loc: 'Calye Street Corner', filed: 'May 18', status: 'urgent' },
+      { id: '#BRGY-2026-0037', type: 'Accident', category: 'major', loc: 'National Highway', filed: 'May 17', status: 'responding' },
+      { id: '#BRGY-2026-0038', type: 'Fire', category: 'major', loc: 'Purok 3', filed: 'May 17', status: 'resolved' },
+      { id: '#BRGY-2026-0036', type: 'Crime', category: 'major', loc: 'Basketball Court', filed: 'May 16', status: 'resolved' },
+      { id: '#BRGY-2026-0042', type: 'Flooding', category: 'major', loc: 'Calye Creek', filed: 'Yesterday', status: 'resolved' },
+      { id: '#BRGY-2026-0046', type: 'Road Hazard', category: 'minor', loc: 'Division Road', filed: '9:50 AM', status: 'urgent' },
+      { id: '#BRGY-2026-0035', type: 'Road Hazard', category: 'minor', loc: 'Zone 4', filed: 'May 16', status: 'pending' },
+      { id: '#BRGY-2026-0045', type: 'Vandalism', category: 'minor', loc: 'Calye Street', filed: '9:02 AM', status: 'pending' },
+      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', category: 'minor', loc: 'Bankley Area', filed: '8:30 AM', status: 'responding' },
+      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', category: 'minor', loc: 'Calye Park', filed: 'Yesterday', status: 'responding' },
+      { id: '#BRGY-2026-0041', type: 'Public Disturbance', category: 'minor', loc: 'Barangay Hall', filed: 'May 19', status: 'resolved' },
+      { id: '#BRGY-2026-0040', type: 'Clogged Drains', category: 'minor', loc: 'Mercado St.', filed: 'May 18', status: 'resolved' },
+      { id: '#BRGY-2026-0034', type: 'Clogged Drains', category: 'minor', loc: 'Purok 5', filed: 'May 15', status: 'pending' },
+    ]);
+
+    function renderReportsGroupTable(bodyId, data) {
+      const tbody = document.getElementById(bodyId);
+      if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3);font-weight:600;font-size:12.5px;">No reports in this category.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map(r => `
+    <tr>
+      <td><span class="report-num">${r.id}</span></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo || reportMediaByReport[r.dbId] || '')}</div></td>
+      <td><div class="report-loc">${r.loc}</div></td>
+      <td><span class="report-time">${r.filed}</span></td>
+      <td>${badgeHtml(r.status)}</td>
+      <td>
+        ${r.status !== 'resolved'
+          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
+          : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
+        }
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    function filterReportsPage(filter, btn) {
+      document.querySelectorAll('#page-reports .ftab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const statusFilters = ['urgent', 'pending', 'responding', 'resolved'];
+      let majorData = fullReports.filter(r => r.category === 'major');
+      let minorData = fullReports.filter(r => r.category === 'minor');
+
+      if (statusFilters.includes(filter)) {
+        majorData = majorData.filter(r => r.status === filter);
+        minorData = minorData.filter(r => r.status === filter);
+      }
+
+      const majorGroup = document.getElementById('reports-major-group');
+      const minorGroup = document.getElementById('reports-minor-group');
+
+      if (filter === 'minor') {
+        majorGroup.style.display = 'none';
+      } else {
+        majorGroup.style.display = 'block';
+        renderReportsGroupTable('reports-major-body', majorData);
+        document.getElementById('reports-major-count').textContent = majorData.length + (majorData.length === 1 ? ' report' : ' reports');
+      }
+
+      if (filter === 'major') {
+        minorGroup.style.display = 'none';
+      } else {
+        minorGroup.style.display = 'block';
+        renderReportsGroupTable('reports-minor-body', minorData);
+        document.getElementById('reports-minor-count').textContent = minorData.length + (minorData.length === 1 ? ' report' : ' reports');
+      }
+    }
+
+    function refreshSummaryStats() {
+      const totalMajor = fullReports.filter(r => r.category === 'major').length;
+      const totalMinor = fullReports.filter(r => r.category === 'minor').length;
+      const totalEl = document.getElementById('reports-total-count');
+      const majEl = document.getElementById('reports-major-count-stat');
+      const minEl = document.getElementById('reports-minor-count-stat');
+      if (totalEl) totalEl.textContent = fullReports.length;
+      if (majEl) majEl.textContent = totalMajor;
+      if (minEl) minEl.textContent = totalMinor;
+      const dashTotal = document.getElementById('dash-total-reports');
+      const dashAvg = document.getElementById('dash-avg-response');
+      const dashResolved = document.getElementById('dash-resolved');
+      const navCount = document.getElementById('reports-nav-count');
+      if (dashTotal) dashTotal.textContent = fullReports.length;
+      if (dashResolved) dashResolved.textContent = fullReports.filter(r => r.status === 'resolved').length;
+      if (dashAvg) dashAvg.textContent = fullReports.length ? '—' : '0m';
+      if (navCount) navCount.textContent = fullReports.length;
+    }
+
+    // Initial render of All Reports page + summary stats
+    (function initReportsPage() {
+      const totalMajor = fullReports.filter(r => r.category === 'major').length;
+      const totalMinor = fullReports.filter(r => r.category === 'minor').length;
+      document.getElementById('reports-total-count').textContent = fullReports.length;
+      document.getElementById('reports-major-count-stat').textContent = totalMajor;
+      document.getElementById('reports-minor-count-stat').textContent = totalMinor;
+      refreshSummaryStats();
+      const dashDate = document.getElementById('dash-date');
+      if (dashDate) dashDate.textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+    })();
+
+    // ── ANNOUNCEMENTS PAGE ──
+    let announcements = loadStoredData(LS_KEY_ANNOUNCEMENTS, [
+      { id: 3, title: 'Flood Advisory — Mercado Village', body: 'Residents near Mercado Village and low-lying areas are advised to prepare for possible flooding due to continuous rainfall. Please secure valuables and move to higher ground if water levels rise.', category: 'advisory', date: 'May 20, 2026 · 9:15 AM', pushed: true },
+      { id: 2, title: 'Barangay Assembly — May 25', body: 'All households are requested to send at least one representative to the Barangay Assembly on May 25, 8:00 AM at the Barangay Hall for the quarterly community briefing.', category: 'event', date: 'May 18, 2026 · 2:00 PM', pushed: true },
+      { id: 1, title: 'Garbage Collection Schedule Update', body: 'Garbage collection for Purok 3 and Purok 4 will move from Tuesdays/Fridays to Mondays/Thursdays starting next week. Please prepare your garbage accordingly.', category: 'general', date: 'May 15, 2026 · 8:00 AM', pushed: false },
+    ]);
+    let announcementIdSeq = announcements.length ? Math.max(...announcements.map(a => (typeof a.id === 'number' ? a.id : 0))) + 1 : 1;
+
+    function annCatLabel(cat) {
+      return { general: 'General', advisory: 'Advisory', emergency: 'Emergency Alert', event: 'Community Event' }[cat] || 'General';
+    }
+
+    function renderAnnouncements() {
+      const list = document.getElementById('ann-list');
+      const countLabel = document.getElementById('ann-count-label');
+      if (countLabel) countLabel.textContent = announcements.length + (announcements.length === 1 ? ' total' : ' total');
+
+      if (announcements.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:30px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">No announcements yet.</div>`;
+        return;
+      }
+
+      list.innerHTML = announcements.map(a => `
+    <div class="ann-item">
+      <div class="ann-item-top">
+        <div class="ann-item-title">${a.title}</div>
+        <span class="ann-cat-badge ${a.category}">${annCatLabel(a.category)}</span>
+      </div>
+      <div class="ann-item-body">${a.body}</div>
+      <div class="ann-item-foot">
+        <span class="ann-item-date">${a.date}</span>
+        <div class="ann-item-actions">
+          <span class="badge ${a.pushed ? 'resolved' : 'pending'}">${a.pushed ? 'Live on Mobile App' : 'Draft'}</span>
+          <button class="ann-mini-btn" onclick="toggleAnnouncementPush('${a.id}')">${a.pushed ? 'Unpublish' : 'Publish'}</button>
+          <button class="ann-mini-btn danger" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+    }
+
+    function publishAnnouncement() {
+      const titleEl = document.getElementById('ann-title');
+      const bodyEl = document.getElementById('ann-body');
+      const categoryEl = document.getElementById('ann-category');
+      const pushEl = document.getElementById('ann-push-toggle');
+
+      const title = titleEl.value.trim();
+      const body = bodyEl.value.trim();
+
+      if (!title || !body) {
+        showToastMsg('Please fill in both the title and message', 'info');
+        return;
+      }
+
+      const pushed = pushEl.checked;
+      announcements.unshift({
+        id: announcementIdSeq++,
+        title, body,
+        category: categoryEl.value,
+        date: 'Just now',
+        pushed
+      });
+
+      titleEl.value = '';
+      bodyEl.value = '';
+      categoryEl.value = 'general';
+      pushEl.checked = true;
+
+      saveStoredData(LS_KEY_ANNOUNCEMENTS, announcements);
+      renderAnnouncements();
+      if (CalyeDB.isOnline()) {
+        CalyeDB.insert('announcements', [{
+          title, body, category: categoryEl.value, pushed
+        }]).then(ins => {
+          if (ins && ins[0] && ins[0].id) {
+            announcements[0].dbId = ins[0].id;
+            announcements[0].id = ins[0].id;
+            saveStoredData(LS_KEY_ANNOUNCEMENTS, announcements);
+          }
+        });
+      }
+      showToastMsg(pushed ? 'Announcement pushed to the Calye Safe mobile app' : 'Announcement saved as draft', 'success');
+    }
+
+    function toggleAnnouncementPush(id) {
+      const a = announcements.find(x => String(x.id) === String(id));
+      if (!a) return;
+      a.pushed = !a.pushed;
+      saveStoredData(LS_KEY_ANNOUNCEMENTS, announcements);
+      renderAnnouncements();
+      showToastMsg(a.pushed ? 'Now live on the mobile app' : 'Removed from the mobile app', 'info');
+      if (CalyeDB.isOnline() && a.dbId) CalyeDB.update('announcements', { id: a.dbId }, { pushed: a.pushed });
+    }
+
+    function deleteAnnouncement(id) {
+      const a = announcements.find(x => String(x.id) === String(id));
+      if (a && a.dbId) CalyeDB.remove('announcements', { id: a.dbId });
+      announcements = announcements.filter(x => String(x.id) !== String(id));
+      saveStoredData(LS_KEY_ANNOUNCEMENTS, announcements);
+      renderAnnouncements();
+      showToastMsg('Announcement deleted', 'info');
+    }
+
+    renderAnnouncements();
+
+    // ── SETTINGS PAGE ──
+    function saveProfileSettings() {
+      showToastMsg('Barangay profile updated', 'success');
+    }
+
+    function saveAccountSettings() {
+      const pw1 = document.getElementById('set-newpass').value;
+      const pw2 = document.getElementById('set-confirmpass').value;
+      if (pw1 || pw2) {
+        if (pw1 !== pw2) {
+          showToastMsg('New passwords do not match', 'info');
+          return;
+        }
+      }
+      document.getElementById('set-newpass').value = '';
+      document.getElementById('set-confirmpass').value = '';
+      showToastMsg('Account settings saved', 'success');
+    }
+
+    function saveGeneralSettings() {
+      showToastMsg('Preferences saved', 'success');
+    }
+
+    function toggleSetting(el, label) {
+      showToastMsg(label + (el.checked ? ' enabled' : ' disabled'), 'info');
+    }
+
+    // ── SIDEBAR NAV ──
+    let pageMapInited = false;
+    let pageMap = null;
+    let pageMapMarkers = null;
+    const pageTitles = {
+      dashboard: 'Dashboard Overview',
+      reports: 'All Reports',
+      map: 'Incident Map',
+      announcements: 'Announcements',
+      analytics: 'Analytics',
+      settings: 'Settings'
+    };
+
+    function navTo(page, el) {
+      // Update active nav item
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      // Update page title
+      const title = pageTitles[page] || 'Dashboard';
+      document.querySelector('.page-title').textContent = title;
+
+      // Show correct page panel
+      document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active-page'));
+      const targetPage = document.getElementById('page-' + page);
+      if (targetPage) targetPage.classList.add('active-page');
+
+      // Init page map on first visit
+      if (page === 'map' && !pageMapInited) initPageMap();
+
+      // Force map to fill the frame
+      if (page === 'map') resizeMapFrame();
+
+      // Build the geospatial heatmap the first time Analytics is opened
+      if (page === 'analytics') setTimeout(() => initAnalyticsHeatmap(), 120);
+    }
+
+    function resizeMapFrame() {
+      const topbar = 62;
+      const paddingV = 44; // 22px top + 22px bottom
+      const toolbar = 52;
+      const legend = 52;
+      const gaps = 28;
+      const h = window.innerHeight - topbar - paddingV - toolbar - legend - gaps;
+      const mapRow = document.querySelector('#page-map .map-row');
+      if (mapRow) mapRow.style.height = Math.max(h, 300) + 'px';
+    }
+    window.addEventListener('resize', resizeMapFrame);
+
+    function setActive(el) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    // ── NOTIFICATIONS ──
+    let notifOpen = false;
+
+    function toggleNotifPanel() {
+      const panel = document.getElementById('notif-panel');
+      notifOpen = !notifOpen;
+      panel.classList.toggle('open', notifOpen);
+    }
+
+    function markAllRead() {
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.classList.remove('unread');
+        item.querySelector('.notif-dot').classList.add('read');
+      });
+      document.querySelector('#notif-btn .dot').style.display = 'none';
+      showToastMsg('All notifications marked as read', 'success');
+    }
+
+    // Close notif panel when clicking outside
+    document.addEventListener('click', function (e) {
+      const panel = document.getElementById('notif-panel');
+      const btn = document.getElementById('notif-btn');
+      if (notifOpen && !panel.contains(e.target) && !btn.contains(e.target)) {
+        notifOpen = false;
+        panel.classList.remove('open');
+      }
+    });
+
+    // ── MODALS ──
+    let dispatchDone = false;
+    let currentDispatchId = null;   // display id, e.g. #BRGY-2026-0047
+    let currentDispatchDbId = null; // reports row uuid in Supabase
+    let reportMediaByReport = {};   // report dbId -> photo url
+
+    function openResponseModal(rid, dbId) {
+      dispatchDone = false;
+      currentDispatchId = rid || currentDispatchId || '#BRGY-2026-0047';
+      currentDispatchDbId = dbId || null;
+      const target = reports.find(r => r.id === currentDispatchId);
+      const typeLabel = target ? target.type : 'Incident';
+      const locLabel = target ? target.loc : 'Barangay Calye';
+      const filedLabel = target ? target.filed : 'Recent';
+      const reporter = target ? target.reporterName : 'Resident';
+      const desc = target && target.description ? target.description : 'No description provided.';
+      const photo = target && target.photo ? target.photo : '';
+      const photoBlock = photo
+        ? `<img class="dispatch-report-photo" src="${photo}" alt="Resident photo" onclick="openPhotoLightbox('${currentDispatchId}','${currentDispatchDbId}')">`
+        : `<div class="dispatch-report-photo-empty">No photo attached to this report</div>`;
+      const body = document.getElementById('dispatch-modal-body');
+      body.innerHTML = `
+    <div class="dispatch-report">
+      <div class="dispatch-report-header">
+        <div class="dispatch-report-title">${typeLabel}</div>
+        <div class="dispatch-report-id">${currentDispatchId}</div>
+      </div>
+      <div class="dispatch-report-row">
+        <div class="dispatch-report-row-label">Location</div>
+        <div class="dispatch-report-row-val">${locLabel}</div>
+      </div>
+      <div class="dispatch-report-row">
+        <div class="dispatch-report-row-label">Reported By</div>
+        <div class="dispatch-report-row-val">${reporter}</div>
+      </div>
+      <div class="dispatch-report-row">
+        <div class="dispatch-report-row-label">Date Filed</div>
+        <div class="dispatch-report-row-val">${filedLabel}</div>
+      </div>
+      <div class="dispatch-report-row">
+        <div class="dispatch-report-row-label">Description</div>
+        <div class="dispatch-report-row-val">${desc}</div>
+      </div>
+      ${photoBlock}
+    </div>
+    <div class="modal-form-group">
+      <div class="modal-label">Response Notes</div>
+      <textarea class="modal-textarea" id="dispatch-notes" placeholder="Provide instructions or notes for the responder…"></textarea>
+    </div>
+    <div class="modal-form-group">
+      <div class="modal-label">Estimated Arrival</div>
+      <select class="modal-select" id="dispatch-eta">
+        <option>5 minutes</option>
+        <option>10 minutes</option>
+        <option>15 minutes</option>
+        <option>30 minutes</option>
+      </select>
+    </div>
+  `;
+      document.getElementById('modal-dispatch').classList.add('open');
+    }
+
+    function openPhotoLightbox(reportId, dbId) {
+      const photo = reportMediaByReport[dbId] || '';
+      if (!photo) return;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${photo}" alt="Report photo ${reportId}" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
+    }
+
+    function openResolveModal(rid, dbId) {
+      currentDispatchId = rid || currentDispatchId || '#BRGY-2026-0047';
+      currentDispatchDbId = dbId || currentDispatchDbId || null;
+      document.getElementById('modal-resolve').classList.add('open');
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+    function confirmDispatch() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+      const reportId = currentDispatchId || '#BRGY-2026-0047';
+      const reportDbId = currentDispatchDbId;
+      const etaSel = document.getElementById('dispatch-eta');
+      const etaMin = etaSel && etaSel.value ? parseInt(etaSel.value, 10) : 10;
+      const notes = document.getElementById('dispatch-notes');
+      const notesVal = notes ? notes.value.trim() : '';
+
+      // Update timeline
+      const dispatchCircle = document.getElementById('tl-dispatch-circle');
+      const dispatchLine = document.getElementById('tl-dispatch-line');
+      const dispatchContent = document.getElementById('tl-dispatch-content');
+      dispatchCircle.className = 'tl-circle done';
+      dispatchCircle.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      dispatchLine.className = 'tl-line done';
+      dispatchContent.innerHTML = `<div class="tl-title">Responder Assigned</div><div class="tl-time">${timeStr} · Auto-assigned</div><div class="tl-note">A responder has been automatically assigned to this incident.</div>`;
+
+      // Update sent step
+      const sentCircle = document.getElementById('tl-sent-circle');
+      const sentLine = document.getElementById('tl-sent-line');
+      sentCircle.className = 'tl-circle active';
+      sentCircle.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>';
+      document.getElementById('tl-sent-time').textContent = `${timeStr} · En Route`;
+
+      // Persist to Supabase (assignment + report status)
+      persistDispatch(reportId, reportDbId, etaMin, notesVal);
+
+      // Show success in modal
+      const body = document.getElementById('dispatch-modal-body');
+      body.innerHTML = `
+    <div class="dispatch-success">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div>
+        <div class="ds-text">Responder has been assigned!</div>
+        <div class="ds-sub">A responder has been automatically assigned to this incident and is now en route.</div>
+      </div>
+    </div>
+  `;
+
+      // Change confirm button to close
+      document.querySelector('#modal-dispatch .modal-btn.confirm').textContent = 'Done';
+      document.querySelector('#modal-dispatch .modal-btn.confirm').onclick = () => closeModal('modal-dispatch');
+      document.querySelector('#modal-dispatch .modal-btn.cancel').style.display = 'none';
+
+      showToastMsg('Responder assigned to ' + reportId, 'success');
+    }
+
+    function persistDispatch(reportId, reportDbId, etaMin, notes) {
+      if (!CalyeDB.isOnline()) return;
+      // Pick the nearest on-duty responder (first available).
+      CalyeDB.fetch('responders', { limit: 5 }).then(respRows => {
+        const responder = (respRows && respRows.length) ? respRows[0] : null;
+        const asn = {
+          report_id: reportDbId || null,
+          responder_id: responder ? responder.id : null,
+          status: 'assigned',
+          distance_km: responder ? 1.0 : null,
+          eta_min: etaMin || 10,
+          resolution_notes: notes || null,
+          assigned_at: new Date().toISOString()
+        };
+        CalyeDB.insert('assignments', [asn]).then(rows => {
+          const asnId = rows && rows.length ? rows[0].id : null;
+          if (reportDbId) {
+            CalyeDB.update('reports', { id: reportDbId }, { status: 'responding', priority: 'responding' });
+          }
+          if (asnId) {
+            const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            CalyeDB.insert('assignment_timeline', [
+              { assignment_id: asnId, step: 1, label: 'Reported', happened_at: nowStr, state: 'done' },
+              { assignment_id: asnId, step: 2, label: 'Verified & Assigned to you', happened_at: nowStr, state: 'done' },
+              { assignment_id: asnId, step: 3, label: 'En Route', happened_at: '—', state: 'pending' },
+              { assignment_id: asnId, step: 4, label: 'On-Site', happened_at: '—', state: 'pending' },
+              { assignment_id: asnId, step: 5, label: 'Resolved', happened_at: '—', state: 'pending' }
+            ]);
+          }
+          // Advance the resident's tracker: mark "Verified by Operator" (2)
+          // and "Responder Dispatched" (3) as done.
+          if (reportDbId) {
+            markReportStep(reportDbId, 2, 'done', fmtDateTime(new Date().toISOString()));
+            markReportStep(reportDbId, 3, 'done', fmtDateTime(new Date().toISOString()));
+          }
+          // Refresh local list so the report shows as Responding.
+          syncFromSupabase();
+        });
+      });
+    }
+
+    function confirmResolve() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+      const resolvedCircle = document.getElementById('tl-resolved-circle');
+      resolvedCircle.className = 'tl-circle done';
+      resolvedCircle.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      document.getElementById('tl-resolved-time').textContent = `${timeStr} · Resolved`;
+      closeModal('modal-resolve');
+      showToastMsg('Report ' + (currentDispatchId || '#BRGY-2026-0047') + ' marked as resolved', 'success');
+      if (CalyeDB.isOnline() && currentDispatchDbId) {
+        CalyeDB.update('reports', { id: currentDispatchDbId }, { status: 'resolved', priority: 'resolved' });
+        markReportStep(currentDispatchDbId, 4, 'done', fmtDateTime(now.toISOString()));
+        markReportStep(currentDispatchDbId, 5, 'done', fmtDateTime(now.toISOString()));
+        syncFromSupabase();
+      }
+    }
+
+    // Update a single step in the resident's report_timeline (used to keep the
+    // community tracker in sync as the report moves through its lifecycle).
+    function markReportStep(reportDbId, step, state, timeStr) {
+      if (!CalyeDB.isOnline() || !reportDbId) return;
+      const patch = { state: state };
+      if (timeStr) patch.happened_at = timeStr;
+      CalyeDB.update('report_timeline', [['report_id', reportDbId], ['step', step]], patch);
+    }
+
+    // ── TOAST ──
+    let toastTimer;
+    function showToastMsg(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-text').textContent = msg;
+      t.className = 'show ' + (type === 'success' ? 'success' : 'info');
+      const iconSvg = t.querySelector('.toast-icon svg');
+      if (type === 'success') iconSvg.setAttribute('points', '20 6 9 17 4 12');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    // ── MAP USING OpenStreetMap (Nominatim geocoding, no API key) ──
+    let dashMap = null;
+    let dashMarker = null;
+
+    function loadMapByCoords(lat, lon, label) {
+      document.getElementById('map-location-label').textContent = label;
+      const loading = document.getElementById('map-loading');
+      const box = document.getElementById('dash-map-leaflet');
+
+      if (!dashMap) {
+        if (!box) return;
+        dashMap = L.map(box, {
+          zoomControl: false,
+          attributionControl: false,
+          scrollWheelZoom: true
+        });
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(dashMap);
+        drawCityBoundary(dashMap);
+      }
+
+      dashMap.setView([lat, lon], 15, { animate: false });
+      if (dashMarker) {
+        dashMarker.setLatLng([lat, lon]).setPopupContent('<b>📍 ' + label + '</b>');
+      } else {
+        dashMarker = L.circleMarker([lat, lon], { radius: 8, color: '#E53935', weight: 3, fillColor: '#E53935', fillOpacity: 0.85 })
+          .addTo(dashMap).bindPopup('<b>📍 ' + label + '</b>');
+      }
+
+      if (loading) loading.style.display = 'none';
+      window.setTimeout(() => { if (dashMap) dashMap.invalidateSize(); }, 150);
+    }
+
+    function searchMap() {
+      const query = document.getElementById('map-search-input').value.trim();
+      if (!query) { showToastMsg('Please enter a location to search', 'info'); return; }
+
+      const loading = document.getElementById('map-loading');
+      if (loading) { loading.style.display = 'flex'; }
+
+      // Try PositionStack first, fallback to Nominatim
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Santa Rosa, Laguna, Philippines')}&format=json&limit=1`;
+
+      fetch(nominatimUrl, { headers: { 'Accept-Language': 'en' } })
+        .then(r => r.json())
+        .then(data => {
+          if (loading) loading.style.display = 'none';
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            const label = data[0].display_name.split(',').slice(0, 3).join(',');
+            document.getElementById('map-search-input').value = '';
+            loadMapByCoords(lat, lon, label);
+            showToastMsg('Location found: ' + label.split(',')[0], 'success');
+          } else {
+            if (loading) {
+              loading.style.display = 'none';
+              loading.querySelector('p').textContent = 'Location not found.';
+            }
+            showToastMsg('Location not found. Try a different search.', 'info');
+          }
+        })
+        .catch(() => {
+          if (loading) {
+            loading.style.display = 'none';
+            loading.querySelector('p').textContent = 'Map service unavailable.';
+          }
+          showToastMsg('Map search unavailable', 'info');
+        });
+    }
+
+    function loadDefaultMap() {
+      // Santa Rosa, Laguna
+      loadMapByCoords(14.3122, 121.1114, 'Santa Rosa, Laguna, Philippines');
+      document.getElementById('map-search-input').value = '';
+    }
+
+    function showIncidentMap() {
+      loadDefaultMap();
+      initPageMap();
+    }
+
+    // ── FULL PAGE MAP ──
+    let incidentPins = loadStoredData(LS_KEY_PINS, [
+      { id: '#BRGY-2026-0047', type: 'Flooding', loc: 'Mercado Village', status: 'pending', cat: 'flood', severity: 'major', lat: 14.3148, lon: 121.1140, filed: '10:14 AM' },
+      { id: '#BRGY-2026-0046', type: 'Road Hazard', loc: 'Division Road', status: 'pending', cat: 'hazard', severity: 'minor', lat: 14.3122, lon: 121.1155, filed: '9:50 AM' },
+      { id: '#BRGY-2026-0045', type: 'Vandalism', loc: 'Calye Street', status: 'pending', cat: 'other', severity: 'minor', lat: 14.3105, lon: 121.1092, filed: '9:02 AM' },
+      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', loc: 'Bankley Area', status: 'responding', cat: 'garbage', severity: 'minor', lat: 14.3090, lon: 121.1128, filed: '8:30 AM' },
+      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', loc: 'Calye Park', status: 'responding', cat: 'hazard', severity: 'minor', lat: 14.3135, lon: 121.1078, filed: 'Yesterday' },
+      { id: '#BRGY-2026-0042', type: 'Flooding', loc: 'Calye Creek', status: 'resolved', cat: 'flood', severity: 'major', lat: 14.3162, lon: 121.1118, filed: 'Yesterday' },
+      { id: '#BRGY-2026-0041', type: 'Public Disturbance', loc: 'Barangay Hall', status: 'resolved', cat: 'other', severity: 'minor', lat: 14.3122, lon: 121.1114, filed: 'May 19' },
+      { id: '#BRGY-2026-0040', type: 'Clogged Drains', loc: 'Mercado St.', status: 'resolved', cat: 'flood', severity: 'minor', lat: 14.3155, lon: 121.1135, filed: 'May 18' },
+      { id: '#BRGY-2026-0039', type: 'Crime', loc: 'Calye Street Corner', status: 'pending', cat: 'crime', severity: 'major', lat: 14.3110, lon: 121.1105, filed: 'May 18' },
+      { id: '#BRGY-2026-0038', type: 'Fire', loc: 'Purok 3', status: 'resolved', cat: 'fire', severity: 'major', lat: 14.3096, lon: 121.1160, filed: 'May 17' },
+      { id: '#BRGY-2026-0037', type: 'Accident', loc: 'National Highway', status: 'responding', cat: 'accident', severity: 'major', lat: 14.3170, lon: 121.1090, filed: 'May 17' },
+    ]);
+
+    let pageMapFilter_active = 'all';
+
+    // ── ANALYTICS HEATMAP (Leaflet + leaflet.heat) ──
+    let analyticsHeatmap = null;
+
+    function initAnalyticsHeatmap() {
+      const box = document.getElementById('analytics-heatmap-box');
+      if (!box) return;
+      if (analyticsHeatmap) {
+        analyticsHeatmap.invalidateSize();
+        return;
+      }
+      analyticsHeatmap = L.map(box, {
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: true
+      });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: ''
+      }).addTo(analyticsHeatmap);
+      drawCityBoundary(analyticsHeatmap);
+
+      // Convert incident pins into heat points. Major incidents weigh more
+      // so higher-severity clusters glow brighter on the hotspot map.
+      const heatPoints = incidentPins.map(p => [
+        p.lat, p.lon, p.severity === 'major' ? 1 : 0.55
+      ]);
+      if (heatPoints.length) {
+        L.heatLayer(heatPoints, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(analyticsHeatmap);
+        analyticsHeatmap.fitBounds(L.latLngBounds(heatPoints.map(pt => [pt[0], pt[1]])), { padding: [30, 30] });
+      } else {
+        analyticsHeatmap.setView([14.3122, 121.1114], 15);
+      }
+      const loading = document.getElementById('analytics-heatmap-loading');
+      if (loading) loading.style.display = 'none';
+    }
+
+    window.addEventListener('resize', () => {
+      if (analyticsHeatmap) analyticsHeatmap.invalidateSize();
+      if (pageMap) pageMap.invalidateSize();
+      if (dashMap) dashMap.invalidateSize();
+    });
+
+    function initPageMap() {
+      const box = document.getElementById('page-map-leaflet');
+      const loading = document.getElementById('page-map-loading');
+      if (!box) return;
+      if (pageMap) {
+        pageMap.invalidateSize();
+        pageMapFit();
+        if (loading) loading.style.display = 'none';
+        return;
+      }
+      pageMap = L.map(box, {
+        zoomControl: true,
+        attributionControl: false,
+        scrollWheelZoom: true
+      });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(pageMap);
+      drawCityBoundary(pageMap);
+      pageMapMarkers = L.layerGroup().addTo(pageMap);
+      renderPageMapList(incidentPins);
+      pageMapFit();
+      pageMapInited = true;
+      if (loading) loading.style.display = 'none';
+      const badge = document.getElementById('page-map-badge');
+      if (badge) badge.style.display = 'block';
+      window.setTimeout(() => { if (pageMap) pageMap.invalidateSize(); }, 150);
+    }
+
+    function pageMapFit() {
+      const valid = incidentPins.filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
+      if (valid.length) {
+        pageMap.fitBounds(L.latLngBounds(valid.map(p => [p.lat, p.lon])), { padding: [40, 40], maxZoom: 15 });
+      } else {
+        pageMap.setView([14.3122, 121.1114], 14);
+      }
+    }
+
+    function pageMapLoadCoords(lat, lon, label) {
+      if (!pageMap) return;
+      pageMap.flyTo([lat, lon], 16, { duration: 0.6 });
+      const locLabel = document.getElementById('page-map-loc-label');
+      if (locLabel) locLabel.textContent = label;
+    }
+
+    function pageMapSearch() {
+      const query = document.getElementById('page-map-search').value.trim();
+      if (!query) { showToastMsg('Enter a location to search', 'info'); return; }
+
+      const loading = document.getElementById('page-map-loading');
+      const loadingTxt = document.getElementById('page-map-loading-txt');
+      if (loading) { loading.style.display = 'flex'; }
+      if (loadingTxt) loadingTxt.textContent = 'Searching location…';
+
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ', Santa Rosa, Laguna, Philippines')}&format=json&limit=1`;
+      fetch(nominatimUrl, { headers: { 'Accept-Language': 'en' } })
+        .then(r => r.json())
+        .then(data => {
+          if (loading) loading.style.display = 'none';
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            const label = data[0].display_name.split(',').slice(0, 3).join(',');
+            document.getElementById('page-map-search').value = '';
+            pageMapLoadCoords(lat, lon, label);
+            if (pageMap) {
+              L.circleMarker([lat, lon], { radius: 8, color: '#E53935', weight: 3, fillColor: '#E53935', fillOpacity: 0.85 })
+                .addTo(pageMap).bindPopup('<b>📍 ' + label + '</b>').openPopup();
+            }
+            showToastMsg('Found: ' + data[0].display_name.split(',')[0], 'success');
+          } else {
+            if (loadingTxt) loadingTxt.textContent = 'Location not found. Try another term.';
+            showToastMsg('Location not found', 'info');
+          }
+        })
+        .catch(() => {
+          if (loading) loading.style.display = 'none';
+          if (loadingTxt) loadingTxt.textContent = 'Map service unavailable.';
+          showToastMsg('Search unavailable', 'info');
+        });
+    }
+
+    function pageMapReset() {
+      document.getElementById('page-map-search').value = '';
+      pageMapLoadCoords(14.3122, 121.1114, 'Santa Rosa, Laguna, Philippines');
+      pageMapFilter('all', document.getElementById('mf-all'));
+      showToastMsg('Map reset to Santa Rosa, Laguna', 'info');
+    }
+
+    function pageMapFilter(cat, btn) {
+      document.querySelectorAll('[id^="mf-"]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      pageMapFilter_active = cat;
+      const filtered = cat === 'all' ? incidentPins
+        : cat === 'major' ? incidentPins.filter(p => p.severity === 'major')
+          : incidentPins.filter(p => p.cat === cat);
+      renderPageMapList(filtered);
+      const badge = document.getElementById('page-map-badge-txt');
+      if (badge) badge.textContent = filtered.length + ' incident' + (filtered.length !== 1 ? 's' : '');
+    }
+
+    function renderPageMapList(pins) {
+      const list = document.getElementById('page-map-incident-list');
+      const badge = document.getElementById('page-map-badge-txt');
+      if (badge) badge.textContent = pins.length + ' incident' + (pins.length !== 1 ? 's' : '');
+
+      if (pageMapMarkers) {
+        pageMapMarkers.clearLayers();
+        const catColors = { flood: '#E53935', hazard: '#F9A825', garbage: '#2E7D32', other: '#607D8B', crime: '#8E24AA', fire: '#FF7043', accident: '#3949AB' };
+        pins.forEach(p => {
+          if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
+          const color = catColors[p.cat] || '#607D8B';
+          L.circleMarker([p.lat, p.lon], {
+            radius: p.severity === 'major' ? 10 : 7,
+            color: '#fff',
+            weight: 2,
+            fillColor: color,
+            fillOpacity: 0.9
+          }).addTo(pageMapMarkers)
+            .bindPopup('<b>' + p.type + '</b><br>📍 ' + p.loc + '<br>' + p.id + ' · ' + p.status + ' · ' + p.filed);
+        });
+      }
+
+      const catColors = { flood: 'var(--danger)', hazard: 'var(--warning)', garbage: 'var(--success)', other: 'var(--text3)', crime: 'var(--crime)', fire: 'var(--fire)', accident: 'var(--accident)' };
+      const statusLabels = { pending: 'Pending', responding: 'Responding', resolved: 'Resolved' };
+      const statusBg = { pending: 'var(--warning-light)', responding: 'var(--info-light)', resolved: 'var(--success-light)' };
+      const statusColor = { pending: 'var(--warning)', responding: 'var(--primary)', resolved: 'var(--success)' };
+
+      list.innerHTML = pins.map(p => `
+    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye');showToastMsg('Zoomed to ${p.loc}','info')"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;cursor:pointer;transition:all 0.16s;border-left:3px solid ${catColors[p.cat]};"
+      onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
+      onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:700;color:var(--text);">${p.type}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${statusBg[p.status]};color:${statusColor[p.status]};">${statusLabels[p.status]}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text2);font-weight:600;">📍 ${p.loc}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">
+        <span style="font-size:10px;color:var(--text3);font-weight:600;">${p.id}</span>
+        <span style="font-size:10px;color:var(--text3);font-weight:600;">${p.filed}</span>
+      </div>
+    </div>
+  `).join('');
+
+      if (pins.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text3);font-size:12px;font-weight:600;">No incidents for this filter.</div>`;
+      }
+    }
+
+    // ── SUPABASE SYNC ──
+    CALYE_SUPABASE.init();
+
+    function fmtDateTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+        (d.getFullYear() !== new Date().getFullYear() ? ', ' + d.getFullYear() : '') +
+        ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function adminStatus(r) {
+      if (r.status === 'resolved') return 'resolved';
+      if (r.status === 'responding' || r.status === 'on_site') return 'responding';
+      return 'pending';
+    }
+
+    function timeAgo(iso) {
+      if (!iso) return 'Recent';
+      const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return mins + ' minutes ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + ' hour' + (hrs > 1 ? 's' : '') + ' ago';
+      const days = Math.floor(hrs / 24);
+      return days + ' day' + (days > 1 ? 's' : '') + ' ago';
+    }
+
+    function renderPriorityCard() {
+      const card = document.getElementById('priority-card');
+      if (!card) return;
+      const active = reports.find(r => r.status === 'pending' || r.status === 'responding');
+      if (!active) {
+        card.innerHTML = `
+        <div class="priority-header">
+          <div class="priority-label">No Active Reports</div>
+          <div class="priority-id">—</div>
+        </div>
+        <div class="priority-body">
+          <p style="color:var(--text2);font-size:13px;margin:0;">No incidents are currently awaiting a response.</p>
+        </div>`;
+        return;
+      }
+      const dbId = active.dbId || '';
+      card.innerHTML = `
+        <div class="priority-header">
+          <div class="priority-label">${active.status === 'responding' ? 'Responding' : 'Awaiting Response'}</div>
+          <div class="priority-id">${active.id}</div>
+        </div>
+        <div class="priority-body">
+          <div class="priority-type-row">
+            <div class="priority-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
+                <path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
+                <circle cx="12" cy="6" r="4" />
+              </svg>
+            </div>
+            <div class="priority-type-info">
+              <h3>${active.type || 'Incident'} — ${active.loc}</h3>
+              <p>Filed by <strong style="color:var(--text);">${active.reporterName}</strong> · ${timeAgo(active.createdAt)}</p>
+            </div>
+          </div>
+          <div class="priority-meta">
+            <div class="meta-item">
+              <div class="meta-label">Location</div>
+              <div class="meta-val">${active.loc}</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Reported At</div>
+              <div class="meta-val">${active.filed}</div>
+            </div>
+          </div>
+          ${active.description ? `<div class="priority-desc">
+            <div class="desc-label">Description</div>
+            <p>${active.description}</p>
+          </div>` : ''}
+          <div class="response-actions">
+            <button class="btn-respond primary" onclick="openResponseModal('${active.id}','${dbId}')">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+              </svg>
+              Dispatch Responder
+            </button>
+            <button class="btn-respond success" onclick="openResolveModal('${active.id}','${dbId}')">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Mark Resolved
+            </button>
+            <button class="btn-respond secondary" onclick="showToastMsg('Report details opened','info')">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4m0 4h.01" />
+              </svg>
+              Details
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function syncFromSupabase() {
+      if (!CalyeDB.isOnline()) return;
+      CalyeDB.fetch('report_media', { limit: 500 }).then(mediaRows => {
+        reportMediaByReport = {};
+        (mediaRows || []).forEach(m => {
+          if (!reportMediaByReport[m.report_id] && m.url) reportMediaByReport[m.report_id] = m.url;
+        });
+        loadReports();
+      });
+      CalyeDB.fetch('announcements', { order: 'created_at', asc: false, limit: 100 }).then(rows => {
+        if (!rows || !rows.length) return;
+        announcements = rows.map(a => ({
+          id: a.id, dbId: a.id, title: a.title, body: a.body,
+          category: a.category, date: fmtDateTime(a.created_at), pushed: a.pushed
+        }));
+        announcementIdSeq = 1;
+        renderAnnouncements();
+      });
+      CalyeDB.fetch('map_incidents', { limit: 200 }).then(rows => {
+        if (!rows || !rows.length) return;
+        incidentPins = rows.map(p => ({
+          id: p.id || p.report_id, dbId: p.id,
+          type: p.label || p.type,
+          loc: p.location || 'Barangay Calye',
+          status: p.status === 'resolved' ? 'resolved' : (p.status === 'responding' || p.status === 'on_site') ? 'responding' : 'pending',
+          cat: p.type, severity: 'minor', lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
+        }));
+        if (pageMapInited) {
+          renderPageMapList(incidentPins);
+          pageMapFilter('all', document.getElementById('mf-all'));
+        }
+      });
+    }
+
+    function loadReports() {
+      CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 200 }).then(rows => {
+        if (!rows || !rows.length) return;
+        const mapped = rows.map(r => ({
+          id: r.report_no || r.id.slice(0, 8),
+          type: r.type,
+          loc: r.location || 'Barangay Calye',
+          filed: fmtDateTime(r.created_at),
+          status: adminStatus(r),
+          category: r.category || 'other',
+          dbId: r.id,
+          description: r.description || '',
+          reporterName: r.reporter_name || 'Resident',
+          createdAt: r.created_at,
+          photo: reportMediaByReport[r.id] || ''
+        }));
+        reports = mapped;
+        fullReports = mapped.map(r => ({
+          id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' ? 'major' : 'minor',
+          loc: r.loc, filed: r.filed, status: r.status, dbId: r.dbId
+        }));
+        renderTable(getFilteredData());
+        filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+        refreshSummaryStats();
+        renderPriorityCard();
+      });
+    }
+
+    // ── VERIFY USERS ──
+    let verifyRequests = [];
+    let verifyFilterState = 'pending';
+    let verifySearchState = '';
+    let selectedVerifyId = null;
+
+    function verifyCardHtml(r) {
+      const roleCls = r.role === 'responder' ? 'role-responder' : 'role-resident';
+      const roleLabel = r.role === 'responder' ? 'Responder' : 'Resident';
+      const sub = r.role === 'responder' && r.employment_info ? r.employment_info : (r.address || r.email);
+      return `
+        <div class="verify-card ${selectedVerifyId === r.id ? 'selected' : ''}" onclick="openVerifyDetail('${r.id}')">
+          <div class="verify-card-top">
+            <div>
+              <div class="verify-card-name">${r.full_name || 'Unnamed'}</div>
+              <div class="verify-card-email">${r.email || ''}</div>
+            </div>
+            <span class="verify-chip ${r.status}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span>
+          </div>
+          <div class="verify-card-meta">
+            <span class="verify-meta-tag ${roleCls}">${roleLabel}</span>
+            <span class="verify-meta-tag">${r.id_type || 'ID'}</span>
+            <span class="verify-meta-tag">${fmtDateTime(r.submitted_at)}</span>
+          </div>
+          ${sub ? '<div style="font-size:11px;color:var(--text3);font-weight:600;margin-top:8px;">' + sub + '</div>' : ''}
+        </div>
+      `;
+    }
+
+    function getFilteredVerify() {
+      let data = verifyRequests;
+      if (verifyFilterState !== 'all') data = data.filter(r => r.status === verifyFilterState);
+      if (verifySearchState) {
+        const q = verifySearchState.toLowerCase();
+        data = data.filter(r =>
+          (r.full_name || '').toLowerCase().includes(q) ||
+          (r.email || '').toLowerCase().includes(q) ||
+          (r.address || '').toLowerCase().includes(q)
+        );
+      }
+      return data;
+    }
+
+    function renderVerifyList() {
+      const list = document.getElementById('verify-list');
+      const data = getFilteredVerify();
+      const pendingCount = verifyRequests.filter(r => r.status === 'pending').length;
+      document.getElementById('verify-count-label').textContent = pendingCount + ' pending';
+      const badge = document.querySelector('.verify-badge');
+      if (badge) { badge.textContent = pendingCount; badge.style.display = pendingCount ? 'inline-flex' : 'none'; }
+
+      if (!data.length) {
+        list.innerHTML = `<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">No accounts in this view.</div>`;
+        return;
+      }
+      list.innerHTML = data.map(verifyCardHtml).join('');
+    }
+
+    function verifyFilter(f, el) {
+      document.querySelectorAll('#page-verify .verify-filter').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+      verifyFilterState = f;
+      renderVerifyList();
+    }
+
+    function verifySearch(val) {
+      verifySearchState = val;
+      renderVerifyList();
+    }
+
+    function verifyField(label, value) {
+      return `<div class="verify-detail-label">${label}</div><div class="verify-detail-value">${value || '—'}</div>`;
+    }
+
+    function openVerifyDetail(id) {
+      selectedVerifyId = id;
+      const r = verifyRequests.find(x => x.id === id);
+      renderVerifyList();
+      if (!r) return;
+      const detail = document.getElementById('verify-detail');
+      const photo = r.id_doc_url
+        ? `<img class="id-photo" src="${r.id_doc_url}" alt="Valid ID" onerror="this.style.display='none';document.getElementById('id-fallback').style.display='flex';">`
+        : '';
+      const fallback = `<div class="id-photo-placeholder" id="id-fallback" style="${r.id_doc_url ? 'display:none;' : ''}">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+          No ID photo uploaded
+        </div>`;
+
+      const actions = r.status === 'pending' ? `
+        <div class="verify-btn-row">
+          <button class="verify-btn reject" onclick="rejectVerify('${r.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Reject
+          </button>
+          <button class="verify-btn approve" onclick="approveVerify('${r.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Approve
+          </button>
+        </div>` : '';
+
+      const rejectedNote = r.status === 'rejected' && r.review_note
+        ? `<div style="background:var(--danger-light);border-radius:var(--radius-sm);padding:11px 13px;font-size:12.5px;color:var(--danger);font-weight:700;margin-bottom:14px;">Rejected: ${r.review_note}</div>`
+        : '';
+
+      detail.style.display = 'block';
+      detail.style.alignItems = 'initial';
+      detail.style.justifyContent = 'initial';
+      detail.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+          <div>
+            <div style="font-size:16px;font-weight:800;color:var(--text);">${r.full_name || 'Unnamed'}</div>
+            <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:3px;">Submitted ${fmtDateTime(r.submitted_at)}</div>
+          </div>
+          <span class="verify-chip ${r.status}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span>
+        </div>
+        ${rejectedNote}
+        <div class="verify-detail-label">Valid ID</div>
+        <div style="margin-bottom:16px;">${photo}${fallback}</div>
+        ${verifyField('Role', r.role === 'responder' ? 'Responder' : 'Resident')}
+        ${verifyField('Email', r.email)}
+        ${verifyField('Address', r.address)}
+        ${verifyField('Employment', r.employment_info)}
+        ${verifyField('ID Type', r.id_type)}
+        ${actions}
+      `;
+    }
+
+    function approveVerify(id) {
+      const r = verifyRequests.find(x => x.id === id);
+      if (!r) return;
+      CalyeDB.update('verification_requests', [['id', id]], {
+        status: 'approved', reviewed_at: new Date().toISOString(), review_note: ''
+      });
+      CalyeDB.update('profiles', [['id', r.user_id]], {
+        verification_status: 'approved', verified_at: new Date().toISOString()
+      });
+      r.status = 'approved';
+      openVerifyDetail(id);
+      renderVerifyList();
+      showToastMsg(r.full_name + ' approved — account is now active', 'success');
+    }
+
+    function rejectVerify(id) {
+      const r = verifyRequests.find(x => x.id === id);
+      if (!r) return;
+      const note = prompt('Reason for rejection (shown to the user):', 'ID could not be verified');
+      if (note === null) return;
+      CalyeDB.update('verification_requests', [['id', id]], {
+        status: 'rejected', reviewed_at: new Date().toISOString(), review_note: note
+      });
+      CalyeDB.update('profiles', [['id', r.user_id]], {
+        verification_status: 'rejected'
+      });
+      r.status = 'rejected';
+      r.review_note = note;
+      openVerifyDetail(id);
+      renderVerifyList();
+      showToastMsg(r.full_name + ' rejected', 'info');
+    }
+
+    function loadVerifyQueue() {
+      if (!CalyeDB.isOnline()) return;
+      CalyeDB.fetch('verification_requests', { order: 'submitted_at', asc: false, limit: 200 }).then(rows => {
+        verifyRequests = rows || [];
+        renderVerifyList();
+      });
+    }
+
+    // Load map on startup
+    loadDefaultMap();
+    syncFromSupabase();
+    loadVerifyQueue();
+    setInterval(syncFromSupabase, 15000);
+
+    // ── CLOCK ──
+    (function tick() {
+      const now = new Date();
+      const dateEl = document.getElementById('dash-date');
+      if (dateEl) dateEl.textContent = now.toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' });
+      setTimeout(tick, 60000);
+    })();
+  </script>
+
+</body>
+
+</html>
