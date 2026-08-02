@@ -114,6 +114,22 @@
             display: flex;
         }
 
+        .screen.once.active {
+            animation: screenIn 0.2s var(--ease-out) both;
+        }
+
+        @keyframes screenIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
         .screen::-webkit-scrollbar {
             display: none;
         }
@@ -209,7 +225,7 @@
         .nav-item.job-btn.live .job-circle {
             background: linear-gradient(135deg, var(--accent), var(--accent-dark));
             box-shadow: 0 4px 16px rgba(245, 166, 35, 0.45);
-            animation: jobPulse 1.8s infinite;
+            animation: jobPulse 1.8s ease-in-out;
         }
 
         @keyframes jobPulse {
@@ -1955,6 +1971,16 @@
         .sheet-actions .btn {
             flex: 1;
         }
+
+        @media (prefers-reduced-motion:reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 
@@ -1980,7 +2006,7 @@
         </div>
 
         <!-- ===== HOME ===== -->
-        <div class="screen active" id="screen-home">
+        <div class="screen active once" id="screen-home">
             <div class="screen-header">
                 <div class="head-row">
                     <div>
@@ -3434,6 +3460,11 @@
         updateJobNavIndicator();
         syncFromSupabase();
         setInterval(syncFromSupabase, 10000);
+
+        // Strip the first-paint entrance marker so later tab switches stay instant.
+        setTimeout(() => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('once'));
+        }, 400);
 
         // Demo: auto-trigger an incoming dispatch shortly after load (only when no real assignments to show)
         // Disabled when running with zero records (FORCE_EMPTY_RECORDS).

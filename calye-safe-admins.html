@@ -110,9 +110,12 @@
     }
 
     @media (prefers-reduced-motion:reduce) {
-      .pulse-dot::after {
-        animation: none;
-        display: none;
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
     }
 
@@ -536,10 +539,12 @@
       box-shadow: var(--shadow);
     }
 
-    .stat-card:hover {
-      border-color: var(--border2);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-1px);
+    @media (hover: hover) and (pointer: fine) {
+      .stat-card:hover {
+        border-color: var(--border2);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+      }
     }
 
     .stat-card .glow {
@@ -838,9 +843,11 @@
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
     }
 
-    .btn-respond.primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+    @media (hover: hover) and (pointer: fine) {
+      .btn-respond.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+      }
     }
 
     .btn-respond.secondary {
@@ -1394,6 +1401,10 @@
       animation: modalFadeIn 0.2s ease both;
     }
 
+    .modal-overlay.open .modal-box {
+      animation: modalIn 0.24s var(--ease-out) both;
+    }
+
     .modal-box {
       background: var(--surface);
       border: 1px solid var(--border2);
@@ -1719,6 +1730,29 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+
+    /* Modal entrance */
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
       }
     }
 
@@ -2546,8 +2580,10 @@
       transition: transform 0.18s;
     }
 
-    .settings-save-btn:hover {
-      transform: translateY(-1px);
+    @media (hover: hover) and (pointer: fine) {
+      .settings-save-btn:hover {
+        transform: translateY(-1px);
+      }
     }
 
     .settings-save-btn:active {

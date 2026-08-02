@@ -47,7 +47,7 @@
       --status-h: 44px;
       --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
       --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-      --ease-spring: var(--ease-spring);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     html,
@@ -448,6 +448,12 @@
       font-size: 13px;
       font-weight: 700;
       transition: background 0.3s, color 0.3s;
+    }
+
+    #report-step-1,
+    #report-step-2,
+    #report-step-3 {
+      animation: fadeUp 0.24s var(--ease-out) both;
     }
 
     .step-dot.done {
@@ -1824,23 +1830,6 @@
 
     /* ===== TRANSITION ANIMATIONS ===== */
 
-    /* Screen enter animation */
-    @keyframes screenEnter {
-      from {
-        opacity: 0;
-        transform: translateY(18px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .screen.active {
-      animation: screenEnter 0.32s var(--ease-out) both;
-    }
-
     /* Staggered card/item entrance */
     @keyframes fadeUp {
       from {
@@ -1852,45 +1841,6 @@
         opacity: 1;
         transform: translateY(0);
       }
-    }
-
-    .screen.active .card,
-    .screen.active .announcement-card,
-    .screen.active .report-card,
-    .screen.active .hotline-item,
-    .screen.active .status-timeline,
-    .screen.active .alert-banner,
-    .screen.active .notif-item {
-      animation: fadeUp 0.38s var(--ease-out) both;
-    }
-
-    /* Stagger delays for sequential items */
-    .screen.active .card:nth-child(1),
-    .screen.active .announcement-card:nth-child(1),
-    .screen.active .report-card:nth-child(1),
-    .screen.active .hotline-item:nth-child(1) {
-      animation-delay: 0.04s;
-    }
-
-    .screen.active .card:nth-child(2),
-    .screen.active .announcement-card:nth-child(2),
-    .screen.active .report-card:nth-child(2),
-    .screen.active .hotline-item:nth-child(2) {
-      animation-delay: 0.10s;
-    }
-
-    .screen.active .card:nth-child(3),
-    .screen.active .announcement-card:nth-child(3),
-    .screen.active .report-card:nth-child(3),
-    .screen.active .hotline-item:nth-child(3) {
-      animation-delay: 0.16s;
-    }
-
-    .screen.active .card:nth-child(n+4),
-    .screen.active .announcement-card:nth-child(n+4),
-    .screen.active .report-card:nth-child(n+4),
-    .screen.active .hotline-item:nth-child(n+4) {
-      animation-delay: 0.22s;
     }
 
     /* Nav item tap bounce */
@@ -1925,7 +1875,7 @@
     }
 
     .alert-banner {
-      animation: alertPulse 2.8s ease-in-out infinite;
+      animation: alertPulse 2.8s ease-in-out;
     }
 
     /* Service item hover lift */
@@ -1934,7 +1884,7 @@
     }
 
     .service-item:active {
-      transform: scale(0.92);
+      transform: scale(0.97);
     }
 
     /* Nearby item tap feedback */
@@ -1955,9 +1905,11 @@
       transition: transform 0.18s var(--ease-out), box-shadow 0.18s;
     }
 
-    .report-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+    @media (hover: hover) and (pointer: fine) {
+      .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
     }
 
     /* Profile menu item slide-right on tap */
@@ -1994,9 +1946,11 @@
       transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out), transform 0.2s var(--ease-out);
     }
 
-    .incident-type:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
+    @media (hover: hover) and (pointer: fine) {
+      .incident-type:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
     }
 
     /* Step indicator transitions already present, enhance */
@@ -2009,31 +1963,25 @@
       transition: box-shadow 0.2s, transform 0.15s var(--ease-spring);
     }
 
-    .btn-primary:hover {
-      box-shadow: 0 6px 20px rgba(245, 166, 35, 0.45);
-      transform: translateY(-1px);
+    @media (hover: hover) and (pointer: fine) {
+      .btn-primary:hover {
+        box-shadow: 0 6px 20px rgba(245, 166, 35, 0.45);
+        transform: translateY(-1px);
+      }
     }
 
     .btn-primary:active {
       transform: scale(0.97) translateY(0);
     }
 
-    /* Screen header slide-down entrance */
-    @keyframes headerSlideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-12px);
+    @media (prefers-reduced-motion:reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .screen.active .screen-header,
-    .screen.active .profile-header {
-      animation: headerSlideDown 0.3s var(--ease-out) both;
     }
   </style>
 </head>
@@ -3967,18 +3915,8 @@
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       const el = document.getElementById('screen-' + name);
       if (el) {
-        // Force animation replay by briefly removing/re-adding active class
-        el.style.animation = 'none';
         el.classList.add('active');
         el.scrollTop = 0;
-        // Re-trigger animations on child elements
-        el.querySelectorAll('.card,.announcement-card,.report-card,.hotline-item,.status-timeline,.alert-banner,.screen-header,.profile-header').forEach(c => {
-          c.style.animation = 'none';
-          void c.offsetWidth; // reflow
-          c.style.animation = '';
-        });
-        void el.offsetWidth; // reflow
-        el.style.animation = '';
       }
       const navEl = document.getElementById('nav-' + name);
       if (navEl) navEl.classList.add('active');
@@ -5209,8 +5147,8 @@
       <!-- Shutter ring + button -->
       <button onclick="capturePhoto()"
         style="width:64px;height:64px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,0.25);outline:3px solid rgba(255,255,255,0.12);cursor:pointer;padding:0;transition:transform 0.1s;box-shadow:0 4px 16px rgba(0,0,0,0.4);"
-        onmousedown="this.style.transform='scale(0.88)'" onmouseup="this.style.transform='scale(1)'"
-        ontouchstart="this.style.transform='scale(0.88)'" ontouchend="this.style.transform='scale(1)'">
+        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+        ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
       </button>
     </div>
 
@@ -5281,8 +5219,8 @@
         style="flex-shrink:0;background:var(--primary);padding:18px 20px 28px;display:flex;flex-direction:column;gap:10px;">
         <button onclick="confirmPhoto()"
           style="width:100%;padding:15px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border:none;color:#fff;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 16px rgba(245,166,35,0.35);transition:transform 0.1s;"
-          onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
-          ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+        ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
@@ -5290,8 +5228,8 @@
         </button>
         <button onclick="retakePhoto()"
           style="width:100%;padding:13px;border-radius:12px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform 0.1s;"
-          onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
-          ontouchstart="this.style.transform='scale(0.98)'" ontouchend="this.style.transform='scale(1)'">
+        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+        ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
             <path d="M1 4v6h6" />
             <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
