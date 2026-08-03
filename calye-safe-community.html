@@ -4038,11 +4038,15 @@
               status: 'pending', lat: row.lat, lng: row.lng
             }]);
             if (selectedMediaDataURL) {
-              CalyeDB.insert('report_media', [{
-                report_id: inserted[0].id,
-                kind: 'photo',
-                url: selectedMediaDataURL
-              }]);
+              const mediaData = selectedMediaDataURL;
+              const mediaPath = 'reports/report-' + inserted[0].id + '-' + Date.now() + '.jpg';
+              CalyeDB.uploadStorage('evidence', mediaPath, mediaData).then(uploadedUrl => {
+                CalyeDB.insert('report_media', [{
+                  report_id: inserted[0].id,
+                  kind: 'photo',
+                  url: uploadedUrl || mediaData
+                }]);
+              });
             }
         });
       });
