@@ -13,6 +13,7 @@
  *   CalyeDB.update('reports', { id: '...' }, { status: 'resolved' })
  *   CalyeDB.remove('reports', { id: '...' })
  *   CalyeDB.cached('announcements', cacheKey, () => Promise<rows>)
+ *   CalyeDB.uploadStorage('evidence', 'proofs/asn-xxx.jpg', dataUrl) -> public URL
  */
 window.CalyeDB = (function () {
   var cfg = window.CALYE_SUPABASE;
@@ -124,6 +125,41 @@ window.CalyeDB = (function () {
     });
   }
 
+  // ---- storage (Supabase Storage buckets) -----------------------------------
+
+  function dataUrlToBlob(dataUrl) {
+    try {
+      var comma = dataUrl.indexOf(',');
+      var head = dataUrl.slice(0, comma);
+      var mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+      var raw = atob(dataUrl.slice(comma + 1));
+      var u8 = new Uint8Array(raw.length);
+      for (var i = 0; i < raw.length; i++) u8[i] = raw.charCodeAt(i);
+      return new Blob([u8], { type: mime });
+    } catch (e) { return null; }
+  }
+
+  /**
+   * uploadStorage(bucket, path, dataUrl):
+   *   Uploads an image data URL to Supabase Storage and resolves with the
+   *   public URL. Resolves null on any failure (caller decides fallback).
+   */
+  function uploadStorage(bucket, path, dataUrl) {
+    return new Promise(function (resolve) {
+      var c = client();
+      if (!c || !c.storage || !dataUrl) { resolve(null); return; }
+      var blob = dataUrlToBlob(dataUrl);
+      if (!blob) { resolve(null); return; }
+      c.storage.from(bucket).upload(path, blob, { contentType: blob.type || 'image/jpeg' })
+        .then(function (res) {
+          if (res.error || !res.data || !res.data.path) { resolve(null); return; }
+          var pub = c.storage.from(bucket).getPublicUrl(res.data.path);
+          resolve(pub && pub.data && pub.data.publicUrl ? pub.data.publicUrl : null);
+        })
+        .catch(function () { resolve(null); });
+    });
+  }
+
   // ---- localStorage cache with fallback ------------------------------------
 
   function lsGet(key) {
@@ -180,6 +216,7 @@ window.CalyeDB = (function () {
     update: update,
     remove: remove,
     cached: cached,
-    clearCache: clearCache
+    clearCache: clearCache,
+    uploadStorage: uploadStorage
   };
 })();

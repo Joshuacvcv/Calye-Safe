@@ -3359,6 +3359,7 @@
             if (!j) return;
             const now = nowStr();
             const notes = (document.getElementById('resolve-notes')?.value || '').trim();
+            const proofData = proofDataURL;
             j.status = 'resolved';
             j.timeline[4] = { label: 'Resolved', ts: now, state: 'done' };
             j.timeline[3].state = 'done';
@@ -3366,22 +3367,6 @@
             history.unshift({ id: j.id, type: j.type, cat: j.cat, loc: j.loc, resolvedDate: now, duration: '—' });
             saveStoredData(LS_KEY_JOBS, jobs);
             saveStoredData(LS_KEY_HISTORY, history);
-
-            if (CalyeDB.isOnline() && j.asnId) {
-                CalyeDB.update('assignments', { id: j.asnId }, {
-                    status: 'resolved',
-                    resolved_at: new Date().toISOString(),
-                    resolution_notes: notes || '',
-                    proof_url: proofDataURL || null
-                });
-                if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: 'resolved' });
-                markAsnStep(j.asnId, 5, 'done', now);
-                markReportStep(j.reportId, 5, 'done', now, notes || null);
-                CalyeDB.insert('resolved_history', [{
-                    assignment_id: j.asnId, responder_id: null, report_no: j.id,
-                    type: j.type, location: j.loc, resolved_at: new Date().toISOString(), duration_min: null
-                }]);
-            }
 
             closeSheet('resolve-overlay');
             showToast('Incident marked as resolved');
@@ -3391,6 +3376,31 @@
             document.getElementById('proof-upload').classList.remove('filled');
             document.getElementById('proof-text').textContent = 'Tap to take a photo of the resolved site';
             document.getElementById('resolve-notes').value = '';
+
+            if (!CalyeDB.isOnline() || !j.asnId) return;
+
+            const persist = proofUrl => {
+                CalyeDB.update('assignments', { id: j.asnId }, {
+                    status: 'resolved',
+                    resolved_at: new Date().toISOString(),
+                    resolution_notes: notes || '',
+                    proof_url: proofUrl || null
+                });
+                if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: 'resolved' });
+                markAsnStep(j.asnId, 5, 'done', now);
+                markReportStep(j.reportId, 5, 'done', now, notes || null);
+                CalyeDB.insert('resolved_history', [{
+                    assignment_id: j.asnId, responder_id: null, report_no: j.id,
+                    type: j.type, location: j.loc, resolved_at: new Date().toISOString(), duration_min: null
+                }]);
+            };
+
+            // Upload the proof photo to Supabase Storage, then persist the public URL.
+            // Falls back to the raw data URL if the upload fails (offline-capable).
+            const path = 'proofs/asn-' + j.asnId + '-' + Date.now() + '.jpg';
+            CalyeDB.uploadStorage('evidence', path, proofData).then(uploadedUrl => {
+                persist(uploadedUrl || proofData || null);
+            });
         }
 
         // ══════════════════════════ ESCALATE FLOW ══════════════════════════
