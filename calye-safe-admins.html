@@ -4038,7 +4038,7 @@
       tbody.innerHTML = data.map(r => `
     <tr>
       <td><span class="report-num">${r.id}</span></td>
-      <td><div class="report-name">${r.type}${photoTag(r.photo)}</div></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div></td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
@@ -4055,6 +4055,26 @@
     function photoTag(photo) {
       if (!photo) return '';
       return ` <span title="Has resident photo" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:rgba(30,58,95,0.1);color:var(--primary);vertical-align:middle;margin-left:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.2"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></span>`;
+    }
+
+    function resolutionTag(r) {
+      if (r.status !== 'resolved' || (!r.resolutionNotes && !r.proofUrl)) return '';
+      return `
+      <div class="resolution-block" style="margin-top:6px;padding-top:6px;border-top:1px dashed rgba(30,58,95,0.18);display:flex;align-items:center;gap:8px;">
+        ${r.proofUrl ? `<img src="${r.proofUrl}" onclick="openProofLightbox('${r.dbId}')" title="View resolution proof photo" style="width:34px;height:34px;object-fit:cover;border-radius:6px;cursor:zoom-in;flex:none;background:#eef2f7;"/>` : ''}
+        ${r.resolutionNotes ? `<div style="font-size:11px;color:var(--text2);line-height:1.45;min-width:0;"><span style="font-weight:700;color:var(--success);font-size:10px;letter-spacing:0.04em;">RESOLUTION NOTES</span><br/>${r.resolutionNotes}</div>` : ''}
+      </div>`;
+    }
+
+    function openProofLightbox(dbId) {
+      const report = reports.find(r => r.dbId === dbId);
+      const photo = report && report.proofUrl;
+      if (!photo) return;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${photo}" alt="Resolution proof" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
     }
 
     let currentFilter = 'all';
@@ -5045,28 +5065,40 @@
     function loadReports() {
       CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 200 }).then(rows => {
         if (!rows || !rows.length) return;
-        const mapped = rows.map(r => ({
-          id: r.report_no || r.id.slice(0, 8),
-          type: r.type,
-          loc: r.location || 'Barangay Calye',
-          filed: fmtDateTime(r.created_at),
-          status: adminStatus(r),
-          category: r.category || 'other',
-          dbId: r.id,
-          description: r.description || '',
-          reporterName: r.reporter_name || 'Resident',
-          createdAt: r.created_at,
-          photo: reportMediaByReport[r.id] || ''
-        }));
-        reports = mapped;
-        fullReports = mapped.map(r => ({
-          id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' ? 'major' : 'minor',
-          loc: r.loc, filed: r.filed, status: r.status, dbId: r.dbId
-        }));
-        renderTable(getFilteredData());
-        filterReportsPage('all', document.querySelector('#page-reports .ftab'));
-        refreshSummaryStats();
-        renderPriorityCard();
+        const reportIds = rows.map(r => r.id);
+        CalyeDB.fetch('assignments', { filters: [['report_id', 'in', reportIds]], limit: 250 }).then(asnRows => {
+          const asnByReport = (asnRows || []).reduce((m, a) => {
+            if (a.report_id && !m[a.report_id]) m[a.report_id] = a;
+            return m;
+          }, {});
+          const mapped = rows.map(r => {
+            const asn = asnByReport[r.id] || {};
+            return {
+              id: r.report_no || r.id.slice(0, 8),
+              type: r.type,
+              loc: r.location || 'Barangay Calye',
+              filed: fmtDateTime(r.created_at),
+              status: adminStatus(r),
+              category: r.category || 'other',
+              dbId: r.id,
+              description: r.description || '',
+              reporterName: r.reporter_name || 'Resident',
+              createdAt: r.created_at,
+              photo: reportMediaByReport[r.id] || '',
+              resolutionNotes: asn.resolution_notes || '',
+              proofUrl: asn.proof_url || ''
+            };
+          });
+          reports = mapped;
+          fullReports = mapped.map(r => ({
+            id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' ? 'major' : 'minor',
+            loc: r.loc, filed: r.filed, status: r.status, dbId: r.dbId
+          }));
+          renderTable(getFilteredData());
+          filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+          refreshSummaryStats();
+          renderPriorityCard();
+        });
       });
     }
 

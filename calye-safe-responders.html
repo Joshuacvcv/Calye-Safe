@@ -2517,7 +2517,139 @@
             </div>
         </div>
 
-        <input type="file" id="proof-file-input" accept="image/*" capture="environment" style="display:none;">
+        <!-- ===== PROOF CAMERA (capture-only) ===== -->
+        <div id="proof-cam-modal"
+            style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;height:780px;max-height:92vh;z-index:400;border-radius:16px;overflow:hidden;background:#fff;flex-direction:column;">
+
+            <div id="pc-header"
+                style="display:none;flex-shrink:0;background:var(--primary);padding:0 16px;height:52px;align-items:center;justify-content:space-between;">
+                <button onclick="closeProofCam()"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div
+                        style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                            <circle cx="12" cy="13" r="3" />
+                        </svg>
+                    </div>
+                    <div id="pc-live-dot"
+                        style="display:none;width:8px;height:8px;border-radius:50%;background:#E53935;animation:pcBlink 1.2s ease-in-out infinite;">
+                    </div>
+                </div>
+                <button id="pc-flip-btn" onclick="flipProofCam()"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M1 4v6h6" />
+                        <path d="M23 20v-6h-6" />
+                        <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
+                    </svg>
+                </button>
+                <div style="width:34px;height:34px;"></div>
+            </div>
+
+            <div id="pc-waiting"
+                style="display:none;flex:1;background:#0b0b0b;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:36px;text-align:center;">
+                <div
+                    style="width:72px;height:72px;border-radius:50%;border:4px solid rgba(255,255,255,0.1);border-top-color:var(--accent,#F5A623);animation:pcSpin 0.9s linear infinite;">
+                </div>
+                <div>
+                    <p style="color:#fff;font-size:15px;font-weight:700;margin:0 0 8px;">Requesting camera access…</p>
+                    <p style="color:rgba(255,255,255,0.45);font-size:12px;line-height:1.7;margin:0;">Tap
+                        <strong style="color:rgba(255,255,255,0.75);">Allow</strong> when your browser asks<br>for
+                        permission to use the camera.</p>
+                </div>
+                <button onclick="closeProofCam()"
+                    style="margin-top:4px;padding:11px 28px;border-radius:10px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+            </div>
+
+            <div id="pc-viewfinder" style="display:none;flex:1;position:relative;background:#000;overflow:hidden;">
+                <video id="pc-stream" autoplay playsinline muted
+                    style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+            </div>
+
+            <div id="pc-shutter-bar"
+                style="display:none;flex-shrink:0;background:var(--primary);padding:20px 24px 24px;flex-direction:column;align-items:center;gap:6px;">
+                <button onclick="captureProof()"
+                    style="width:64px;height:64px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,0.25);outline:3px solid rgba(255,255,255,0.12);cursor:pointer;padding:0;transition:transform 0.1s;box-shadow:0 4px 16px rgba(0,0,0,0.4);"
+                    onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+                    ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+                </button>
+            </div>
+
+            <div id="pc-denied"
+                style="display:none;flex:1;background:#0d0d0d;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:32px;text-align:center;">
+                <div
+                    style="width:68px;height:68px;border-radius:50%;background:rgba(229,57,53,0.1);display:flex;align-items:center;justify-content:center;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="1.6">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                        <line x1="3" y1="3" x2="21" y2="21" stroke="#E53935" stroke-width="2" />
+                    </svg>
+                </div>
+                <div>
+                    <p style="color:#fff;font-size:15px;font-weight:700;margin:0 0 8px;">Camera Access Denied</p>
+                    <p style="color:rgba(255,255,255,0.5);font-size:12px;line-height:1.7;margin:0;">Go to your browser
+                        or device settings<br>and allow camera permission, then try again.</p>
+                </div>
+                <button onclick="retryProofCam()"
+                    style="width:100%;max-width:220px;padding:13px;border-radius:10px;background:var(--primary);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Try
+                    Again</button>
+                <button onclick="closeProofCam()"
+                    style="padding:10px 24px;border-radius:10px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.6);font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+            </div>
+
+            <div id="pc-confirm" style="display:none;flex:1;flex-direction:column;background:#000;overflow:hidden;">
+                <div style="flex:1;position:relative;overflow:hidden;">
+                    <img id="pc-preview-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
+                </div>
+                <div style="flex-shrink:0;background:var(--primary);padding:18px 20px 28px;display:flex;flex-direction:column;gap:10px;">
+                    <button onclick="confirmProof()"
+                        style="width:100%;padding:15px;border-radius:12px;background:linear-gradient(135deg,var(--accent,#F5A623),var(--accent-dark,#D4841A));border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform 0.1s;"
+                        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+                        ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Confirm Image
+                    </button>
+                    <button onclick="retakeProof()"
+                        style="width:100%;padding:13px;border-radius:12px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform 0.1s;"
+                        onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
+                        ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+                            <path d="M1 4v6h6" />
+                            <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
+                        </svg>
+                        Retake
+                    </button>
+                </div>
+            </div>
+
+            <canvas id="pc-canvas" style="display:none;"></canvas>
+        </div>
+        <style>
+            @keyframes pcSpin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            @keyframes pcBlink {
+
+                0%,
+                100% {
+                    opacity: 1;
+                }
+
+                50% {
+                    opacity: 0.2;
+                }
+            }
+        </style>
 
     </div>
 
@@ -2644,7 +2776,7 @@
         let onDuty = true;
         let currentJobId = null;
         let currentQueueFilter = 'all';
-        let proofAttached = false;
+        let proofDataURL = null;
         let selectedReason = null;
         let dispatchTimer = null;
         let incomingJob = null;
@@ -3063,32 +3195,170 @@
         }
 
         // Persist a status change into the resident's report_timeline tracker.
-        function markReportStep(reportId, step, state, timeStr) {
+        function markReportStep(reportId, step, state, timeStr, note) {
             if (!CalyeDB.isOnline() || !reportId) return;
             const patch = { state: state };
             if (timeStr) patch.happened_at = timeStr;
+            if (note) patch.note = note;
             CalyeDB.update('report_timeline', [['report_id', reportId], ['step', step]], patch);
         }
 
         // ══════════════════════════ RESOLVE FLOW ══════════════════════════
+        let pcStream = null;
+        let pcFacing = 'environment';
+        let pcDataURL = null;
+
         function attachProof() {
-            document.getElementById('proof-file-input').click();
+            openProofCam();
         }
-        document.getElementById('proof-file-input').addEventListener('change', function () {
-            proofAttached = true;
+
+        function _pcState(state) {
+            const modal = document.getElementById('proof-cam-modal');
+            const header = document.getElementById('pc-header');
+            const waiting = document.getElementById('pc-waiting');
+            const viewfinder = document.getElementById('pc-viewfinder');
+            const shutter = document.getElementById('pc-shutter-bar');
+            const denied = document.getElementById('pc-denied');
+            const confirm = document.getElementById('pc-confirm');
+            const liveDot = document.getElementById('pc-live-dot');
+            header.style.display = 'none';
+            waiting.style.display = 'none';
+            viewfinder.style.display = 'none';
+            shutter.style.display = 'none';
+            denied.style.display = 'none';
+            confirm.style.display = 'none';
+            liveDot.style.display = 'none';
+            if (state === 'waiting') waiting.style.display = 'flex';
+            else if (state === 'viewfinder') {
+                header.style.display = 'flex';
+                viewfinder.style.display = 'flex';
+                shutter.style.display = 'flex';
+                liveDot.style.display = 'block';
+            } else if (state === 'denied') denied.style.display = 'flex';
+            else if (state === 'confirm') {
+                header.style.display = 'flex';
+                confirm.style.display = 'flex';
+            }
+        }
+
+        function openProofCam() {
+            const modal = document.getElementById('proof-cam-modal');
+            modal.style.display = 'flex';
+            _pcState('waiting');
+            startProofCam(pcFacing);
+        }
+
+        async function startProofCam(facingMode) {
+            if (pcStream) { pcStream.getTracks().forEach(t => t.stop()); pcStream = null; }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { _pcState('denied'); return; }
+            try {
+                let constraints = { video: { facingMode: { ideal: facingMode } }, audio: false };
+                try {
+                    constraints = {
+                        audio: false,
+                        video: {
+                            facingMode: { ideal: facingMode },
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
+                    pcStream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (e1) {
+                    pcStream = await navigator.mediaDevices.getUserMedia({
+                        audio: false,
+                        video: { facingMode: { ideal: facingMode } }
+                    });
+                }
+                const video = document.getElementById('pc-stream');
+                video.srcObject = pcStream;
+                await new Promise(resolve => {
+                    video.onloadedmetadata = resolve;
+                    setTimeout(resolve, 2000);
+                });
+                video.play().catch(() => { });
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const cams = devices.filter(d => d.kind === 'videoinput');
+                    document.getElementById('pc-flip-btn').style.display = cams.length > 1 ? 'flex' : 'none';
+                } catch (e) { /* ignore */ }
+                _pcState('viewfinder');
+            } catch (err) {
+                console.error('Camera error:', err.name, err.message);
+                _pcState('denied');
+            }
+        }
+
+        function retryProofCam() {
+            _pcState('waiting');
+            startProofCam(pcFacing);
+        }
+
+        function flipProofCam() {
+            pcFacing = pcFacing === 'environment' ? 'user' : 'environment';
+            _pcState('waiting');
+            startProofCam(pcFacing);
+        }
+
+        function captureProof() {
+            const video = document.getElementById('pc-stream');
+            const canvas = document.getElementById('pc-canvas');
+            const vw = video.videoWidth || 1280;
+            const vh = video.videoHeight || 720;
+            const targetRatio = 3 / 4;
+            const videoRatio = vw / vh;
+            let srcX = 0, srcY = 0, srcW = vw, srcH = vh;
+            if (videoRatio > targetRatio) {
+                srcW = Math.round(vh * targetRatio);
+                srcX = Math.round((vw - srcW) / 2);
+            } else if (videoRatio < targetRatio) {
+                srcH = Math.round(vw / targetRatio);
+                srcY = Math.round((vh - srcH) / 2);
+            }
+            canvas.width = srcW;
+            canvas.height = srcH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+            pcDataURL = canvas.toDataURL('image/jpeg', 0.92);
+            document.getElementById('pc-preview-img').src = pcDataURL;
+            if (pcStream) pcStream.getTracks().forEach(t => t.enabled = false);
+            _pcState('confirm');
+        }
+
+        function retakeProof() {
+            pcDataURL = null;
+            document.getElementById('pc-preview-img').src = '';
+            if (pcStream) pcStream.getTracks().forEach(t => t.enabled = true);
+            _pcState('viewfinder');
+        }
+
+        function confirmProof() {
+            if (!pcDataURL) return;
+            proofDataURL = pcDataURL;
             const area = document.getElementById('proof-upload');
             area.classList.add('filled');
-            document.getElementById('proof-text').textContent = 'Photo attached ✓';
-        });
+            document.getElementById('proof-text').textContent = 'Photo captured ✓';
+            closeProofCam();
+            showToast('Proof photo added.');
+        }
+
+        function closeProofCam() {
+            if (pcStream) { pcStream.getTracks().forEach(t => t.stop()); pcStream = null; }
+            pcDataURL = null;
+            document.getElementById('pc-preview-img').src = '';
+            document.getElementById('proof-cam-modal').style.display = 'none';
+            _pcState('waiting');
+            document.getElementById('proof-cam-modal').style.display = 'none';
+        }
 
         function submitResolution() {
-            if (!proofAttached) {
-                showToast('Please attach a photo before resolving');
+            if (!proofDataURL) {
+                showToast('Please capture a photo before resolving');
                 return;
             }
             const j = jobs.find(x => x.id === currentJobId);
             if (!j) return;
             const now = nowStr();
+            const notes = (document.getElementById('resolve-notes')?.value || '').trim();
             j.status = 'resolved';
             j.timeline[4] = { label: 'Resolved', ts: now, state: 'done' };
             j.timeline[3].state = 'done';
@@ -3098,10 +3368,15 @@
             saveStoredData(LS_KEY_HISTORY, history);
 
             if (CalyeDB.isOnline() && j.asnId) {
-                CalyeDB.update('assignments', { id: j.asnId }, { status: 'resolved', resolved_at: new Date().toISOString() });
+                CalyeDB.update('assignments', { id: j.asnId }, {
+                    status: 'resolved',
+                    resolved_at: new Date().toISOString(),
+                    resolution_notes: notes || '',
+                    proof_url: proofDataURL || null
+                });
                 if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: 'resolved' });
                 markAsnStep(j.asnId, 5, 'done', now);
-                markReportStep(j.reportId, 5, 'done', now);
+                markReportStep(j.reportId, 5, 'done', now, notes || null);
                 CalyeDB.insert('resolved_history', [{
                     assignment_id: j.asnId, responder_id: null, report_no: j.id,
                     type: j.type, location: j.loc, resolved_at: new Date().toISOString(), duration_min: null
@@ -3112,9 +3387,10 @@
             showToast('Incident marked as resolved');
             renderJob();
             updateJobNavIndicator();
-            proofAttached = false;
+            proofDataURL = null;
             document.getElementById('proof-upload').classList.remove('filled');
             document.getElementById('proof-text').textContent = 'Tap to take a photo of the resolved site';
+            document.getElementById('resolve-notes').value = '';
         }
 
         // ══════════════════════════ ESCALATE FLOW ══════════════════════════

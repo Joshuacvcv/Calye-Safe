@@ -684,16 +684,6 @@
       color: var(--danger);
     }
 
-    .incident-type.major .major-tag {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--danger);
-    }
-
     .incident-type.minor {
       border-color: var(--border);
     }
@@ -2324,7 +2314,6 @@
           </div>
           <div class="incident-grid">
             <div class="incident-type major" onclick="selectType(this,'Crime')">
-              <span class="major-tag"></span>
               <svg viewBox="0 0 24 24" fill="none" stroke="#B71C1C" stroke-width="1.8">
                 <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
                 <path d="M9.5 12l1.8 1.8L15 10" />
@@ -2332,7 +2321,6 @@
               <span>Crime</span>
             </div>
             <div class="incident-type major" onclick="selectType(this,'Fire')">
-              <span class="major-tag"></span>
               <svg viewBox="0 0 24 24" fill="none" stroke="#D84315" stroke-width="1.8">
                 <path
                   d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z" />
@@ -2340,7 +2328,6 @@
               <span>Fire</span>
             </div>
             <div class="incident-type major" onclick="selectType(this,'Flooding')">
-              <span class="major-tag"></span>
               <svg viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="1.8">
                 <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
                 <path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
@@ -2350,7 +2337,6 @@
               <span>Flooding</span>
             </div>
             <div class="incident-type major" onclick="selectType(this,'Accidents')">
-              <span class="major-tag"></span>
               <svg viewBox="0 0 24 24" fill="none" stroke="#B71C1C" stroke-width="1.8">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
@@ -2543,15 +2529,20 @@
         <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Add more information</h3>
         <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Help responders with more context</p>
         <div class="form-group">
-          <label>Upload Photo or Video (optional)</label>
-          <!-- Default upload button -->
-          <div class="upload-area" id="upload-area" onclick="openMediaChoice()">
+          <label>Incident Description (optional)</label>
+          <textarea id="report-description" rows="3"
+            placeholder="Describe what happened, what you saw, or any important details…"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Take Photo of the Incident (optional)</label>
+          <!-- Default camera button -->
+          <div class="upload-area" id="upload-area" onclick="chooseCamera()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
               <circle cx="12" cy="13" r="4" />
             </svg>
-            <p>Tap to add a photo or video</p>
-            <span>JPG, PNG, MP4 • Max 20MB</span>
+            <p>Tap to take a photo of the incident</p>
+            <span>Photo captured live with the camera</span>
           </div>
           <!-- Preview after selection -->
           <div id="media-preview" style="display:none;margin-top:8px;">
@@ -3375,67 +3366,7 @@
       </div>
     </div>
 
-    <!-- MEDIA CHOICE MODAL -->
-    <div class="modal-overlay" id="media-choice-modal" onclick="closeModal('media-choice-modal')">
-      <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:28px;">
-        <div class="modal-handle"></div>
-        <h3 style="font-size:16px;margin-bottom:6px;">Add Photo or Video</h3>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:20px;">How would you like to add media?</p>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <!-- Camera option -->
-          <button onclick="chooseCamera()"
-            style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);cursor:pointer;font-family:inherit;text-align:left;transition:border-color 0.2s;"
-            onmouseenter="this.style.borderColor='var(--primary)'"
-            onmouseleave="this.style.borderColor='var(--border)'">
-            <div
-              style="width:44px;height:44px;border-radius:12px;background:#E3F2FD;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.8">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--text);">Use Camera</div>
-              <div style="font-size:12px;color:var(--text2);margin-top:2px;">Take a photo or video now</div>
-            </div>
-            <svg style="margin-left:auto;flex-shrink:0;" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="var(--text3)" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-
-          <!-- Gallery option -->
-          <button onclick="chooseFiles()"
-            style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--card);cursor:pointer;font-family:inherit;text-align:left;transition:border-color 0.2s;"
-            onmouseenter="this.style.borderColor='var(--primary)'"
-            onmouseleave="this.style.borderColor='var(--border)'">
-            <div
-              style="width:44px;height:44px;border-radius:12px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="1.8">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-              </svg>
-            </div>
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--text);">Choose from Gallery</div>
-              <div style="font-size:12px;color:var(--text2);margin-top:2px;">Pick an existing photo or video</div>
-            </div>
-            <svg style="margin-left:auto;flex-shrink:0;" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="var(--text3)" stroke-width="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- FILE INPUTS: must be top-level, outside any overflow:hidden containers -->
-    <input type="file" id="media-input-camera" accept="image/*" capture="environment"
-      style="position:fixed;left:-9999px;opacity:0;width:1px;height:1px;" onchange="handleMediaUpload(this)">
-    <input type="file" id="media-input-files" accept="image/*,video/*"
-      style="position:fixed;left:-9999px;opacity:0;width:1px;height:1px;" onchange="handleMediaUpload(this)">
+    <!-- MEDIA: capture-only (camera modal below), no gallery/file upload -->
 
   </div>
 
@@ -4012,8 +3943,14 @@
       selectedDangerVal = val;
     }
 
+    function generateReportNo() {
+      // Millisecond-unique suffix (base36) so it never collides with seed
+      // rows like #BRGY-2026-0040…0049 or a previous report.
+      return '#BRGY-' + new Date().getFullYear() + '-' + new Date().getTime().toString(36).toUpperCase();
+    }
+
     function submitReport() {
-      const rid = '#BRGY-2026-00' + Math.floor(40 + Math.random() * 10);
+      const rid = generateReportNo();
       document.getElementById('report-id').textContent = rid;
       const now = new Date();
       const destLatLng = reportMarker ? reportMarker.getLatLng() : { lat: BRGY_CENTER[0], lng: BRGY_CENTER[1] };
@@ -4024,6 +3961,7 @@
         id: rid,
         type: selectedType || 'Incident',
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
+        description: document.getElementById('report-description')?.value || '',
         date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         status: 'responding',
         source: 'BRGY',
@@ -4081,8 +4019,11 @@
       CalyeAuth.currentSession().then(function (s) {
         if (s && s.user && s.user.id) row.reporter_id = s.user.id;
         CalyeDB.insert('reports', row).then(inserted => {
-          if (inserted && inserted[0] && inserted[0].id) {
-            const steps = [
+          if (!inserted || !inserted[0] || !inserted[0].id) {
+            showToast('Could not sync report. Please try again.');
+            return;
+          }
+          const steps = [
               { step: 1, label: 'Report Submitted', note: 'Your report was received by the system.', happened_at: fmtDate(new Date().toISOString()), state: 'done' },
               { step: 2, label: 'Verified by Operator', note: 'A barangay operator is reviewing your report.', happened_at: '—', state: 'active' },
               { step: 3, label: 'Responder Dispatched', note: 'Waiting for operator to assign a responder.', happened_at: '—', state: 'pending' },
@@ -4103,7 +4044,6 @@
                 url: selectedMediaDataURL
               }]);
             }
-          }
         });
       });
     }
@@ -4148,6 +4088,12 @@
       <div id="tl-${r.id.replace('#', '')}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
         <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.05em;margin-bottom:10px;">RESPONSE TIMELINE</div>
         ${renderTimeline(r.timeline)}
+        ${r.status === 'resolved' && (r.resolutionNotes || r.proofUrl) ? `
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:700;color:var(--success);letter-spacing:0.05em;margin-bottom:8px;">RESOLUTION EVIDENCE</div>
+          ${r.proofUrl ? `<img src="${r.proofUrl}" onclick="event.stopPropagation();openResolutionPhoto('${r.id}')" title="View resolution proof photo" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;cursor:zoom-in;background:var(--border);margin-bottom:10px;"/>` : ''}
+          ${r.resolutionNotes ? `<p style="margin:0;font-size:12px;color:var(--text2);line-height:1.6;">${r.resolutionNotes}</p>` : ''}
+        </div>` : ''}
         ${r.status === 'responding' && r.responder ? `
         <button class="btn" style="margin-top:6px;background:var(--info);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="event.stopPropagation();openResponderTracking('${r.id}')">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -4199,8 +4145,17 @@
     let trackingTotalDist = 0;        // total route distance (meters)
     let trackingFetchToken = 0;       // guards against stale async responses
 
-    function openResponderTracking(reportId) {
+    function openResolutionPhoto(reportId) {
       const r = reports.find(x => x.id === reportId);
+      if (!r || !r.proofUrl) return;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${r.proofUrl}" alt="Resolution proof" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
+    }
+
+    function openResponderTracking(reportId) {
       if (!r || !r.responder || r.lat == null || r.lng == null) {
         showToast('Live responder location is not available yet for this report.');
         return;
@@ -4480,19 +4435,14 @@
       showModal('all-alerts-modal');
     }
 
-    // ========== MEDIA UPLOAD ==========
-    function openMediaChoice() {
-      showModal('media-choice-modal');
-    }
-
+    // ========== MEDIA (capture-only) ==========
     let activeCameraStream = null;
     let currentFacingMode = 'environment';
     let capturedDataURL = null;
     let selectedMediaDataURL = null;
 
     function chooseCamera() {
-      closeModal('media-choice-modal');
-      setTimeout(function () { openCameraModal(); }, 280);
+      openCameraModal();
     }
 
     function _showCamState(state) {
@@ -4692,37 +4642,7 @@
       document.getElementById('camera-modal').style.display = 'none';
     }
 
-    function chooseFiles() {
-      closeModal('media-choice-modal');
-      setTimeout(function () {
-        document.getElementById('media-input-files').click();
-      }, 320);
-    }
-    function handleMediaUpload(input) {
-      const file = input.files[0];
-      if (!file) return;
-      if (file.size > 20 * 1024 * 1024) { showToast('File too large. Max 20MB.'); return; }
-      const preview = document.getElementById('media-preview');
-      const img = document.getElementById('media-img');
-      const vid = document.getElementById('media-vid');
-      const nameEl = document.getElementById('media-name');
-      const url = URL.createObjectURL(file);
-      nameEl.textContent = file.name;
-      if (file.type.startsWith('image/')) {
-        img.src = url; img.style.display = 'block'; vid.style.display = 'none';
-        const reader = new FileReader();
-        reader.onload = function (e) { selectedMediaDataURL = e.target.result; };
-        reader.readAsDataURL(file);
-      } else {
-        vid.src = url; vid.style.display = 'block'; img.style.display = 'none';
-        selectedMediaDataURL = null;
-      }
-      preview.style.display = 'block';
-      document.getElementById('upload-area').style.display = 'none';
-    }
     function clearMedia() {
-      const fi = document.getElementById('media-input-files');
-      if (fi) fi.value = '';
       selectedMediaDataURL = null;
       document.getElementById('media-preview').style.display = 'none';
       document.getElementById('media-img').src = '';
@@ -4965,21 +4885,32 @@
             (acc[t.report_id] = acc[t.report_id] || []).push(t);
             return acc;
           }, {});
-          const mapped = dbReports.map(r => ({
-            id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
-            type: r.type,
-            loc: r.location || 'Barangay Calye',
-            date: fmtDate(r.created_at),
-            status: r.status === 'on_site' || r.status === 'responding' ? 'responding' : r.status === 'resolved' ? 'resolved' : 'pending',
-            source: r.source && r.source.toUpperCase() || 'BRGY',
-            lat: r.lat, lng: r.lng,
-            timeline: mapDbTimeline(tlByReport[r.id])
-          }));
-          if (mapped.length) {
-            reports = mapped;
-            renderReports();
-            refreshCommunityStats();
-          }
+          CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], limit: 250 }).then(asnRows => {
+            const asnByReport = (asnRows || []).reduce((acc, a) => {
+              if (a.report_id && !acc[a.report_id]) acc[a.report_id] = a;
+              return acc;
+            }, {});
+            const mapped = dbReports.map(r => {
+              const asn = asnByReport[r.id] || {};
+              return {
+                id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
+                type: r.type,
+                loc: r.location || 'Barangay Calye',
+                date: fmtDate(r.created_at),
+                status: r.status === 'on_site' || r.status === 'responding' ? 'responding' : r.status === 'resolved' ? 'resolved' : 'pending',
+                source: r.source && r.source.toUpperCase() || 'BRGY',
+                lat: r.lat, lng: r.lng,
+                timeline: mapDbTimeline(tlByReport[r.id]),
+                resolutionNotes: asn.resolution_notes || '',
+                proofUrl: asn.proof_url || ''
+              };
+            });
+            if (mapped.length) {
+              reports = mapped;
+              renderReports();
+              refreshCommunityStats();
+            }
+          });
         });
       });
     }
