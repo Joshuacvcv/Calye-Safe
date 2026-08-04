@@ -3383,7 +3383,17 @@
             <!-- LEFT COLUMN -->
             <div class="col-left">
 
-              <!-- STAT CARDS -->
+              <!-- ANALYTICS FILTER BAR -->
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+                <span style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:0.04em;text-transform:uppercase;">Period</span>
+                <button class="ftab" onclick="setAnalyticsRange(7,this)">7 Days</button>
+                <button class="ftab active" onclick="setAnalyticsRange(30,this)">30 Days</button>
+                <button class="ftab" onclick="setAnalyticsRange(90,this)">90 Days</button>
+                <button class="ftab" onclick="setAnalyticsRange(0,this)">All Time</button>
+                <span id="analytics-range-note" style="font-size:11px;font-weight:700;color:var(--text2);margin-left:auto;"></span>
+              </div>
+
+              <!-- STAT CARDS (live) -->
               <div class="stat-grid">
                 <div class="stat-card">
                   <div class="glow" style="background:var(--danger);"></div>
@@ -3395,11 +3405,11 @@
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
                     </div>
-                    <span class="trend up">+5%</span>
+                    <span class="trend down" id="an-top-zone-count">0</span>
                   </div>
-                  <div class="val" style="font-size:22px;">Mercado Village</div>
+                  <div class="val" id="an-top-zone" style="font-size:22px;">—</div>
                   <div class="lbl">Top High-Risk Zone</div>
-                  <div class="sub">Highest flood recurrence</div>
+                  <div class="sub" id="an-top-zone-sub">No incident data</div>
                 </div>
                 <div class="stat-card">
                   <div class="glow" style="background:var(--accent);"></div>
@@ -3410,11 +3420,11 @@
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
                     </div>
-                    <span class="trend down">-2%</span>
+                    <span class="trend up" id="an-top-cat-pct">0%</span>
                   </div>
-                  <div class="val" style="font-size:22px;">Flooding</div>
+                  <div class="val" id="an-top-cat" style="font-size:22px;">—</div>
                   <div class="lbl">Top Recurring Issue</div>
-                  <div class="sub">Accounts for 35% of reports</div>
+                  <div class="sub" id="an-top-cat-sub">No incident data</div>
                 </div>
                 <div class="stat-card">
                   <div class="glow" style="background:var(--primary);"></div>
@@ -3425,11 +3435,11 @@
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
                     </div>
-                    <span class="trend up">-4m</span>
+                    <span class="trend up" id="an-avg-res-note">SLA</span>
                   </div>
-                  <div class="val">18m</div>
+                  <div class="val" id="an-avg-res">—</div>
                   <div class="lbl">Avg. Time to Resolution</div>
-                  <div class="sub">Improved vs last month</div>
+                  <div class="sub" id="an-avg-res-sub">No resolved reports</div>
                 </div>
               </div>
 
@@ -3464,35 +3474,14 @@
               <div class="panel">
                 <div class="panel-header">
                   <div class="sec-title">Incident Trends (Last 6 Months)</div>
-                  <button class="settings-save-btn" onclick="showToastMsg('Report exported','success')">Export
-                    Report</button>
+                  <div style="display:flex;gap:8px;">
+                    <button class="settings-save-btn" onclick="generateMonthlySummary()">Monthly Report</button>
+                    <button class="settings-save-btn" onclick="exportAnalyticsCsv()">Export CSV</button>
+                  </div>
                 </div>
                 <div class="panel-body">
-                  <div class="chart-bars" style="height:140px;">
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:45%;background:rgba(30,58,95,0.45);"></div>
-                      <div class="bar-label">Jan</div>
-                    </div>
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:55%;background:rgba(30,58,95,0.45);"></div>
-                      <div class="bar-label">Feb</div>
-                    </div>
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:38%;background:rgba(30,58,95,0.45);"></div>
-                      <div class="bar-label">Mar</div>
-                    </div>
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:62%;background:rgba(30,58,95,0.45);"></div>
-                      <div class="bar-label">Apr</div>
-                    </div>
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:95%;background:var(--accent);"></div>
-                      <div class="bar-label" style="color:var(--accent-dark);">May</div>
-                    </div>
-                    <div class="bar-wrap">
-                      <div class="bar" style="height:50%;background:rgba(30,58,95,0.45);"></div>
-                      <div class="bar-label">Jun</div>
-                    </div>
+                  <div class="chart-bars" id="analytics-trend-bars" style="height:140px;">
+                    <div style="align-self:center;color:var(--text3);font-size:12px;font-weight:600;">Loading trend data…</div>
                   </div>
                 </div>
               </div>
@@ -3507,53 +3496,8 @@
                 <div class="panel-header">
                   <div class="sec-title">Actionable Insights</div>
                 </div>
-                <div class="panel-body" style="display:flex;flex-direction:column;gap:12px;">
-                  <div
-                    style="display:flex;gap:10px;background:var(--danger-light);border:1px solid rgba(229,57,53,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
-                    <div
-                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(229,57,53,0.15);display:flex;align-items:center;justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="14" height="14"
-                        style="stroke:var(--danger);fill:none;stroke-width:2;">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
-                    </div>
-                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
-                      <strong style="color:var(--danger);">Flooding Alert</strong> — Mercado Village requires additional
-                      flood response personnel. 35% of all incidents originate here.
-                    </div>
-                  </div>
-                  <div
-                    style="display:flex;gap:10px;background:var(--warning-light);border:1px solid rgba(245,124,0,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
-                    <div
-                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(245,124,0,0.15);display:flex;align-items:center;justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="14" height="14"
-                        style="stroke:var(--warning);fill:none;stroke-width:2;">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
-                    </div>
-                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
-                      <strong style="color:var(--warning);">Garbage Collection</strong> — Uncollected garbage incidents
-                      are rising in Zone 4. Recommend increasing collection frequency to twice a week.
-                    </div>
-                  </div>
-                  <div
-                    style="display:flex;gap:10px;background:var(--success-light);border:1px solid rgba(46,125,50,0.2);border-radius:var(--radius-sm);padding:12px 14px;">
-                    <div
-                      style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(46,125,50,0.15);display:flex;align-items:center;justify-content:center;">
-                      <svg viewBox="0 0 24 24" width="14" height="14"
-                        style="stroke:var(--success);fill:none;stroke-width:2;">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                    <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
-                      <strong style="color:var(--success);">Resource Allocation</strong> — Road hazards have decreased
-                      by 20% in the last month. Current road maintenance schedule is effective.
-                    </div>
-                  </div>
+                <div class="panel-body" id="analytics-insights" style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="padding:10px 4px;color:var(--text3);font-size:12px;font-weight:600;">Loading insights…</div>
                 </div>
               </div>
 
@@ -3563,35 +3507,8 @@
                   <div class="sec-title">Department Allocation</div>
                 </div>
                 <div class="panel-body">
-                  <div class="cat-list">
-                    <div class="cat-row">
-                      <span class="cat-label" style="width:150px;">Disaster Risk (BDRRM)</span>
-                      <div class="cat-bar-wrap">
-                        <div class="cat-bar" style="width:45%;background:var(--danger);"></div>
-                      </div>
-                      <span class="cat-count" style="width:32px;">45%</span>
-                    </div>
-                    <div class="cat-row">
-                      <span class="cat-label" style="width:150px;">Sanitation</span>
-                      <div class="cat-bar-wrap">
-                        <div class="cat-bar" style="width:30%;background:var(--accent);"></div>
-                      </div>
-                      <span class="cat-count" style="width:32px;">30%</span>
-                    </div>
-                    <div class="cat-row">
-                      <span class="cat-label" style="width:150px;">Engineering/Public Works</span>
-                      <div class="cat-bar-wrap">
-                        <div class="cat-bar" style="width:15%;background:var(--primary);"></div>
-                      </div>
-                      <span class="cat-count" style="width:32px;">15%</span>
-                    </div>
-                    <div class="cat-row">
-                      <span class="cat-label" style="width:150px;">Barangay Tanods</span>
-                      <div class="cat-bar-wrap">
-                        <div class="cat-bar" style="width:10%;background:var(--success);"></div>
-                      </div>
-                      <span class="cat-count" style="width:32px;">10%</span>
-                    </div>
+                  <div class="cat-list" id="analytics-depts">
+                    <div style="padding:10px 4px;color:var(--text3);font-size:12px;font-weight:600;">Loading…</div>
                   </div>
                 </div>
               </div>
@@ -3947,11 +3864,11 @@
       <div class="modal-body">
         <div class="modal-form-group">
           <div class="modal-label">Resolution Summary</div>
-          <textarea class="modal-textarea" placeholder="Describe how the incident was resolved…"></textarea>
+          <textarea class="modal-textarea" id="resolve-notes" placeholder="Describe how the incident was resolved…"></textarea>
         </div>
         <div class="modal-form-group">
           <div class="modal-label">Resolved By</div>
-          <select class="modal-select">
+          <select class="modal-select" id="resolve-by">
             <option>Pedro Dela Cruz — Barangay Tanod</option>
             <option>Jose Reyes — BDRRM Officer</option>
             <option>Ana Mercado — Health Worker</option>
@@ -3962,6 +3879,20 @@
       <div class="modal-footer">
         <button class="modal-btn cancel" onclick="closeModal('modal-resolve')">Cancel</button>
         <button class="modal-btn confirm" onclick="confirmResolve()">Mark Resolved</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY REPORT MODAL -->
+  <div class="modal-overlay" id="modal-monthly">
+    <div class="modal-box" style="max-width:540px;">
+      <div class="modal-head">
+        <h3>Automated Monthly Report</h3>
+      </div>
+      <div class="modal-body" id="monthly-report-body" style="max-height:62vh;overflow:auto;"></div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-monthly')">Close</button>
+        <button class="modal-btn confirm" onclick="exportMonthlyCsv()">Download CSV</button>
       </div>
     </div>
   </div>
@@ -4193,7 +4124,15 @@
       const navCount = document.getElementById('reports-nav-count');
       if (dashTotal) dashTotal.textContent = fullReports.length;
       if (dashResolved) dashResolved.textContent = fullReports.filter(r => r.status === 'resolved').length;
-      if (dashAvg) dashAvg.textContent = fullReports.length ? '—' : '0m';
+      if (dashAvg) {
+        const resolved = reports.filter(r => r.status === 'resolved' && r.createdAt && r.resolvedAt);
+        if (resolved.length) {
+          const avgHrs = resolved.reduce((s, r) => s + ((new Date(r.resolvedAt) - new Date(r.createdAt)) / 3600000), 0) / resolved.length;
+          dashAvg.textContent = avgHrs >= 1 ? avgHrs.toFixed(1) + 'h' : Math.max(1, Math.round(avgHrs * 60)) + 'm';
+        } else {
+          dashAvg.textContent = reports.length ? '—' : '0m';
+        }
+      }
       if (navCount) navCount.textContent = fullReports.length;
     }
 
@@ -4376,8 +4315,8 @@
       // Force map to fill the frame
       if (page === 'map') resizeMapFrame();
 
-      // Build the geospatial heatmap the first time Analytics is opened
-      if (page === 'analytics') setTimeout(() => initAnalyticsHeatmap(), 120);
+      // Load live analytics data the first time Analytics is opened
+      if (page === 'analytics') setTimeout(() => loadAnalytics(), 120);
     }
 
     function resizeMapFrame() {
@@ -4500,6 +4439,8 @@
     function openResolveModal(rid, dbId) {
       currentDispatchId = rid || currentDispatchId || '#BRGY-2026-0047';
       currentDispatchDbId = dbId || currentDispatchDbId || null;
+      const notesEl = document.getElementById('resolve-notes');
+      if (notesEl) notesEl.value = '';
       document.getElementById('modal-resolve').classList.add('open');
     }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -4598,17 +4539,45 @@
     function confirmResolve() {
       const now = new Date();
       const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+      const reportId = currentDispatchId || '#BRGY-2026-0047';
+      const reportDbId = currentDispatchDbId;
+
       const resolvedCircle = document.getElementById('tl-resolved-circle');
       resolvedCircle.className = 'tl-circle done';
       resolvedCircle.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
       document.getElementById('tl-resolved-time').textContent = `${timeStr} · Resolved`;
       closeModal('modal-resolve');
-      showToastMsg('Report ' + (currentDispatchId || '#BRGY-2026-0047') + ' marked as resolved', 'success');
-      if (CalyeDB.isOnline() && currentDispatchDbId) {
-        CalyeDB.update('reports', { id: currentDispatchDbId }, { status: 'resolved', priority: 'resolved' });
-        markReportStep(currentDispatchDbId, 4, 'done', fmtDateTime(now.toISOString()));
-        markReportStep(currentDispatchDbId, 5, 'done', fmtDateTime(now.toISOString()));
+
+      const notesEl = document.getElementById('resolve-notes');
+      const byEl = document.getElementById('resolve-by');
+      const notes = notesEl ? notesEl.value.trim() : '';
+      const resolvedBy = byEl ? byEl.value : '';
+      const summary = resolvedBy && resolvedBy !== 'Admin (Direct)'
+        ? (notes ? 'Resolved by ' + resolvedBy + '. ' + notes : 'Resolved by ' + resolvedBy)
+        : notes;
+
+      // Keep the in-memory lists in sync immediately (works offline too)
+      reports = reports.map(r => r.dbId === reportDbId ? Object.assign({}, r, { status: 'resolved', resolutionNotes: summary }) : r);
+      fullReports = fullReports.map(r => r.dbId === reportDbId ? Object.assign({}, r, { status: 'resolved' }) : r);
+      renderTable(getFilteredData());
+      filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+      refreshSummaryStats();
+      renderPriorityCard();
+
+      if (CalyeDB.isOnline() && reportDbId) {
+        const patch = { status: 'resolved', resolved_at: now.toISOString() };
+        if (summary) patch.resolution_notes = summary;
+        CalyeDB.update('assignments', { report_id: reportDbId }, patch);
+        CalyeDB.update('reports', { id: reportDbId }, { status: 'resolved', priority: 'resolved' });
+        CalyeDB.update('map_incidents', { report_id: reportDbId }, { status: 'resolved' });
+        markReportStep(reportDbId, 4, 'done', fmtDateTime(now.toISOString()));
+        markReportStep(reportDbId, 5, 'done', fmtDateTime(now.toISOString()));
         syncFromSupabase();
+        showToastMsg('Report ' + reportId + ' marked as resolved and saved to the database', 'success');
+      } else if (reportDbId) {
+        showToastMsg('Report ' + reportId + ' marked as resolved (database offline — not synced)', 'info');
+      } else {
+        showToastMsg('Report ' + reportId + ' marked as resolved (local demo report)', 'success');
       }
     }
 
@@ -4734,15 +4703,46 @@
 
     let pageMapFilter_active = 'all';
 
-    // ── ANALYTICS HEATMAP (Leaflet + leaflet.heat) ──
+    // ── ANALYTICS (data-driven — live Supabase aggregation) ──
     let analyticsHeatmap = null;
+    let analyticsHeatLayer = null;
+    let analyticsRows = [];           // live report rows used for heatmap + export
+    let analyticsRange = 30;          // days; 0 = all time
 
-    function initAnalyticsHeatmap() {
+    const ANALYTICS_CATEGORY_LABELS = {
+      flood: 'Flooding', hazard: 'Road Hazard', garbage: 'Waste Mgmt',
+      crime: 'Crime / Safety', fire: 'Fire', accident: 'Accident', other: 'Other'
+    };
+
+    function deptForCategory(cat) {
+      switch (cat) {
+        case 'flood':
+        case 'fire':     return 'Disaster Risk (BDRRM)';
+        case 'garbage':  return 'Sanitation';
+        case 'hazard':
+        case 'accident': return 'Engineering / Public Works';
+        case 'crime':    return 'Barangay Tanods';
+        default:         return 'Barangay Ops';
+      }
+    }
+
+    const DEPT_BAR_COLORS = ['var(--danger)', 'var(--accent)', 'var(--primary)', 'var(--success)', 'var(--warning)'];
+
+    function setAnalyticsRange(days, btn) {
+      document.querySelectorAll('#page-analytics .ftab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      analyticsRange = days;
+      loadAnalytics();
+    }
+
+    // Create the Leaflet map once; data is drawn separately so the heat layer
+    // can be rebuilt whenever the date range changes.
+    function ensureAnalyticsMap() {
       const box = document.getElementById('analytics-heatmap-box');
-      if (!box) return;
+      if (!box) return false;
       if (analyticsHeatmap) {
         analyticsHeatmap.invalidateSize();
-        return;
+        return true;
       }
       analyticsHeatmap = L.map(box, {
         zoomControl: false,
@@ -4754,20 +4754,371 @@
         attribution: ''
       }).addTo(analyticsHeatmap);
       drawCityBoundary(analyticsHeatmap);
+      analyticsHeatmap.setView([14.3122, 121.1114], 15);
+      const loading = document.getElementById('analytics-heatmap-loading');
+      if (loading) loading.style.display = 'none';
+      return true;
+    }
 
-      // Convert incident pins into heat points. Major incidents weigh more
-      // so higher-severity clusters glow brighter on the hotspot map.
-      const heatPoints = incidentPins.map(p => [
-        p.lat, p.lon, p.severity === 'major' ? 1 : 0.55
-      ]);
-      if (heatPoints.length) {
-        L.heatLayer(heatPoints, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(analyticsHeatmap);
-        analyticsHeatmap.fitBounds(L.latLngBounds(heatPoints.map(pt => [pt[0], pt[1]])), { padding: [30, 30] });
+    // Pull live report rows + the server-side summary, then render every panel.
+    // Falls back to client-side aggregation (computeAnalyticsSummary) when the
+    // SQL analytics layer has not been applied to the database.
+    function loadAnalytics() {
+      const to = new Date();
+      const from = analyticsRange > 0 ? new Date(Date.now() - analyticsRange * 86400000) : null;
+      const filters = [];
+      if (from) filters.push(['created_at', 'gte', from.toISOString()]);
+      filters.push(['created_at', 'lte', to.toISOString()]);
+
+      ensureAnalyticsMap();
+
+      const noteEl = document.getElementById('analytics-range-note');
+      if (noteEl) noteEl.textContent = from
+        ? from.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' → ' + to.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'All time';
+
+      Promise.all([
+        CalyeDB.rpc('fn_incident_summary', { p_from: from ? from.toISOString() : null, p_to: to.toISOString() }),
+        CalyeDB.fetch('reports', { filters: filters, order: 'created_at', asc: false, limit: 500 })
+      ]).then(function (results) {
+        const rows = (results[1] || []).map(function (r) {
+          return {
+            report_no: r.report_no || r.id, type: r.type, category: r.category || 'other',
+            severity: r.severity || 'minor', location: r.location || 'Barangay Calye',
+            lat: r.lat, lng: r.lng, status: adminStatus(r), created_at: r.created_at, dbId: r.id
+          };
+        });
+        analyticsRows = rows;
+        const summary = (results[0] && results[0].totals) ? results[0] : computeAnalyticsSummary(rows);
+        renderAnalytics(summary, rows);
+      });
+    }
+
+    // Client-side mirror of fn_incident_summary() so the page is fully
+    // functional even before supabase-analytics.sql is applied.
+    function computeAnalyticsSummary(rows) {
+      const byCat = {}, byLoc = {};
+      let total = rows.length, open = 0, resolved = 0, major = 0, minor = 0;
+      rows.forEach(function (r) {
+        if (r.status === 'resolved') resolved++; else open++;
+        if (r.severity === 'major') major++; else minor++;
+        byCat[r.category] = (byCat[r.category] || 0) + 1;
+        if (r.location && r.location !== 'Barangay Calye') byLoc[r.location] = (byLoc[r.location] || 0) + 1;
+      });
+      const cats = Object.keys(byCat).map(function (c) {
+        return { category: c, count: byCat[c], pct: Math.round(100 * byCat[c] / (total || 1)) };
+      }).sort(function (a, b) { return b.count - a.count; });
+      const hotspots = Object.keys(byLoc).map(function (l) {
+        return { location: l, count: byLoc[l] };
+      }).sort(function (a, b) { return b.count - a.count; }).slice(0, 5);
+
+      const months = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - i);
+        months.push({
+          label: d.toLocaleDateString('en-US', { month: 'short' }),
+          key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+          count: 0
+        });
+      }
+      rows.forEach(function (r) {
+        const d = new Date(r.created_at);
+        const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        const m = months.find(function (x) { return x.key === key; });
+        if (m) m.count++;
+      });
+
+      return {
+        totals: { total: total, open: open, resolved: resolved },
+        by_severity: { major: major, minor: minor },
+        avg_resolution_hrs: 0,
+        by_category: cats,
+        monthly: months,
+        hotspots: hotspots
+      };
+    }
+
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    function fmtResHours(h) {
+      if (h == null) return '—';
+      if (h < 1) return Math.round(h * 60) + 'm';
+      return (Math.round(h * 10) / 10) + 'h';
+    }
+
+    function renderAnalytics(summary, rows) {
+      const s = summary || {};
+      const t = s.totals || { total: 0, open: 0, resolved: 0 };
+      const cats = s.by_category || [];
+      const hotspots = s.hotspots || [];
+      const topZone = hotspots[0] || null;
+      const topCat = cats[0] || null;
+
+      setText('an-top-zone', topZone ? topZone.location : 'No incidents');
+      setText('an-top-zone-count', topZone ? topZone.count + ' incidents' : '0');
+      setText('an-top-zone-sub', topZone ? 'Recurring zone in selected period' : 'No incident data for this period');
+
+      setText('an-top-cat', topCat ? (ANALYTICS_CATEGORY_LABELS[topCat.category] || topCat.category) : '—');
+      setText('an-top-cat-pct', topCat ? topCat.pct + '%' : '0%');
+      setText('an-top-cat-sub', topCat ? topCat.count + ' of ' + t.total + ' reports' : 'No incident data for this period');
+
+      const resRate = t.total ? Math.round(100 * t.resolved / t.total) : 0;
+      setText('an-avg-res', s.avg_resolution_hrs ? fmtResHours(s.avg_resolution_hrs) : '—');
+      setText('an-avg-res-note', t.total ? (t.total - t.resolved) + ' open' : 'SLA');
+      setText('an-avg-res-sub', t.total ? 'Resolution rate ' + resRate + '% (' + t.resolved + ' resolved / ' + t.total + ' total)' : 'No resolved reports');
+
+      renderTrendBars(s.monthly || []);
+      renderInsights(s, rows);
+      renderDeptAllocation(rows);
+      renderAnalyticsHeat(rows);
+    }
+
+    function renderTrendBars(months) {
+      const el = document.getElementById('analytics-trend-bars');
+      if (!el) return;
+      if (!months.length) {
+        el.innerHTML = '<div style="align-self:center;color:var(--text3);font-size:12px;font-weight:600;">No data for the selected period.</div>';
+        return;
+      }
+      const max = Math.max.apply(null, months.map(m => m.count)) || 1;
+      const curMonth = new Date().toLocaleDateString('en-US', { month: 'short' }).toLowerCase();
+      el.innerHTML = months.map(function (m) {
+        const h = Math.max(6, Math.round(100 * m.count / max));
+        const cur = m.label.toLowerCase() === curMonth;
+        return `<div class="bar-wrap" style="justify-content:flex-end;">
+          <div class="bar-count" style="font-size:8.5px;font-weight:800;color:${cur ? 'var(--accent-dark)' : 'var(--text3)'};">${m.count}</div>
+          <div class="bar" style="height:${h}%;${cur ? 'background:var(--accent);' : 'background:rgba(30,58,95,0.45);'}"></div>
+          <div class="bar-label" style="${cur ? 'color:var(--accent-dark);' : ''}">${m.label}</div>
+        </div>`;
+      }).join('');
+    }
+
+    const INSIGHT_TONES = {
+      danger:  { bg: 'var(--danger-light)',  border: 'rgba(229,57,53,0.2)',  color: 'var(--danger)' },
+      warning: { bg: 'var(--warning-light)', border: 'rgba(245,124,0,0.2)',  color: 'var(--warning)' },
+      success: { bg: 'var(--success-light)', border: 'rgba(46,125,50,0.2)',  color: 'var(--success)' },
+      info:    { bg: 'var(--info-light)',    border: 'rgba(30,58,95,0.2)',   color: 'var(--primary)' }
+    };
+
+    function insightIcon(color) {
+      return `<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:${color};fill:none;stroke-width:2;">
+        <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>`;
+    }
+
+    function renderInsights(summary, rows) {
+      const el = document.getElementById('analytics-insights');
+      if (!el) return;
+      const s = summary || {};
+      const t = s.totals || { total: 0, open: 0, resolved: 0 };
+      const cats = s.by_category || [];
+      const hotspots = s.hotspots || [];
+      const items = [];
+
+      if (hotspots[0]) {
+        items.push({ tone: 'danger', title: hotspots[0].location + ' is the top hotspot',
+          body: hotspots[0].count + ' incident(s) originated here in the selected period. Prioritise inspections and preventive maintenance in this area.' });
+      }
+      if (cats[0]) {
+        items.push({ tone: 'warning', title: (ANALYTICS_CATEGORY_LABELS[cats[0].category] || cats[0].category) + ' is the most frequent issue',
+          body: 'It accounts for ' + cats[0].pct + '% of reports in the selected period. Consider targeted resource allocation.' });
+      }
+      if (t.total) {
+        const open = t.total - t.resolved;
+        if (open > 0) {
+          items.push({ tone: 'info', title: open + ' report(s) still open',
+            body: 'Of ' + t.total + ' reports, ' + open + ' await action. Review the pending queue on the Reports page.' });
+        } else {
+          items.push({ tone: 'success', title: 'All reports resolved',
+            body: 'Every report in the selected period has been closed out.' });
+        }
+      }
+      if (s.avg_resolution_hrs) {
+        items.push({ tone: 'success', title: 'Avg. resolution ' + fmtResHours(s.avg_resolution_hrs),
+          body: 'Average time from filing to resolution across closed reports in the period.' });
+      }
+
+      if (!items.length) {
+        el.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:12px;font-weight:600;">No incident data for the selected period.</div>';
+        return;
+      }
+      el.innerHTML = items.map(function (it) {
+        const tone = INSIGHT_TONES[it.tone] || INSIGHT_TONES.info;
+        return `<div style="display:flex;gap:10px;background:${tone.bg};border:1px solid ${tone.border};border-radius:var(--radius-sm);padding:12px 14px;">
+          <div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:center;">${insightIcon(tone.color)}</div>
+          <div style="font-size:12px;color:var(--text2);font-weight:600;line-height:1.5;">
+            <strong style="color:${tone.color};">${it.title}</strong> — ${it.body}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderDeptAllocation(rows) {
+      const el = document.getElementById('analytics-depts');
+      if (!el) return;
+      const byDept = {};
+      rows.forEach(function (r) {
+        const d = deptForCategory(r.category);
+        byDept[d] = (byDept[d] || 0) + 1;
+      });
+      const total = rows.length || 1;
+      const depts = Object.keys(byDept).map(function (d) {
+        return { name: d, count: byDept[d], pct: Math.round(100 * byDept[d] / total) };
+      }).sort(function (a, b) { return b.count - a.count; });
+
+      if (!depts.length) {
+        el.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:12px;font-weight:600;">No data for the selected period.</div>';
+        return;
+      }
+      el.innerHTML = depts.map(function (d, i) {
+        return `<div class="cat-row">
+          <span class="cat-label" style="width:150px;">${d.name}</span>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:${d.pct}%;background:${DEPT_BAR_COLORS[i % DEPT_BAR_COLORS.length]};"></div></div>
+          <span class="cat-count" style="width:32px;">${d.pct}%</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderAnalyticsHeat(rows) {
+      if (!analyticsHeatmap) return;
+      const points = [];
+      rows.forEach(function (r) {
+        if (typeof r.lat === 'number' && typeof r.lng === 'number' && r.lat && r.lng) {
+          points.push([r.lat, r.lng, r.severity === 'major' ? 1 : 0.55]);
+        }
+      });
+      if (analyticsHeatLayer) { analyticsHeatmap.removeLayer(analyticsHeatLayer); analyticsHeatLayer = null; }
+      if (points.length) {
+        analyticsHeatLayer = L.heatLayer(points, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(analyticsHeatmap);
+        analyticsHeatmap.fitBounds(L.latLngBounds(points.map(function (p) { return [p[0], p[1]]; })), { padding: [30, 30] });
       } else {
         analyticsHeatmap.setView([14.3122, 121.1114], 15);
       }
-      const loading = document.getElementById('analytics-heatmap-loading');
-      if (loading) loading.style.display = 'none';
+    }
+
+    // ── EXPORT / AUTOMATED MONTHLY REPORT ──
+    function downloadFile(name, content, mime) {
+      const blob = new Blob([content], { type: mime || 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 150);
+    }
+
+    function csvEscape(v) {
+      return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    }
+
+    function exportAnalyticsCsv() {
+      const rows = analyticsRows;
+      if (!rows.length) { showToastMsg('No data to export for this period', 'error'); return; }
+      const header = ['Report No', 'Type', 'Category', 'Severity', 'Location', 'Latitude', 'Longitude', 'Status', 'Filed At'];
+      const lines = [header.map(csvEscape).join(',')].concat(rows.map(function (r) {
+        return [r.report_no, r.type, r.category, r.severity, r.location, r.lat, r.lng, r.status, r.created_at].map(csvEscape).join(',');
+      }));
+      downloadFile('calye-safe-incidents-' + new Date().toISOString().slice(0, 10) + '.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+      showToastMsg('Exported ' + rows.length + ' report(s)', 'success');
+    }
+
+    let monthlyRows = [];
+    let monthlyLabel = '';
+
+    function generateMonthlySummary() {
+      const now = new Date();
+      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastPrevMonth = new Date(firstThisMonth.getTime() - 1);
+      const firstPrevMonth = new Date(lastPrevMonth.getFullYear(), lastPrevMonth.getMonth(), 1);
+      monthlyLabel = lastPrevMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const pFrom = firstPrevMonth.toISOString();
+      const pTo = lastPrevMonth.toISOString();
+
+      const body = document.getElementById('monthly-report-body');
+      if (!body) return;
+      document.getElementById('modal-monthly').classList.add('open');
+      body.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Generating ' + monthlyLabel + ' summary…</div>';
+
+      Promise.all([
+        CalyeDB.rpc('fn_monthly_summary', { p_year: firstPrevMonth.getFullYear(), p_month: firstPrevMonth.getMonth() + 1 }),
+        CalyeDB.fetch('reports', { filters: [['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]], order: 'created_at', asc: false, limit: 500 })
+      ]).then(function (results) {
+        const rows = (results[1] || []).map(function (r) {
+          return {
+            report_no: r.report_no || r.id, type: r.type, category: r.category || 'other',
+            severity: r.severity || 'minor', location: r.location || 'Barangay Calye',
+            lat: r.lat, lng: r.lng, status: adminStatus(r), created_at: r.created_at
+          };
+        });
+        monthlyRows = rows;
+        const rpc = results[0];
+        const summary = (rpc && rpc.summary && rpc.summary.totals) ? rpc.summary : computeAnalyticsSummary(rows);
+        renderMonthlyReport(summary);
+      });
+    }
+
+    function renderMonthlyReport(summary) {
+      const body = document.getElementById('monthly-report-body');
+      if (!body) return;
+      const s = summary || {};
+      const t = s.totals || { total: 0, open: 0, resolved: 0 };
+      const cats = s.by_category || [];
+      const hotspots = s.hotspots || [];
+
+      const mini = [
+        { v: t.total, l: 'Total Reports' },
+        { v: t.resolved, l: 'Resolved' },
+        { v: t.total - t.resolved, l: 'Open' },
+        { v: s.avg_resolution_hrs ? fmtResHours(s.avg_resolution_hrs) : '—', l: 'Avg. Resolution' }
+      ];
+
+      body.innerHTML = `
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);">Automated Monthly Report · <span style="color:var(--primary);">${monthlyLabel}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 16px;">
+          ${mini.map(function (m) {
+            return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+              <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${m.v}</div>
+              <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">${m.l}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px;">Incidents by Category</div>
+        ${cats.length ? cats.map(function (c) {
+          return `<div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--text2);padding:5px 0;border-bottom:1px dashed var(--border);">
+            <span>${ANALYTICS_CATEGORY_LABELS[c.category] || c.category}</span><span>${c.count} · ${c.pct}%</span></div>`;
+        }).join('') : '<div style="font-size:12px;color:var(--text3);font-weight:600;">No incidents were reported in this month.</div>'}
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin:16px 0 8px;">High-Frequency Areas</div>
+        ${hotspots.length ? hotspots.map(function (h) {
+          return `<div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:var(--text2);padding:5px 0;border-bottom:1px dashed var(--border);">
+            <span>📍 ${h.location}</span><span>${h.count} incident(s)</span></div>`;
+        }).join('') : '<div style="font-size:12px;color:var(--text3);font-weight:600;">No recurring hotspots identified.</div>'}
+        <div style="margin-top:16px;padding:12px;border-radius:var(--radius-sm);background:var(--warning-light);border:1px solid rgba(245,124,0,0.2);font-size:11.5px;font-weight:600;color:var(--text2);line-height:1.55;">
+          <strong style="color:var(--warning);">Recommendation:</strong> ${recommendationText(cats, hotspots)}
+        </div>`;
+    }
+
+    function recommendationText(cats, hotspots) {
+      if (hotspots.length && cats.length) {
+        return 'Concentrate resources on ' + hotspots[0].location + ' and address the recurring ' + (ANALYTICS_CATEGORY_LABELS[cats[0].category] || cats[0].category) + ' issues, which account for ' + cats[0].pct + '% of the month\'s reports.';
+      }
+      return 'Maintain current response operations and monitor next month\'s trends for changes.';
+    }
+
+    function exportMonthlyCsv() {
+      const rows = monthlyRows;
+      if (!rows.length) { showToastMsg('No monthly data to download', 'error'); return; }
+      const header = ['Report No', 'Type', 'Category', 'Severity', 'Location', 'Latitude', 'Longitude', 'Status', 'Filed At'];
+      const lines = [header.map(csvEscape).join(',')].concat(rows.map(function (r) {
+        return [r.report_no, r.type, r.category, r.severity, r.location, r.lat, r.lng, r.status, r.created_at].map(csvEscape).join(',');
+      }));
+      downloadFile('calye-safe-monthly-' + monthlyLabel.replace(/\s+/g, '-').toLowerCase() + '.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+      showToastMsg('Monthly report downloaded', 'success');
     }
 
     window.addEventListener('resize', () => {
@@ -5084,6 +5435,7 @@
               description: r.description || '',
               reporterName: r.reporter_name || 'Resident',
               createdAt: r.created_at,
+              resolvedAt: asn.resolved_at || null,
               photo: reportMediaByReport[r.id] || '',
               resolutionNotes: asn.resolution_notes || '',
               proofUrl: asn.proof_url || ''

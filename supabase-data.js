@@ -125,6 +125,19 @@ window.CalyeDB = (function () {
     });
   }
 
+  // ---- RPC (server-side functions, e.g. analytics aggregations) -------------
+
+  function rpc(fn, params) {
+    return new Promise(function (resolve) {
+      var c = client();
+      if (!c) { resolve(null); return; }
+      c.rpc(fn, params || {}).then(function (res) {
+        if (res.error) { resolve(null); return; }
+        resolve(res.data);
+      }).catch(function () { resolve(null); });
+    });
+  }
+
   // ---- storage (Supabase Storage buckets) -----------------------------------
 
   function dataUrlToBlob(dataUrl) {
@@ -215,6 +228,7 @@ window.CalyeDB = (function () {
     insert: insert,
     update: update,
     remove: remove,
+    rpc: rpc,
     cached: cached,
     clearCache: clearCache,
     uploadStorage: uploadStorage

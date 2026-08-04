@@ -3833,7 +3833,7 @@
           if (data && data.display_name) {
             const addr = data.display_name.split(',').slice(0, 3).join(', ');
             const addrInput = document.getElementById('report-address');
-            if (addr && !addrInput.value) addrInput.value = addr;
+            if (addr) addrInput.value = addr;
             document.getElementById('loc-confirmed-text').textContent = `📍 ${addr || `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`}`;
           }
         })
@@ -3869,6 +3869,16 @@
       if (reportMarker) { reportMarker.remove(); reportMarker = null; }
       if (userLocMarker) { userLocMarker.remove(); userLocMarker = null; }
       if (reportMap) { reportMap.remove(); reportMap = null; }
+      const addrField = document.getElementById('report-address');
+      if (addrField) addrField.value = '';
+      const confirmedBar = document.getElementById('loc-confirmed-bar');
+      if (confirmedBar) confirmedBar.style.display = 'none';
+      const confirmedText = document.getElementById('loc-confirmed-text');
+      if (confirmedText) confirmedText.textContent = '';
+      const locReq = document.getElementById('loc-required-msg');
+      if (locReq) locReq.style.display = 'flex';
+      const pinLabel = document.getElementById('report-map-pin-label');
+      if (pinLabel) pinLabel.textContent = '📍 Tap to drop a pin';
       const d = new Date();
       const dateEl = document.getElementById('report-date');
       const timeEl = document.getElementById('report-time');
@@ -4084,6 +4094,14 @@
         </div>
         <span class="badge ${r.status}">${r.status === 'responding' ? 'Responding' : r.status === 'resolved' ? 'Resolved' : 'Pending'}</span>
       </div>
+      ${r.photo ? `
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="event.stopPropagation();openSubmittedPhoto('${r.id}')">
+        <img src="${r.photo}" alt="Your submitted photo" style="width:52px;height:52px;object-fit:cover;border-radius:8px;background:var(--border);flex:none;"/>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">Your submitted photo</div>
+          <div style="font-size:11px;color:var(--text3);">Tap to view full photo</div>
+        </div>
+      </div>` : ''}
       <div class="report-footer">
         <span class="report-date">${r.date}</span>
         <span style="font-size:11px;color:var(--primary);font-weight:600;">${r.id}</span>
@@ -4155,6 +4173,16 @@
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
       overlay.innerHTML = `<img src="${r.proofUrl}" alt="Resolution proof" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
+    }
+
+    function openSubmittedPhoto(reportId) {
+      const r = reports.find(x => x.id === reportId);
+      if (!r || !r.photo) return;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${r.photo}" alt="Your submitted photo" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
       overlay.onclick = function () { document.body.removeChild(overlay); };
       document.body.appendChild(overlay);
     }
@@ -4889,31 +4917,38 @@
             (acc[t.report_id] = acc[t.report_id] || []).push(t);
             return acc;
           }, {});
-          CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], limit: 250 }).then(asnRows => {
-            const asnByReport = (asnRows || []).reduce((acc, a) => {
-              if (a.report_id && !acc[a.report_id]) acc[a.report_id] = a;
+          CalyeDB.fetch('report_media', { filters: [['report_id', 'in', ids]], limit: 250 }).then(mediaRows => {
+            const mediaByReport = (mediaRows || []).reduce((acc, m) => {
+              if (m.report_id && m.url && !acc[m.report_id]) acc[m.report_id] = m.url;
               return acc;
             }, {});
-            const mapped = dbReports.map(r => {
-              const asn = asnByReport[r.id] || {};
-              return {
-                id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
-                type: r.type,
-                loc: r.location || 'Barangay Calye',
-                date: fmtDate(r.created_at),
-                status: r.status === 'on_site' || r.status === 'responding' ? 'responding' : r.status === 'resolved' ? 'resolved' : 'pending',
-                source: r.source && r.source.toUpperCase() || 'BRGY',
-                lat: r.lat, lng: r.lng,
-                timeline: mapDbTimeline(tlByReport[r.id]),
-                resolutionNotes: asn.resolution_notes || '',
-                proofUrl: asn.proof_url || ''
-              };
+            CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], limit: 250 }).then(asnRows => {
+              const asnByReport = (asnRows || []).reduce((acc, a) => {
+                if (a.report_id && !acc[a.report_id]) acc[a.report_id] = a;
+                return acc;
+              }, {});
+              const mapped = dbReports.map(r => {
+                const asn = asnByReport[r.id] || {};
+                return {
+                  id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
+                  type: r.type,
+                  loc: r.location || 'Barangay Calye',
+                  date: fmtDate(r.created_at),
+                  status: r.status === 'on_site' || r.status === 'responding' ? 'responding' : r.status === 'resolved' ? 'resolved' : 'pending',
+                  source: r.source && r.source.toUpperCase() || 'BRGY',
+                  lat: r.lat, lng: r.lng,
+                  timeline: mapDbTimeline(tlByReport[r.id]),
+                  photo: mediaByReport[r.id] || '',
+                  resolutionNotes: asn.resolution_notes || '',
+                  proofUrl: asn.proof_url || ''
+                };
+              });
+              if (mapped.length) {
+                reports = mapped;
+                renderReports();
+                refreshCommunityStats();
+              }
             });
-            if (mapped.length) {
-              reports = mapped;
-              renderReports();
-              refreshCommunityStats();
-            }
           });
         });
       });
