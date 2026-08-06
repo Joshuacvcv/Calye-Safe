@@ -16,8 +16,8 @@ window.CalyeAuth = (function () {
   var client = null;
   var lastSession = null;
 
-  function init() {
-    CALYE_SUPABASE.init();
+  function init(storageKey) {
+    CALYE_SUPABASE.init(storageKey);
     client = CALYE_SUPABASE.getClient();
     return !!client;
   }
@@ -161,16 +161,21 @@ window.CalyeAuth = (function () {
         };
         CalyeDB.insert('verification_requests', [row]).then(function (rows) {
           if (!rows || !rows.length) { resolve({ error: 'Could not save your verification request' }); return; }
+          // Persist the submitted details on the profile BEFORE resolving, so
+          // a follow-up getStatus() (and the gate) sees the ID on file and
+          // shows "under review" instead of asking for another upload.
           CalyeDB.update('profiles', [['id', user.id]], {
             full_name: row.full_name,
             email: row.email,
             address: row.address,
+            barangay: opts.barangay || '',
             id_doc_url: row.id_doc_url,
             id_type: row.id_type,
             employment_info: row.employment_info,
             verification_status: 'pending'
+          }).then(function () {
+            resolve({ error: null, row: rows[0] });
           });
-          resolve({ error: null, row: rows[0] });
         });
       });
     });
@@ -207,6 +212,107 @@ window.CalyeAuth = (function () {
     });
   }
 
+  // ── PASSWORD POLICY (applied across resident / responder / staff) ─────────
+  // Core rules:
+  //   1. Length — at least 8 required, 12+ recommended, 15+ for sensitive ops.
+  //   2. Uniqueness — reject passwords that are widely reused (common/breached)
+  //      or that mirror this account's own details (email, name).
+  //   3. No common words / patterns — block "password", "123456", names,
+  //      keyboard runs, repeated chars, sequential digits.
+  //   4. No forced rotation — we intentionally do NOT force periodic resets;
+  //      that is enforced by never expiring the session here.
+  var COMMON_PASSWORDS = [
+    'password', 'password1', 'password123', '123456', '1234567', '12345678',
+    '123456789', '1234567890', '12345', '1234567890123456', 'qwerty', 'qwerty123',
+    'qwertyuiop', 'abc123', 'abc12345', '123qwe', '123abc', 'iloveyou', '111111',
+    '000000', '666666', '88888888', '654321', '012345', '123123', '121212',
+    'a123456', 'a1234567', 'a123456789', 'aa123456', 'aaa111', 'passw0rd',
+    'p@ssw0rd', 'admin', 'admin123', 'administrator', 'letmein', 'monkey',
+    'monkey123', 'dragon', 'trustno1', 'master', 'shadow', 'sunshine', 'welcome',
+    'welcome1', 'football', 'baseball', 'princess', 'dragon123', 'login', 'changeme',
+    'secret', 'password!', 'guest', 'user', 'user123', 'test', 'test123',
+    'hello123', 'rightnow', 'mustang', 'freedom', 'whatever', 'default',
+    'yourpassword', 'access', 'linkedin', 'google', 'yahoo', 'michelle',
+    'jordan', 'harley', 'jessica', 'superman', 'batman', 'pokemon', 'killer',
+    'buster', 'soccer', 'diamond', 'starwars', 'charlie', 'dallas', 'tigger',
+    'pepper', 'corona', 'zaq12wsx', '1q2w3e4r', '1qaz2wsx', 'qaz123', 'plm123'
+  ];
+  // Common weak building blocks used in pattern checks.
+  var KEYBOARD_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+  var SEQUENTIAL = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+  function containsRun(str, max) {
+    // Detect a run of identical characters (e.g. "aaaaaa") or an ascending /
+    // descending sequence of length >= 6 (e.g. "123456", "abcdef", "qazwsx").
+    str = str.toLowerCase();
+    var same = 1;
+    for (var i = 1; i < str.length; i++) {
+      if (str[i] === str[i - 1]) { same++; if (same >= max) return true; }
+      else same = 1;
+    }
+    for (var j = 0; j < KEYBOARD_ROWS.length; j++) {
+      if (str.indexOf(KEYBOARD_ROWS[j].substring(0, 5)) !== -1) return true;
+    }
+    for (var k = 0; k + 5 < str.length; k++) {
+      var asc = true, desc = true;
+      for (var s = 1; s < 5; s++) {
+        var idx = SEQUENTIAL.indexOf(str[k + s - 1]);
+        var nxt = SEQUENTIAL.indexOf(str[k + s]);
+        if (idx === -1 || nxt === -1 || nxt !== idx + 1) asc = false;
+        if (idx === -1 || nxt === -1 || nxt !== idx - 1) desc = false;
+      }
+      if (asc || desc) return true;
+    }
+    return false;
+  }
+
+  function tokensFor(opts) {
+    var out = [];
+    function push(s) {
+      s = (s || '').toLowerCase().trim();
+      if (s) out.push(s);
+    }
+    push(opts && opts.full_name);
+    push(opts && opts.email);
+    if (opts && opts.email) push((opts.email.split('@')[0] || '').replace(/[^a-z]/g, ''));
+    if (opts && opts.email) { var host = (opts.email.split('@')[1] || '').split('.')[0]; push(host); }
+    return out;
+  }
+
+  /**
+   * Validate a candidate password against the Calye-Safe policy.
+   * opts: { full_name, email } (used for personal-detail checks).
+   * Returns { ok, message, strength } where strength is 0..4.
+   */
+  function evalPasswordPolicy(pw, opts) {
+    opts = opts || {};
+    var pass = (pw == null) ? '' : String(pw);
+    if (!pass) return { ok: false, strength: 0, message: 'Password is required.' };
+    if (pass.length < 8) {
+      return { ok: false, strength: 0, message: 'Password must be at least 8 characters (12+ recommended, 15+ for sensitive roles).' };
+    }
+    var lower = pass.toLowerCase();
+    // Reused / common passwords.
+    if (COMMON_PASSWORDS.indexOf(lower) !== -1 || COMMON_PASSWORDS.indexOf(lower.replace(/[^a-z0-9]/g, '')) !== -1) {
+      return { ok: false, strength: 1, message: 'This password is too common and widely used. Choose a unique one.' };
+    }
+    // Personal details (email, name) — prevents password mirrors the account.
+    var tokens = tokensFor(opts);
+    for (var t = 0; t < tokens.length; t++) {
+      if (tokens[t].length >= 3 && lower.indexOf(tokens[t]) !== -1) {
+        return { ok: false, strength: 1, message: 'Password cannot contain your name or email address.' };
+      }
+    }
+    // Weak patterns: repeated / sequential / keyboard runs.
+    if (containsRun(lower, 4)) {
+      return { ok: false, strength: 1, message: 'Password is too repetitive or uses an obvious sequence (e.g. "123456", "aaaa").' };
+    }
+    var strength = 2;
+    if (pass.length >= 12) strength = 3;
+    if (pass.length >= 15 && /[A-Z]/.test(pass) && /[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass)) strength = 4;
+    return { ok: true, strength: strength };
+  }
+
   return {
     init: init,
     isOnline: isOnline,
@@ -216,6 +322,7 @@ window.CalyeAuth = (function () {
     signOut: signOut,
     uploadId: uploadId,
     submitVerification: submitVerification,
-    getStatus: getStatus
+    getStatus: getStatus,
+    passwordPolicy: evalPasswordPolicy
   };
 })();

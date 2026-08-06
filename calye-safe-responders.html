@@ -3790,12 +3790,48 @@
         // ══════════════════════════ VERIFICATION GATE ══════════════════════════
         // Only enforced when there is a real Supabase session. Demo access
         // (no session) and approved accounts use the app as normal.
-        CalyeAuth.init();
+        CalyeAuth.init('calye-responder');
         CalyeAuth.getStatus().then(function (gate) {
-            if (!gate.session) return;
-            if (gate.status === 'approved') return;
+            if (!gate.session) return; // demo mode — allow
+            var role = (gate.profile && gate.profile.role) || '';
+            // Responder app is restricted to authorized responder-type accounts.
+            // An approved resident must NOT be able to use it.
+            var responderRole = (role === 'responder' || role === 'staff' || role === 'admin');
             var shell = document.getElementById('app-shell');
             if (!shell) return;
+
+            if (!responderRole) {
+                shell.innerHTML = `
+                <div style="background:#F4F6FA;height:100%;display:flex;align-items:center;justify-content:center;">
+                  <div style="text-align:center;padding:28px;max-width:300px;">
+                    <div style="width:84px;height:84px;border-radius:50%;background:#FFEBEE;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;background:#FFEBEE;color:#C62828;">Access Restricted</span>
+                    <h2 style="font-size:18px;margin:10px 0 6px;color:#1A2332;">Responder app only</h2>
+                    <p style="font-size:13px;color:#5A6780;line-height:1.6;">This app is for authorized barangay responders. Your account is a '${role || 'user'}' — you cannot use it. Please sign in with a responder account.</p>
+                    <button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
+                  </div>
+                </div>`;
+                return;
+            }
+
+            // In-app watchdog: if the account is deleted, rejected, or the
+            // session disappears while the app is open, sign the user out
+            // automatically instead of leaving them signed in.
+            if (gate.status === 'approved') {
+                var watchdog = setInterval(function () {
+                    CalyeAuth.getStatus().then(function (gs) {
+                        if (!gs.session || !gs.profile || gs.status !== 'approved' ||
+                            (['responder', 'staff', 'admin'].indexOf(gs.profile.role) === -1)) {
+                            clearInterval(watchdog);
+                            CalyeAuth.signOut().then(function () { location.href = 'responder-login.html'; });
+                        }
+                    });
+                }, 20000);
+                return;
+            }
+
             shell.innerHTML = `
             <div style="background:#F4F6FA;height:100%;display:flex;align-items:center;justify-content:center;">
               <div style="text-align:center;padding:28px;max-width:300px;">

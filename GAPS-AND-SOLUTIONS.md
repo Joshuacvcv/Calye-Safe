@@ -146,6 +146,8 @@ Companion to the completeness assessment. Each gap lists the evidence in the cod
 
 ## Gap 8 — RLS Disabled in Demo Mode; No Production Path
 
+**Status: IN PROGRESS** (migration + code prepared; not yet applied).
+
 **Evidence.** `calye-safe_database/supabase-demo-access.sql` disables row-level security so the demo works with a public anon key. That is fine for a prototype but cannot ship.
 
 **Solution.** Define role-based policies and keep the demo file separate:
@@ -153,11 +155,23 @@ Companion to the completeness assessment. Each gap lists the evidence in the cod
    - **Residents (authenticated, role=resident):** insert their own reports; select/update their own profile and report timeline only.
    - **Admins:** full CRUD on reports, announcements, users, and routing.
    - **Responders:** read assignments for their department; update assignment status; insert resolution evidence.
-   - **Public/anonymous:** nothing (or read-only, approved announcements).
+   - **Public/anonymous:** nothing (or read-only, approved announcements + hotlines + map pins).
 2. Replace `supabase-demo-access.sql` with a commented production template (`supabase-rls-production.sql`) so the demo and prod setups never conflict.
 3. Note in README that switching to prod requires real Supabase credentials via environment variables, not the committed config.
 
 **Effort:** Medium (SQL policies + auth role plumbing).
+
+**Implemented:**
+- `calye-safe_database/supabase-rls-production.sql` — re-enables RLS on all 13 tables and re-asserts every per-role policy (profiles, reports, timeline, media, responders, assignments, assignment timeline, resolved history, announcements, hotlines, map incidents, verification requests, notifications). Public-by-design surfaces (hotlines, map pins, pushed announcements) stay anon-readable; everything personal requires a real session.
+- `calye-safe_database/supabase-storage-private.sql` — flips `verification-ids` + `evidence` buckets private with owner/staff storage policies (Priority 3).
+- `supabase-config.js` now accepts a deploy-time `window.CALYE_SUPABASE_ENV` override (Priority 2); template in `supabase-config.env.example.js`; gitignored via `.gitignore`.
+- Removed dead fake-auth `sessionStorage.setItem('calye_safe_role', …)` from `index.html` + `responder-login.html`; login pages already gate on the real `CalyeAuth.getStatus()` session.
+- **Hardening (v2):** `profiles_self_update` now blocks role changes + self-approval (`with check`); added `profiles_staff_update` so the Verify-Users approve/reject flow works under RLS; revoked `anon` execution on the analytics RPCs (`fn_incident_summary` / `fn_incident_density` / `fn_monthly_summary`), now `authenticated` only.
+- **Reverted:** the signed-URL storage refactor was rolled back (it created a half-state: uploads would store paths while renderers still expect public URLs, and buckets remain public). Buckets are still public — `supabase-storage-private.sql` must wait for a clean, tested signed-URL refactor.
+- **Before flipping buckets private,** the apps must switch stored media URLs to `getSignedUrl` at render — see the deployment runbook.
+- **Privacy flag:** `calye-safe_database/backup-live-2026-08-02.json` (live backup with PII) is tracked/pushed; histor removal is recommended.
+
+**Follow-up sequence — see** `SUPABASE-RLS-RUNBOOK.md`.
 
 ---
 
@@ -186,6 +200,6 @@ Companion to the completeness assessment. Each gap lists the evidence in the cod
 | 3 | Gap 1 outbox + service worker | Foundation that unblocks Gaps 3 (scheduling) and 7 |
 | 4 | Gap 5 department routing | Largest schema change; do before analytics build on top of it |
 | 5 | Gap 3 remainder (pg_cron) + Gap 7 verify queue | Automation and reliability once the outbox exists |
-| 6 | Gap 8 production RLS | Enable last, once tables and roles are stable |
+| 6 | Gap 8 production RLS | Migrations + code prepared (`supabase-rls-production.sql`, storage-private, auth cleanup). Apply per `SUPABASE-RLS-RUNBOOK.md` once apps are verified live |
 
 > Note: Gap 5 (departments) and Gap 2/3 (aggregation) should be sequenced together — aggregation RPCs can reuse the department dimension, and routing should be live before "per-department backlog" is computed. Gap 2's client-side aggregation already groups by a `deptForCategory()` mapping, so per-department analytics can ship without waiting for the departments table.

@@ -607,25 +607,26 @@
           </div>
 
           <div class="form-group">
-            <label>Valid ID type</label>
-            <select id="reg-idtype">
-              <option value="National ID">National ID</option>
-              <option value="Driver's License">Driver's License</option>
-              <option value="Passport">Passport</option>
-              <option value="UMID">UMID</option>
-              <option value="Postal ID">Postal ID</option>
-              <option value="Other Government ID">Other Government ID</option>
+            <label>Barangay</label>
+            <select id="reg-barangay" onchange="pendingAddr.barangay = this.value">
+              <option value="">Select barangay…</option>
+              <option>Aplaya</option><option>Balibago</option><option>Caingin</option>
+              <option>Dila</option><option>Dita</option><option>Don Jose</option>
+              <option>Ibaba</option><option>Kanluran</option><option>Labas</option>
+              <option>Macabling</option><option>Malitlit</option><option>Malusak</option>
+              <option>Market Area</option><option>Pook</option><option>Pulong Santa Cruz</option>
+              <option>Santo Domingo</option><option>Sinalhan</option><option>Tagapo</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Upload a photo of your valid ID</label>
-            <div class="upload-box" id="id-upload-box" onclick="document.getElementById('id-file').click()">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <p id="id-upload-text">Tap to upload a photo of your ID</p>
-              <span>JPG, PNG or WebP</span>
-            </div>
-            <input type="file" id="id-file" accept="image/*" style="display:none;" onchange="handleIdFile(this)">
+            <label>House / Unit / Street</label>
+            <input id="reg-house" type="text" placeholder="e.g. 12 Barangay Rd., Unit 3, Matatag Building" oninput="pendingAddr.house = this.value">
+          </div>
+
+          <div class="form-group">
+            <label>Subdivision / Village <span style="font-weight:400;color:#8a97ab;">(optional)</span></label>
+            <input id="reg-subdivision" type="text" placeholder="e.g. Sunrise Subdivision" oninput="pendingAddr.subdivision = this.value">
           </div>
 
           <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
@@ -649,8 +650,29 @@
   </div>
 
   <script>
-    CalyeAuth.init();
-    let selectedIdFile = null;
+    CalyeAuth.init('calye-responder');
+
+    // All users live in Santa Rosa City, Laguna — so registration only asks for
+    // their Barangay plus the home/street + subdivision. City/province are implicit.
+    const BARANGAYS = ['Aplaya', 'Balibago', 'Caingin', 'Dila', 'Dita', 'Don Jose',
+      'Ibaba', 'Kanluran', 'Labas', 'Macabling', 'Malitlit', 'Malusak',
+      'Market Area', 'Pook', 'Pulong Santa Cruz', 'Santo Domingo', 'Sinalhan', 'Tagapo'];
+
+    function barangayOptions(selected) {
+      return '<option value="">Select barangay…</option>' + BARANGAYS.map(function (b) {
+        return '<option value="' + b + '"' + (b === selected ? ' selected' : '') + '>' + b + '</option>';
+      }).join('');
+    }
+
+    // Combine the address pieces into the single `address` string stored on the profile.
+    function composeAddress(barangay, houseStreet, subdivision) {
+      const parts = [];
+      if (houseStreet && houseStreet.trim()) parts.push(houseStreet.trim());
+      if (subdivision && subdivision.trim()) parts.push('Village: ' + subdivision.trim());
+      if (barangay && barangay.trim()) parts.push('Brgy. ' + barangay.trim());
+      return parts.join(', ');
+    }
+    let pendingAddr = { barangay: '', house: '', subdivision: '' };
     let gatePollTimer = null;
 
     function showErr(id, msg) {
@@ -678,21 +700,6 @@
       btn.textContent = text;
     }
 
-    function handleIdFile(input) {
-      const file = input.files && input.files[0];
-      if (!file) return;
-      const ext = (file.name || '').split('.').pop().toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'webp'].indexOf(ext) === -1) {
-        showErr('reg-error', 'Please upload a JPG, PNG or WebP image of your ID.');
-        input.value = '';
-        return;
-      }
-      selectedIdFile = file;
-      const box = document.getElementById('id-upload-box');
-      box.classList.add('filled');
-      document.getElementById('id-upload-text').textContent = file.name;
-    }
-
     let gateProfile = null;
     let gateIdFile = null;
 
@@ -707,12 +714,15 @@
     }
 
     function submitGateVerification() {
-      const address = document.getElementById('gate-address').value.trim();
+      // Address is captured once, on the Create Account step — reuse it here;
+      // the verification step only needs employment + the ID photo.
       const employment = document.getElementById('gate-employment').value.trim();
       const idType = document.getElementById('gate-idtype').value;
       if (!gateIdFile) { showErr('gate-error', 'Please upload a photo of your valid ID.'); return; }
       clearErr('gate-error');
       const prof = gateProfile || {};
+      const address = composeAddress(pendingAddr.barangay, pendingAddr.house, pendingAddr.subdivision) || prof.address || '';
+      const barangay = pendingAddr.barangay || prof.barangay || '';
       CalyeAuth.uploadId(gateIdFile).then(up => {
         if (up.error) { showErr('gate-error', 'Upload failed: ' + up.error); return; }
         CalyeAuth.submitVerification({
@@ -720,12 +730,18 @@
           full_name: prof.full_name || '',
           email: prof.email || '',
           address: address,
+          barangay: barangay,
           employment_info: employment || null,
           id_doc_url: up.url,
           id_type: idType
         }).then(sub => {
           if (sub.error) { showErr('gate-error', 'Could not submit: ' + sub.error); return; }
-          CalyeAuth.getStatus().then(st => showGate(st.status, st.profile, (st.profile && st.profile.review_note) || ''));
+          // Mark the ID as on file locally so the gate immediately shows
+          // "Account under review" instead of bouncing back to the upload form.
+          CalyeAuth.getStatus().then(st => {
+            const prof = st.profile || gateProfile || {};
+            showGate(st.status, Object.assign({}, prof, { id_doc_url: up.url, address: address, barangay: barangay, id_type: idType }), (prof && prof.review_note) || '');
+          });
         });
       });
     }
@@ -766,10 +782,6 @@
             ? 'Your valid ID could not be verified. Upload a clearer photo to resubmit.'
             : 'Upload your valid ID to complete your verification. A barangay staff member will review it.'}</p>
           ${st === 'rejected' ? reasonHtml : ''}
-          <div class="form-group" style="margin-top:14px;">
-            <label>Address / Purok</label>
-            <input id="gate-address" type="text" value="${profile && profile.address ? profile.address : ''}" placeholder="e.g. Purok 3, Mercado St.">
-          </div>
           <div class="form-group">
             <label>Employment / Agency</label>
             <input id="gate-employment" type="text" value="${profile && profile.employment_info ? profile.employment_info : ''}" placeholder="e.g. Santa Rosa QRT · Unit RES-014">
@@ -850,7 +862,6 @@
           showErr('login-error', res.error);
           return;
         }
-        try { sessionStorage.setItem('calye_safe_role', 'responder'); } catch (e) { /* ignore */ }
         CalyeAuth.getStatus().then(st => {
           if (st.status === 'approved') {
             location.href = 'calye-safe-responders.html';
@@ -866,14 +877,22 @@
       const email = document.getElementById('reg-email').value.trim();
       const pass = document.getElementById('reg-pass').value;
       const employment = document.getElementById('reg-employment').value.trim();
-      const idType = document.getElementById('reg-idtype').value;
+      const barangay = document.getElementById('reg-barangay').value.trim();
+      const house = document.getElementById('reg-house').value.trim();
+      const subdivision = document.getElementById('reg-subdivision').value.trim();
 
       if (!name) { showErr('reg-error', 'Please enter your full name.'); return; }
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('reg-error', 'Please enter a valid email address.'); return; }
-      if (!pass || pass.length < 6) { showErr('reg-error', 'Password must be at least 6 characters.'); return; }
+      if (!pass) { showErr('reg-error', 'Please enter a password.'); return; }
+      const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
+      if (!pw.ok) { showErr('reg-error', pw.message); return; }
       if (!employment) { showErr('reg-error', 'Please enter your employment / agency.'); return; }
-      if (!selectedIdFile) { showErr('reg-error', 'Please upload a photo of your valid ID.'); return; }
+      if (!barangay) { showErr('reg-error', 'Please select your barangay.'); return; }
+      if (!house) { showErr('reg-error', 'Please enter your house / unit / street address.'); return; }
       clearErr('reg-error');
+
+      pendingAddr = { barangay: barangay, house: house, subdivision: subdivision };
+      const address = composeAddress(barangay, house, subdivision);
 
       setBtn('reg-btn', true, 'Creating account…');
       CalyeAuth.signUp({ role: 'responder', full_name: name, email: email, password: pass }).then(reg => {
@@ -885,14 +904,12 @@
           return;
         }
 
-        CalyeAuth.uploadId(selectedIdFile).then(up => {
-          CalyeAuth.submitVerification({
-            role: 'responder', full_name: name, email: email, address: '',
-            employment_info: employment, id_doc_url: up.error ? '' : up.url, id_type: idType
-          }).then(() => {
-            try { sessionStorage.setItem('calye_safe_role', 'responder'); } catch (e) { /* ignore */ }
-            CalyeAuth.getStatus().then(st => showGate(st.status, st.profile, (st.profile && st.profile.review_note) || ''));
-          });
+        // Persist the address on the profile right away (the trigger that
+        // creates the profile only stores name/role).
+        CalyeDB.update('profiles', [['id', reg.session.user.id]], {
+          full_name: name, email: email, address: address, barangay: barangay
+        }).then(() => {
+          CalyeAuth.getStatus().then(st => showGate(st.status, st.profile, (st.profile && st.profile.review_note) || ''));
         });
       });
     }

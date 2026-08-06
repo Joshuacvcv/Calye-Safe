@@ -1492,6 +1492,17 @@
       transform: translateY(-1px);
     }
 
+    .modal-btn.danger-confirm {
+      background: linear-gradient(135deg, var(--danger), #B71C1C);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
+    }
+
+    .modal-btn.danger-confirm:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
     .modal-btn:active {
       transform: scale(0.97);
     }
@@ -2426,6 +2437,21 @@
       border: 1px solid rgba(229, 57, 53, 0.25);
     }
 
+    .verify-btn.delete {
+      background: linear-gradient(135deg, var(--danger), #B71C1C);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
+    }
+
+    .verify-btn.delete:hover {
+      filter: brightness(1.08);
+    }
+
+    .verify-btn.delete:active {
+      transform: scale(0.97);
+    }
+
     .verify-btn:active {
       transform: scale(0.97);
     }
@@ -2593,10 +2619,65 @@
     .danger-zone {
       border: 1px solid rgba(229, 57, 53, 0.25) !important;
     }
+
+    /* ── ADMIN AUTH GATE ── */
+    #admin-gate {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 20% 0%, #16233a 0%, #0a0f1c 60%);
+      font-family: 'Nunito', sans-serif;
+    }
+    #admin-gate.hidden { display: none; }
+    .gate-card {
+      width: min(400px, 90vw); background: #ffffff; color: #0f1a2b;
+      border-radius: 18px; padding: 32px 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45); text-align: center;
+    }
+    .gate-logo {
+      width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1d6fe0, #1ab3a6); color: #fff; font-weight: 900; font-size: 22px;
+    }
+    .gate-title { font-size: 20px; font-weight: 900; color: #0f1a2b; }
+    .gate-sub { font-size: 12.5px; font-weight: 700; color: #5b6b82; margin: 6px 0 20px; }
+    .gate-field {
+      width: 100%; box-sizing: border-box; padding: 12px 14px; margin-bottom: 10px;
+      border: 1.5px solid #dce3ee; border-radius: 10px; font-size: 14px; font-family: inherit;
+      outline: none; background: #f7f9fc; color: #0f1a2b;
+    }
+    .gate-field:focus { border-color: #1d6fe0; background: #fff; }
+    .gate-btn {
+      width: 100%; padding: 13px; margin-top: 4px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, #1d6fe0, #129fbe); color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+    }
+    .gate-btn:disabled { opacity: 0.6; cursor: wait; }
+    .gate-link {
+      margin-top: 14px; background: none; border: none; color: #1d6fe0;
+      font-size: 12.5px; font-weight: 800; font-family: inherit; cursor: pointer;
+    }
+    .gate-msg { min-height: 18px; font-size: 12.5px; font-weight: 700; margin: 0 0 10px; }
+    .gate-hint { font-size: 11px; color: #8a97ab; font-weight: 700; margin-top: 16px; line-height: 1.5; }
   </style>
 </head>
 
 <body>
+
+  <!-- ── AUTH GATE (admin dashboard is session-protected) ── -->
+  <div id="admin-gate">
+    <div class="gate-card">
+      <div class="gate-logo">C</div>
+      <div class="gate-title">Calye-Safe Admin</div>
+      <div class="gate-sub">Sign in with an admin or staff account</div>
+      <div id="gate-msg" class="gate-msg"></div>
+      <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
+      <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
+      <div id="gate-hint" class="gate-msg" style="display:none"></div>
+      <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
+      <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
+      <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
+    </div>
+  </div>
 
   <div id="shell">
 
@@ -2661,6 +2742,15 @@
         </div>
 
         <div class="nav-label" style="margin-top:14px;">Management</div>
+        <div class="nav-item" onclick="navTo('users',this); loadUsers()">
+          <svg viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 00-3-3.87" />
+            <path d="M16 3.13a4 4 0 010 7.75" />
+          </svg>
+          Users
+        </div>
         <div class="nav-item" onclick="navTo('analytics',this)">
           <svg viewBox="0 0 24 24">
             <line x1="18" y1="20" x2="18" y2="10" />
@@ -2720,6 +2810,9 @@
               <path
                 d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4M20 12h2M17.66 18.66l1.41-1.41M5.34 5.34L3.93 3.93M12 2v2M12 20v2" />
             </svg>
+          </div>
+          <div class="topbar-btn" onclick="adminGateOut()" title="Sign out" style="color:#D32F2F">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </div>
         </div>
       </div>
@@ -3376,6 +3469,35 @@
           </div>
         </div>
 
+        <!-- USERS PAGE -->
+        <div id="page-users" class="page-panel">
+          <div style="display:flex;flex-direction:column;gap:18px;flex:1;min-height:0;overflow:hidden;">
+            <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+              <div class="panel-header">
+                <div class="sec-title">All Non-Staff Accounts</div>
+                <div class="sec-action" style="display:flex;align-items:center;gap:8px;">
+                  <button class="verify-reload-btn" onclick="loadUsers()" title="Reload user list">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    Refresh
+                  </button>
+                  <span id="users-count-label"></span>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;padding:0 18px 12px;">
+                <div class="verify-filter active" data-f="all" onclick="usersFilter('all',this)">All</div>
+                <div class="verify-filter" data-f="resident" onclick="usersFilter('resident',this)">Residents</div>
+                <div class="verify-filter" data-f="responder" onclick="usersFilter('responder',this)">Responders</div>
+                <div class="verify-filter" data-f="pending" onclick="usersFilter('pending',this)">Pending</div>
+              </div>
+              <div style="padding:0 18px 12px;">
+                <input type="text" class="map-input" id="users-search" placeholder="Search name or email…"
+                  oninput="usersSearch(this.value)" style="width:100%;">
+              </div>
+              <div style="flex:1;overflow-y:auto;padding:0 18px 18px;" id="users-list"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- ANALYTICS PAGE -->
         <div id="page-analytics" class="page-panel">
           <div style="display:flex;flex-direction:row;gap:22px;flex:1;min-height:0;overflow:hidden;">
@@ -3897,6 +4019,57 @@
     </div>
   </div>
 
+  <!-- DELETE ACCOUNT CONFIRMATION (danger) -->
+  <div class="modal-overlay" id="modal-delete-user">
+    <div class="modal-box" style="max-width:440px;border:1px solid rgba(229,57,53,0.35);">
+      <div class="modal-head">
+        <h3>Delete account permanently</h3>
+        <button class="modal-close" onclick="closeModal('modal-delete-user')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div
+          style="background:var(--danger-light);border:1px solid rgba(229,57,53,0.25);border-radius:var(--radius-sm);padding:13px 15px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"
+            style="flex-shrink:0;margin-top:1px;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--danger);">This cannot be undone.</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px;font-weight:600;line-height:1.5;">
+              The account will lose login access, its verification records will be removed, and its ID photo will no
+              longer be accessible. Incident reports stay but become anonymous.
+            </div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Account</div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--text);"> <span id="del-user-name"></span>
+            <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:2px;" id="del-user-email"></div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Type DELETE to confirm</div>
+          <input type="text" class="modal-input" id="del-confirm" placeholder="DELETE" autocomplete="off"
+            oninput="document.getElementById('del-confirm-btn').disabled = (this.value.trim() !== 'DELETE');"
+            onkeydown="if(event.key==='Enter' && this.value.trim()==='DELETE')confirmDeleteUser();">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-delete-user')">Cancel</button>
+        <button class="modal-btn danger-confirm" id="del-confirm-btn" onclick="confirmDeleteUser()" disabled>
+          Permanently delete account
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast">
     <div class="toast-icon">
@@ -4004,6 +4177,15 @@
       const overlay = document.createElement('div');
       overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
       overlay.innerHTML = `<img src="${photo}" alt="Resolution proof" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
+    }
+
+    function openIdPhotoLightbox(img) {
+      if (!img || !img.src) return;
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${img.src}" alt="Valid ID" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
       overlay.onclick = function () { document.body.removeChild(overlay); };
       document.body.appendChild(overlay);
     }
@@ -4291,6 +4473,7 @@
       reports: 'All Reports',
       map: 'Incident Map',
       announcements: 'Announcements',
+      users: 'Users',
       analytics: 'Analytics',
       settings: 'Settings'
     };
@@ -5279,7 +5462,7 @@
     }
 
     // ── SUPABASE SYNC ──
-    CALYE_SUPABASE.init();
+    CalyeAuth.init('calye-admin');
 
     function fmtDateTime(iso) {
       if (!iso) return '—';
@@ -5535,11 +5718,11 @@
       if (!r) return;
       const detail = document.getElementById('verify-detail');
       const photo = r.id_doc_url
-        ? `<img class="id-photo" src="${r.id_doc_url}" alt="Valid ID" onerror="this.style.display='none';document.getElementById('id-fallback').style.display='flex';">`
+        ? `<img class="id-photo" id="id-photo" src="" alt="Valid ID" title="Click to expand" style="display:none;cursor:zoom-in;" onclick="openIdPhotoLightbox(this)" onerror="this.style.display='none';document.getElementById('id-fallback').style.display='flex';">`
         : '';
-      const fallback = `<div class="id-photo-placeholder" id="id-fallback" style="${r.id_doc_url ? 'display:none;' : ''}">
+      const fallback = `<div class="id-photo-placeholder" id="id-fallback" style="${r.id_doc_url ? 'display:flex;' : ''}">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-          No ID photo uploaded
+          ${r.id_doc_url ? 'Loading photo…' : 'No ID photo uploaded'}
         </div>`;
 
       const actions = r.status === 'pending' ? `
@@ -5553,6 +5736,15 @@
             Approve
           </button>
         </div>` : '';
+
+      const dangerDelete = `
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:9px;">Danger zone</div>
+          <button class="verify-btn delete" onclick="deleteVerify('${r.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Delete account
+          </button>
+        </div>`;
 
       const rejectedNote = r.status === 'rejected' && r.review_note
         ? `<div style="background:var(--danger-light);border-radius:var(--radius-sm);padding:11px 13px;font-size:12.5px;color:var(--danger);font-weight:700;margin-bottom:14px;">Rejected: ${r.review_note}</div>`
@@ -5578,22 +5770,51 @@
         ${verifyField('Employment', r.employment_info)}
         ${verifyField('ID Type', r.id_type)}
         ${actions}
+        ${dangerDelete}
       `;
+
+      // The verification-ids bucket is private, so the stored public URL is
+      // not viewable directly. Generate a signed URL (staff may sign any
+      // object in this bucket) and show that instead.
+      if (r.id_doc_url) {
+        const path = CalyeDB.bucketPath('verification-ids', r.id_doc_url);
+        if (path) {
+          CalyeDB.signedUrl('verification-ids', path, 3600).then(function (signed) {
+            const img = document.getElementById('id-photo');
+            const fb = document.getElementById('id-fallback');
+            if (!img || !fb) return;
+            if (signed) {
+              img.src = signed;
+              img.style.display = '';
+              fb.style.display = 'none';
+            } else {
+              fb.textContent = 'Photo unavailable';
+            }
+          });
+        } else {
+          const fb = document.getElementById('id-fallback');
+          if (fb) fb.textContent = 'Photo unavailable';
+        }
+      }
     }
 
     function approveVerify(id) {
       const r = verifyRequests.find(x => x.id === id);
       if (!r) return;
-      CalyeDB.update('verification_requests', [['id', id]], {
-        status: 'approved', reviewed_at: new Date().toISOString(), review_note: ''
+      CalyeDB.rpc('admin_review_verification', {
+        p_request_id: id, p_decision: 'approved', p_note: ''
+      }).then(res => {
+        const row = res && res[0];
+        if (!row || row.ok !== true) {
+          showToastMsg((row && row.message) || 'Approval failed — the database rejected the update.', 'error');
+          return;
+        }
+        r.status = 'approved';
+        r.review_note = '';
+        openVerifyDetail(id);
+        renderVerifyList();
+        showToastMsg(r.full_name + ' approved — account is now active', 'success');
       });
-      CalyeDB.update('profiles', [['id', r.user_id]], {
-        verification_status: 'approved', verified_at: new Date().toISOString()
-      });
-      r.status = 'approved';
-      openVerifyDetail(id);
-      renderVerifyList();
-      showToastMsg(r.full_name + ' approved — account is now active', 'success');
     }
 
     function rejectVerify(id) {
@@ -5601,17 +5822,71 @@
       if (!r) return;
       const note = prompt('Reason for rejection (shown to the user):', 'ID could not be verified');
       if (note === null) return;
-      CalyeDB.update('verification_requests', [['id', id]], {
-        status: 'rejected', reviewed_at: new Date().toISOString(), review_note: note
+      CalyeDB.rpc('admin_review_verification', {
+        p_request_id: id, p_decision: 'rejected', p_note: note
+      }).then(res => {
+        const row = res && res[0];
+        if (!row || row.ok !== true) {
+          showToastMsg((row && row.message) || 'Rejection failed — the database rejected the update.', 'error');
+          return;
+        }
+        r.status = 'rejected';
+        r.review_note = note;
+        openVerifyDetail(id);
+        renderVerifyList();
+        showToastMsg(r.full_name + ' rejected', 'info');
       });
-      CalyeDB.update('profiles', [['id', r.user_id]], {
-        verification_status: 'rejected'
+    }
+
+    // ── DELETE ACCOUNT (danger) ─────────────────────────────────────────────
+    let deleteTarget = null;
+    let adminSessionUid = null;
+
+    function deleteVerify(id) {
+      const r = verifyRequests.find(x => x.id === id);
+      if (!r) return;
+      deleteTarget = { requestId: id, userId: r.user_id };
+      document.getElementById('del-user-name').textContent = r.full_name || 'Unnamed account';
+      document.getElementById('del-user-email').textContent = r.email || '';
+      const input = document.getElementById('del-confirm');
+      input.value = '';
+      const btn = document.getElementById('del-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Permanently delete account';
+      document.getElementById('modal-delete-user').classList.add('open');
+    }
+
+    function confirmDeleteUser() {
+      if (!deleteTarget) return;
+      const input = document.getElementById('del-confirm');
+      if (input.value.trim() !== 'DELETE') return;
+      const btn = document.getElementById('del-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting…';
+      requireAdminSession('delete accounts').then(function (check) {
+        if (!check.ok) {
+          btn.disabled = false;
+          btn.textContent = 'Permanently delete account';
+          closeModal('modal-delete-user');
+          showToastMsg(check.message, 'error');
+          return;
+        }
+        CalyeDB.rpc('admin_delete_user', { p_target: deleteTarget.userId }).then(res => {
+          const row = res && res[0];
+          closeModal('modal-delete-user');
+          deleteTarget = null;
+          if (!row || row.ok !== true) {
+            showToastMsg((row && row.message) || 'Delete failed — the database rejected the request.', 'error');
+            return;
+          }
+          showToastMsg((row.message) || 'Account deleted.', 'success');
+          selectedVerifyId = null;
+          const vd = document.getElementById('verify-detail');
+          if (vd) vd.innerHTML = 'Click an account in the queue to review their valid ID.';
+          loadVerifyQueue();
+          loadUsers();
+        });
       });
-      r.status = 'rejected';
-      r.review_note = note;
-      openVerifyDetail(id);
-      renderVerifyList();
-      showToastMsg(r.full_name + ' rejected', 'info');
     }
 
     function loadVerifyQueue() {
@@ -5622,11 +5897,206 @@
       });
     }
 
-    // Load map on startup
-    loadDefaultMap();
-    syncFromSupabase();
-    loadVerifyQueue();
-    setInterval(syncFromSupabase, 15000);
+    // ── USERS (residents & responders) — profile-driven account management ──
+    let allUsers = [];
+    let usersFilterState = 'all';
+    let usersSearchState = '';
+
+    function loadUsers() {
+      if (!CalyeDB.isOnline()) return;
+      // Non-staff accounts only (staff/admin manage themselves via SQL). The
+      // profiles_staff_select policy lets staff read all non-self profiles.
+      CalyeDB.fetch('profiles', { order: 'created_at', asc: false, limit: 500 }).then(rows => {
+        allUsers = (rows || []).filter(u => u.role !== 'staff' && u.role !== 'admin');
+        const count = document.getElementById('users-count-label');
+        if (count) count.textContent = allUsers.length + ' accounts';
+        renderUsersList();
+      });
+    }
+
+    function usersFilter(f, el) {
+      if (el) {
+        document.querySelectorAll('#page-users .verify-filter').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+      }
+      usersFilterState = f;
+      renderUsersList();
+    }
+
+    function usersSearch(val) {
+      usersSearchState = val;
+      renderUsersList();
+    }
+
+    function renderUsersList() {
+      const list = document.getElementById('users-list');
+      if (!list) return;
+      const q = usersSearchState ? usersSearchState.toLowerCase().trim() : '';
+      const data = allUsers.filter(u => {
+        if (usersFilterState === 'resident' && u.role !== 'resident') return false;
+        if (usersFilterState === 'responder' && u.role !== 'responder') return false;
+        if (usersFilterState === 'pending') {
+          const st = u.verification_status || 'pending';
+          if (st === 'approved' || st === 'rejected') return false;
+        }
+        if (q && !(u.full_name || '').toLowerCase().includes(q) && !(u.email || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+
+      if (!data.length) {
+        list.innerHTML = `<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">No accounts found.</div>`;
+        return;
+      }
+      list.innerHTML = data.map(userRowHtml).join('');
+    }
+
+    function userRowHtml(u) {
+      const status = u.verification_status || 'pending';
+      const statusLabel = status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Pending';
+      const statusColor = status === 'approved' ? '#178a5a' : status === 'rejected' ? '#e5484d' : '#f59e0b';
+      const roleLabel = u.role === 'responder' ? 'Responder' : 'Resident';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:9px;background:var(--bg-card);">
+        <div style="width:38px;height:38px;border-radius:50%;background:#eef2f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#64748b;flex-shrink:0;">${((u.full_name || '?')[0] || '?').toUpperCase()}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.full_name || 'Unnamed'}</div>
+          <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.email || ''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;">${roleLabel}</div>
+          <div style="font-size:11px;color:${statusColor};font-weight:800;">${statusLabel}</div>
+        </div>
+        ${status !== 'approved' ? '' : `<button class="verify-btn delete" onclick="openDeleteUser('${u.id}')" title="Permanently delete account">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>`}
+      </div>`;
+    }
+
+    function openDeleteUser(userId) {
+      const u = allUsers.find(x => x.id === userId);
+      if (!u) return;
+      deleteTarget = { userId: u.id };
+      document.getElementById('del-user-name').textContent = u.full_name || 'Unnamed account';
+      document.getElementById('del-user-email').textContent = u.email || '';
+      const input = document.getElementById('del-confirm');
+      input.value = '';
+      const btn = document.getElementById('del-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Permanently delete account';
+      document.getElementById('modal-delete-user').classList.add('open');
+    }
+
+    // ── ADMIN AUTH GATE: no dashboard access without a real staff/admin session ──
+    let adminBooted = false;
+
+    function gateMsg(msg, ok) {
+      const el = document.getElementById('gate-msg');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = ok ? '#178a5a' : '#e5484d';
+    }
+    function gateLoading(on) {
+      const btn = document.getElementById('gate-btn');
+      if (btn) { btn.disabled = on; btn.textContent = on ? 'Signing in…' : 'Sign In'; }
+      const out = document.getElementById('gate-out');
+      if (out) out.style.display = on ? 'none' : 'inline-block';
+    }
+    function bootAdmin(gs) {
+      if (adminBooted) return;
+      adminBooted = true;
+      // Pin the identity this dashboard session claims, so privileged actions
+      // can later detect when another tab overwrites the shared auth token.
+      adminSessionUid = (gs && gs.session && gs.session.user && gs.session.user.id) || null;
+      document.getElementById('admin-gate').classList.add('hidden');
+      loadDefaultMap();
+      syncFromSupabase();
+      loadVerifyQueue();
+      setInterval(syncFromSupabase, 15000);
+    }
+
+    // Verifies the dashboard is still acting as a staff/admin before any
+    // privileged action. The Supabase token is shared across tabs, so a
+    // resident signed in elsewhere can silently replace it — protecting
+    // against deletes that would otherwise appear to be "your own account".
+    function requireAdminSession(step) {
+      return CalyeAuth.getStatus().then(function (gs) {
+        const role = gs.profile && gs.profile.role;
+        if (!gs.session || !gs.profile) {
+          return { ok: false, message: 'Sign-in was lost. Sign back in as a staff member to ' + step + '.' };
+        }
+        if (role !== 'admin' && role !== 'staff') {
+          return { ok: false, message: 'Session changed to a non-admin account (' + (gs.profile.email || role) + ') in another tab. Sign out and sign in as a staff to ' + step + '.' };
+        }
+        if (gs.session.user.id !== adminSessionUid) {
+          return { ok: false, message: 'Session identity changed in another tab. Sign out and sign back in as staff to ' + step + '.' };
+        }
+        return { ok: true };
+      });
+    }
+    function showAccessDenied(gs) {
+      document.getElementById('gate-email').style.display = 'none';
+      document.getElementById('gate-pass').style.display = 'none';
+      document.getElementById('gate-btn').style.display = 'none';
+      document.getElementById('gate-out').style.display = 'inline-block';
+      gateMsg('Signed in as ' + (gs.profile ? gs.profile.role : 'user') + ' — admin access required.', false);
+    }
+    function adminGateHint() {
+      const hint = document.getElementById('gate-hint');
+      if (!hint) return;
+      const pass = document.getElementById('gate-pass').value;
+      if (!pass) { hint.style.display = 'none'; return; }
+      const pw = CalyeAuth.passwordPolicy(pass);
+      if (!pw.ok) {
+        hint.style.display = 'block';
+        hint.textContent = 'Weak: ' + pw.message;
+      } else {
+        hint.style.display = 'none';
+      }
+    }
+    function adminGateLogin() {
+      const email = document.getElementById('gate-email').value.trim();
+      const pass = document.getElementById('gate-pass').value;
+      if (!email || !pass) { gateMsg('Enter your email and password.', false); return; }
+      gateLoading(true); gateMsg('Signing in…', true);
+      CalyeAuth.signIn(email, pass).then(res => {
+        if (res.error) { gateLoading(false); gateMsg(res.error, false); return; }
+        CalyeAuth.getStatus().then(gs => {
+          if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
+            bootAdmin(gs);
+          } else {
+            gateLoading(false);
+            showAccessDenied(gs);
+          }
+        });
+      }).catch(e => { gateLoading(false); gateMsg((e && e.message) || 'Sign-in failed.', false); });
+    }
+    function adminGateOut() {
+      CalyeAuth.signOut().then(() => {
+        adminBooted = false;
+        adminSessionUid = null;
+        document.getElementById('admin-gate').classList.remove('hidden');
+        document.getElementById('gate-email').value = '';
+        document.getElementById('gate-pass').value = '';
+        document.getElementById('gate-email').style.display = 'block';
+        document.getElementById('gate-pass').style.display = 'block';
+        document.getElementById('gate-btn').style.display = 'block';
+        document.getElementById('gate-out').style.display = 'none';
+        gateMsg('Signed out.');
+      });
+    }
+    function adminGate() {
+      CalyeAuth.getStatus().then(gs => {
+        if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
+          bootAdmin(gs);
+        } else if (gs.session) {
+          showAccessDenied(gs);
+        } else {
+          gateMsg('');
+        }
+      }).catch(() => gateMsg('Could not reach the database. Check your connection and retry.', false));
+    }
+
+    // Authenticated gate only — the dashboard bootstraps after an admin signs in.
+    adminGate();
 
     // ── CLOCK ──
     (function tick() {

@@ -140,8 +140,30 @@ window.CalyeDB = (function () {
 
   // ---- storage (Supabase Storage buckets) -----------------------------------
 
-  function dataUrlToBlob(dataUrl) {
-    try {
+  // Extract the object path from a public storage URL.
+  // e.g. ".../object/public/verification-ids/<uid>/<ts>-id.png" -> "<uid>/<ts>-id.png"
+  function bucketPath(bucket, url) {
+    if (!url || !bucket) return '';
+    var marker = '/object/public/' + bucket + '/';
+    var i = url.indexOf(marker);
+    if (i === -1) return '';
+    return url.slice(i + marker.length);
+  }
+
+  // Generate a signed URL for a private-bucket object using the current
+  // session (owner or staff). Returns '' on failure.
+  function signedUrl(bucket, path, expiresIn) {
+    return new Promise(function (resolve) {
+      var c = client();
+      if (!c || !path) { resolve(''); return; }
+      c.storage.from(bucket).createSignedUrl(path, expiresIn || 3600).then(function (res) {
+        if (res.error || !res.data || !res.data.signedUrl) { resolve(''); return; }
+        resolve(res.data.signedUrl);
+      }).catch(function () { resolve(''); });
+    });
+  }
+
+  function dataUrlToBlob(dataUrl) {    try {
       var comma = dataUrl.indexOf(',');
       var head = dataUrl.slice(0, comma);
       var mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
@@ -231,6 +253,8 @@ window.CalyeDB = (function () {
     rpc: rpc,
     cached: cached,
     clearCache: clearCache,
-    uploadStorage: uploadStorage
+    uploadStorage: uploadStorage,
+    bucketPath: bucketPath,
+    signedUrl: signedUrl
   };
 })();
