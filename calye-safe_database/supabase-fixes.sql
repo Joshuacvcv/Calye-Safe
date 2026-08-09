@@ -75,11 +75,18 @@ create trigger trg_create_report_timeline
 -- ============================================================================
 create or replace function create_assignment_timeline()
 returns trigger language plpgsql as $$
+declare
+  v_created_at timestamptz;
 begin
+  -- Step 1 "Reported" must reflect when the RESIDENT filed the report,
+  -- not the dispatch moment (assignments.created_at is the dispatch time).
+  select r.created_at into v_created_at from reports r where r.id = new.report_id;
+  v_created_at := coalesce(v_created_at, new.created_at);
+
   insert into assignment_timeline (assignment_id, step, label, happened_at, state)
   values
-    (new.id, 1, 'Reported', to_char(new.created_at, 'HH:MI AM'), 'done'),
-    (new.id, 2, 'Verified & Assigned to you', to_char(coalesce(new.assigned_at, new.created_at), 'HH:MI AM'), 'done'),
+    (new.id, 1, 'Reported', to_char(v_created_at, 'Mon DD · HH:MI AM'), 'done'),
+    (new.id, 2, 'Verified & Assigned to you', to_char(coalesce(new.assigned_at, new.created_at), 'Mon DD · HH:MI AM'), 'done'),
     (new.id, 3, 'En Route', '—', 'pending'),
     (new.id, 4, 'On-Site', '—', 'pending'),
     (new.id, 5, 'Resolved', '—', 'pending');

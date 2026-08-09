@@ -2953,6 +2953,7 @@
                 return;
             }
             currentResidentPhoto = j.photo || '';
+            ensureTimeline(j);
             const c = CAT[j.cat] || CAT.other;
             const d = 0.01;
             const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${j.lng - d}%2C${j.lat - d * 0.7}%2C${j.lng + d}%2C${j.lat + d * 0.7}&layer=mapnik&marker=${j.lat}%2C${j.lng}`;
@@ -3187,12 +3188,14 @@
             const j = jobs.find(x => x.id === currentJobId);
             if (!j) return;
             const now = nowStr();
+            ensureTimeline(j);
             if (j.status === 'assigned') {
                 j.status = 'en_route';
                 j.timeline[2] = { label: 'En Route', ts: now, state: 'done' };
                 j.timeline[3].state = 'active';
                 showToast('Status updated: En Route');
                 markAsnStep(j.asnId, 3, 'done', now);
+                markReportStep(j.reportId, 3, 'done', now);
             } else if (j.status === 'en_route') {
                 j.status = 'on_site';
                 j.timeline[3] = { label: 'On-Site', ts: now, state: 'done' };
@@ -3225,6 +3228,28 @@
             if (timeStr) patch.happened_at = timeStr;
             if (note) patch.note = note;
             CalyeDB.update('report_timeline', [['report_id', reportId], ['step', step]], patch);
+        }
+
+        // Build a guaranteed 5-step timeline skeleton, overlaying any rows that
+        // exist for this assignment so the rails never render empty or crash on
+        // a missing index even if assignment_timeline rows are incomplete.
+        function canonicalTimeline(rows) {
+            const labels = { 1: 'Reported', 2: 'Verified & Assigned to you', 3: 'En Route', 4: 'On-Site', 5: 'Resolved' };
+            const byStep = {};
+            (rows || []).forEach(function (t) { byStep[Number(t.step)] = t; });
+            return [1, 2, 3, 4, 5].map(function (s) {
+                const r = byStep[s];
+                return {
+                    label: labels[s] || (r && r.label) || 'Step ' + s,
+                    ts: (r && r.happened_at) || '—',
+                    state: r && (r.state === 'done' || r.state === 'active') ? r.state : 'pending'
+                };
+            });
+        }
+
+        function ensureTimeline(j) {
+            if (!j.timeline || j.timeline.length < 5) j.timeline = canonicalTimeline(j.timeline || null);
+            return j.timeline;
         }
 
         // ══════════════════════════ RESOLVE FLOW ══════════════════════════
@@ -3382,6 +3407,7 @@
             const j = jobs.find(x => x.id === currentJobId);
             if (!j) return;
             const now = nowStr();
+            ensureTimeline(j);
             const notes = (document.getElementById('resolve-notes')?.value || '').trim();
             const proofData = proofDataURL;
             j.status = 'resolved';
@@ -3748,9 +3774,17 @@
                                     desc: r.description || '',
                                     notes: a.resolution_notes || '',
                                     photo: reportMediaByReport[r.id] || '',
-                                    timeline: (tlByAsn[a.id] || [])
-                                        .slice().sort((x, y) => x.step - y.step)
-                                        .map(t => ({ label: t.label, ts: t.happened_at, state: t.state }))
+                                    timeline: (function () {
+                                      const tl = canonicalTimeline(tlByAsn[a.id] || []);
+                                      if (tl.length > 0) {
+                                        tl[0].ts = r.created_at ? fmtTime(r.created_at) : tl[0].ts;
+                                        tl[0].state = 'done';
+                                      }
+                                      if (tl.length > 1 && (a.assigned_at || a.created_at)) {
+                                        tl[1].ts = fmtTime(a.assigned_at || a.created_at);
+                                      }
+                                      return tl;
+                                    })()
                                 };
                             });
                             if (mapped.length) {

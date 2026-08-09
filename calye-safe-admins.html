@@ -4133,6 +4133,19 @@
       return `<span class="badge ${status}">${labels[status]}</span>`;
     }
 
+    function reportActionsCell(r) {
+      if (r.status === 'resolved') {
+        return `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`;
+      }
+      const btnStyle = 'background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;';
+      const respondBtn = `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="${btnStyle}" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`;
+      if (r.status === 'responding') {
+        const resolveBtn = `<button onclick="openResolveModal('${r.id}','${r.dbId || ''}')" style="background:rgba(23,138,90,0.1);color:var(--success);border:1px solid rgba(23,138,90,0.4);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:6px;transition:background 0.16s;" onmouseover="this.style.background='rgba(23,138,90,0.18)'" onmouseout="this.style.background='rgba(23,138,90,0.1)'">Resolve</button>`;
+        return respondBtn + resolveBtn;
+      }
+      return respondBtn;
+    }
+
     function renderTable(data) {
       const tbody = document.getElementById('table-body');
       if (!data || data.length === 0) {
@@ -4147,10 +4160,7 @@
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
       <td>
-        ${r.status !== 'resolved'
-          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
-          : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
-        }
+        ${reportActionsCell(r)}
       </td>
     </tr>
   `).join('');
@@ -4194,7 +4204,12 @@
     let currentSearch = '';
 
     function getFilteredData() {
-      let data = currentFilter === 'all' ? reports : reports.filter(r => r.status === currentFilter);
+      let data;
+      if (currentFilter === 'urgent') {
+        data = reports.filter(r => r.urgent === true || r.status === 'urgent');
+      } else {
+        data = currentFilter === 'all' ? reports : reports.filter(r => r.status === currentFilter);
+      }
       if (currentSearch) data = data.filter(r =>
         r.type.toLowerCase().includes(currentSearch) ||
         r.loc.toLowerCase().includes(currentSearch) ||
@@ -4249,10 +4264,7 @@
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
       <td>
-        ${r.status !== 'resolved'
-          ? `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`
-          : `<span style="font-size:11px;color:var(--text3);font-weight:600;">Done</span>`
-        }
+        ${reportActionsCell(r)}
       </td>
     </tr>
   `).join('');
@@ -4267,8 +4279,9 @@
       let minorData = fullReports.filter(r => r.category === 'minor');
 
       if (statusFilters.includes(filter)) {
-        majorData = majorData.filter(r => r.status === filter);
-        minorData = minorData.filter(r => r.status === filter);
+        const match = r => filter === 'urgent' ? (r.urgent === true || r.status === 'urgent' || r.priority === 'urgent') : r.status === filter;
+        majorData = majorData.filter(match);
+        minorData = minorData.filter(match);
       }
 
       const majorGroup = document.getElementById('reports-major-group');
@@ -4387,10 +4400,11 @@
       }
 
       const pushed = pushEl.checked;
+      const category = categoryEl.value;
       announcements.unshift({
         id: announcementIdSeq++,
         title, body,
-        category: categoryEl.value,
+        category,
         date: 'Just now',
         pushed
       });
@@ -4404,7 +4418,7 @@
       renderAnnouncements();
       if (CalyeDB.isOnline()) {
         CalyeDB.insert('announcements', [{
-          title, body, category: categoryEl.value, pushed
+          title, body, category, pushed
         }]).then(ins => {
           if (ins && ins[0] && ins[0].id) {
             announcements[0].dbId = ins[0].id;
@@ -4697,21 +4711,15 @@
           if (reportDbId) {
             CalyeDB.update('reports', { id: reportDbId }, { status: 'responding', priority: 'responding' });
           }
-          if (asnId) {
-            const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-            CalyeDB.insert('assignment_timeline', [
-              { assignment_id: asnId, step: 1, label: 'Reported', happened_at: nowStr, state: 'done' },
-              { assignment_id: asnId, step: 2, label: 'Verified & Assigned to you', happened_at: nowStr, state: 'done' },
-              { assignment_id: asnId, step: 3, label: 'En Route', happened_at: '—', state: 'pending' },
-              { assignment_id: asnId, step: 4, label: 'On-Site', happened_at: '—', state: 'pending' },
-              { assignment_id: asnId, step: 5, label: 'Resolved', happened_at: '—', state: 'pending' }
-            ]);
-          }
-          // Advance the resident's tracker: mark "Verified by Operator" (2)
-          // and "Responder Dispatched" (3) as done.
+          // assignment_timeline rows (Reported/Verified/En Route/On-Site/Resolved)
+          // are created by the trg_create_assignment_timeline trigger so step 1
+          // "Reported" reflects the resident's real filing time, not dispatch.
+          // Advance the resident's tracker: mark "Verified by Operator" (2) done
+          // now. Step 3 "Responder Dispatched" is only marked done when the
+          // responder actually starts (Start → En Route), so the resident
+          // doesn't see progress before the unit moves.
           if (reportDbId) {
             markReportStep(reportDbId, 2, 'done', fmtDateTime(new Date().toISOString()));
-            markReportStep(reportDbId, 3, 'done', fmtDateTime(new Date().toISOString()));
           }
           // Refresh local list so the report shows as Responding.
           syncFromSupabase();
@@ -5597,8 +5605,25 @@
     }
 
     function loadReports() {
+      if (!CalyeDB.isOnline()) {
+        showToastMsg('Offline — reports may be out of date.', 'error');
+        renderTable(getFilteredData());
+        return;
+      }
       CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 200 }).then(rows => {
-        if (!rows || !rows.length) return;
+        if (!rows) {
+          showToastMsg('Could not reach the database — reports may be out of date.', 'error');
+          return;
+        }
+        if (!rows.length) {
+          reports = [];
+          fullReports = [];
+          renderTable(getFilteredData());
+          filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+          refreshSummaryStats();
+          renderPriorityCard();
+          return;
+        }
         const reportIds = rows.map(r => r.id);
         CalyeDB.fetch('assignments', { filters: [['report_id', 'in', reportIds]], limit: 250 }).then(asnRows => {
           const asnByReport = (asnRows || []).reduce((m, a) => {
@@ -5614,6 +5639,7 @@
               filed: fmtDateTime(r.created_at),
               status: adminStatus(r),
               category: r.category || 'other',
+              urgent: r.priority === 'urgent' || r.status === 'urgent',
               dbId: r.id,
               description: r.description || '',
               reporterName: r.reporter_name || 'Resident',
@@ -5626,8 +5652,8 @@
           });
           reports = mapped;
           fullReports = mapped.map(r => ({
-            id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' ? 'major' : 'minor',
-            loc: r.loc, filed: r.filed, status: r.status, dbId: r.dbId
+            id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' || r.category === 'flood' ? 'major' : 'minor',
+            loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId
           }));
           renderTable(getFilteredData());
           filterReportsPage('all', document.querySelector('#page-reports .ftab'));
