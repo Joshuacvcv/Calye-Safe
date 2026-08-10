@@ -569,22 +569,6 @@ async function adminScenario(d) {
   }
   var filterMs = Date.now() - t1;
 
-  // local-only resolve (no dbId) — currentDispatchDbId must be null
-  document.getElementById('resolve-notes').value = 'local-only';
-  openResolveModal('#BRGY-TEST-999', null);
-  confirmResolve();
-  await new Promise(function(r){ setTimeout(r, 0); });
-
-  // batch resolve with dbIds
-  var before = parseInt(document.getElementById('dash-resolved').textContent, 10) || 0;
-  for (var i = 1; i <= 40; i++) {
-    document.getElementById('resolve-notes').value = 'Stress resolved #' + i;
-    openResolveModal('#BRGY-TEST-' + i, 'report-' + i);
-    confirmResolve();
-    await new Promise(function(r){ setTimeout(r, 0); });
-  }
-  var after = parseInt(document.getElementById('dash-resolved').textContent, 10) || 0;
-
   // dispatch batch
   for (var i = 1; i <= 5; i++) {
     document.getElementById('dispatch-notes').value = '';
@@ -616,8 +600,6 @@ async function adminScenario(d) {
     tableHtml: tableLen,
     renderMs: renderMs,
     filterMs: filterMs,
-    resolvedBefore: before,
-    resolvedAfter: after,
     topZone: topZone,
     analyticsMs: analyticsMs
   };
@@ -715,7 +697,7 @@ async function main() {
   // Community — signed-in resident (filtered reports)
   await runApp('communityResident', communityResidentScenario, 'My Reports (resident)');
   // Admin
-  await runApp('admin', adminScenario, 'Dashboard + resolve + analytics');
+  await runApp('admin', adminScenario, 'Dashboard + dispatch + analytics');
   // Responder
   await runApp('responders', responderScenario, 'Queue + job detail');
 

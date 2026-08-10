@@ -2366,6 +2366,25 @@
             </div>
         </div>
 
+        <!-- ===== ETA SHEET ===== -->
+        <div class="sheet-overlay" id="eta-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Estimated Arrival</h3>
+                <p class="sheet-sub">How long until you reach the incident location?</p>
+
+                <div class="form-group">
+                    <label>ETA (minutes)</label>
+                    <input id="eta-input" type="number" min="1" max="120" placeholder="e.g. 10">
+                </div>
+
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('eta-overlay')">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmEta()">Start — Mark En Route</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== RESPONDER PERSONAL INFO SHEET ===== -->
         <div class="sheet-overlay" id="rpi-overlay">
             <div class="sheet">
@@ -2959,7 +2978,7 @@
             const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${j.lng - d}%2C${j.lat - d * 0.7}%2C${j.lng + d}%2C${j.lat + d * 0.7}&layer=mapnik&marker=${j.lat}%2C${j.lng}`;
 
             const stepBtn = {
-                assigned: `<button class="btn btn-step-assigned" onclick="advanceStatus()"><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Start — Mark En Route</button>`,
+                assigned: `<button class="btn btn-step-assigned" onclick="openEtaSheet()"><svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg> Start — Mark En Route</button>`,
                 en_route: `<button class="btn btn-step-enroute" onclick="advanceStatus()"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Mark Arrived — On-Site</button>`,
                 on_site: `<button class="btn btn-step-onsite" onclick="openSheet('resolve-overlay')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Resolve Incident</button>`,
                 resolved: `<button class="btn btn-step-done" disabled><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Resolved</button>`,
@@ -3182,6 +3201,32 @@
             if (!j) return;
             const url = `https://www.google.com/maps/dir/?api=1&destination=${j.lat},${j.lng}&travelmode=driving`;
             window.open(url, '_blank');
+        }
+
+        function openEtaSheet() {
+            const j = jobs.find(x => x.id === currentJobId);
+            const input = document.getElementById('eta-input');
+            if (input) input.value = (j && typeof j.etaMin === 'number') ? j.etaMin : '';
+            openSheet('eta-overlay');
+            setTimeout(function () { if (input) input.focus(); }, 300);
+        }
+
+        function confirmEta() {
+            const j = jobs.find(x => x.id === currentJobId);
+            if (!j) return;
+            const input = document.getElementById('eta-input');
+            const etaVal = input ? parseInt(input.value, 10) : NaN;
+            if (!etaVal || etaVal < 1 || etaVal > 120) {
+                showToast('Please enter a valid ETA (1–120 minutes)');
+                return;
+            }
+            j.etaMin = etaVal;
+            saveStoredData(LS_KEY_JOBS, jobs);
+            closeSheet('eta-overlay');
+            if (CalyeDB.isOnline() && j.asnId) {
+                CalyeDB.update('assignments', { id: j.asnId }, { eta_min: etaVal });
+            }
+            advanceStatus();
         }
 
         function advanceStatus() {
@@ -3746,6 +3791,36 @@
                             if (match) myAsn = dbAssignments.filter(a => !a.responder_id || a.responder_id === match.id);
                         }
                         const activeAsn = myAsn.filter(a => a.status !== 'resolved');
+
+                        // Merge resolved assignments into History (deduped by id) so
+                        // jobs resolved on any device show up in the History tab.
+                        const doneAsn = myAsn.filter(a => a.status === 'resolved');
+                        if (doneAsn.length) {
+                            const mappedHist = doneAsn.map(a => {
+                                const r = reportById[a.report_id] || {};
+                                const resolvedAt = a.resolved_at || a.updated_at || a.created_at;
+                                const startedAt = a.assigned_at || a.created_at;
+                                const mins = (resolvedAt && startedAt)
+                                    ? Math.max(1, Math.round((new Date(resolvedAt) - new Date(startedAt)) / 60000))
+                                    : null;
+                                const duration = mins != null
+                                    ? (mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + 'm')
+                                    : '—';
+                                return {
+                                    id: r.report_no || '#BRGY',
+                                    type: r.type || 'Incident',
+                                    cat: r.category || 'other',
+                                    loc: r.location || 'Barangay Calye',
+                                    resolvedDate: fmtTime(resolvedAt),
+                                    duration: duration
+                                };
+                            });
+                            const seen = {};
+                            mappedHist.forEach(h => { seen[h.id] = true; });
+                            history = mappedHist.concat(history.filter(h => !seen[h.id]));
+                            saveStoredData(LS_KEY_HISTORY, history);
+                            renderHistory();
+                        }
                         if (!activeAsn.length) return;
                         const asnIds = activeAsn.map(a => a.id);
                         CalyeDB.fetch('assignment_timeline', { filters: [['assignment_id', 'in', asnIds]], limit: 250 }).then(tlRows => {

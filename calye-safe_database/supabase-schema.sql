@@ -132,6 +132,7 @@ create table if not exists reports (
   lng           double precision not null default 0,
   source        text not null default 'resident', -- 'resident' or 'BRGY' (admin-entered)
   status        report_status not null default 'pending',
+  announce_consent boolean not null default false, -- resident consent to publish as a public announcement
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );

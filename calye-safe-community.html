@@ -714,6 +714,14 @@
       transform: scale(0.97);
     }
 
+    .btn-primary.btn-sent,
+    .btn-primary.btn-sent:hover {
+      background: linear-gradient(135deg, var(--success), #1b5e20);
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+      pointer-events: none;
+      transform: none;
+    }
+
     .btn-secondary {
       background: var(--bg);
       color: var(--text2);
@@ -2587,12 +2595,16 @@
           <label>Number of people affected (if known)</label>
           <input type="number" placeholder="e.g. 5" min="0">
         </div>
+        <label class="consent-row" style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;cursor:pointer;">
+          <input type="checkbox" id="announce-consent" style="margin-top:2px;flex-shrink:0;width:18px;height:18px;accent-color:var(--accent);">
+          <span style="font-size:12px;color:var(--text2);line-height:1.5;font-weight:600;">I consent to this report being uploaded as an announcement to warn residents near the incident.</span>
+        </label>
         <!-- No back button on step 3 as requested, only submit -->
-        <button class="btn btn-primary" onclick="submitReport()">
+        <button class="btn btn-primary" id="submit-report-btn" onclick="submitReport()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          Submit Report
+          <span id="submit-report-label">Submit Report</span>
         </button>
         <div style="height:16px;"></div>
       </div>
@@ -2931,8 +2943,8 @@
             <span class="badge responding">Responding</span>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="closeModal('success-modal');switchScreen('myreports')">Track My
-          Report</button>
+        <button class="btn btn-primary" onclick="closeModal('success-modal');switchScreen('myreports')">Report
+          submitted, proceed to track</button>
       </div>
     </div>
 
@@ -3014,78 +3026,7 @@
         <div style="width:34px;"></div>
       </div>
       <div class="scroll-content" style="padding-top:12px;">
-        <div
-          style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">
-          NEW · 3 UNREAD</div>
-        <div class="notif-item unread alert">
-          <div class="notif-icon" style="background:#FFEBEE;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          </div>
-          <div class="notif-text">
-            <h5>🌊 Flood Advisory Issued</h5>
-            <p>PAGASA has issued a flood advisory for Mercado Village. Residents are advised to stay alert and prepare
-              for evacuation.</p>
-            <div class="notif-time">Just now</div>
-          </div>
-        </div>
-        <div class="notif-item unread update">
-          <div class="notif-icon" style="background:#E3F2FD;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2">
-              <polyline points="9 11 12 14 22 4" />
-              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-            </svg>
-          </div>
-          <div class="notif-text">
-            <h5>Report #BRGY-2026-0038 Update</h5>
-            <p>A responder has been dispatched to your Road Accident report on Division Road. ETA: 10 minutes.</p>
-            <div class="notif-time">15 minutes ago</div>
-          </div>
-        </div>
-        <div class="notif-item unread">
-          <div class="notif-icon" style="background:#E8F5E9;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div class="notif-text">
-            <h5>Report Resolved ✅</h5>
-            <p>Your report #BRGY-2026-0035 (Uncollected Garbage – Bankley) has been resolved by the sanitation team.</p>
-            <div class="notif-time">2 hours ago</div>
-          </div>
-        </div>
-        <div
-          style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin:16px 0 8px;">
-          EARLIER</div>
-        <div class="notif-item">
-          <div class="notif-icon" style="background:#FFF3E0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
-          </div>
-          <div class="notif-text">
-            <h5>⚡ Power Interruption Notice</h5>
-            <p>Meralco scheduled maintenance tonight from 9 PM – 12 AM. Prepare backup lighting.</p>
-            <div class="notif-time">Yesterday</div>
-          </div>
-        </div>
-        <div class="notif-item">
-          <div class="notif-icon" style="background:#F3E5F5;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B1FA2" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <div class="notif-text">
-            <h5>🏛 Barangay Assembly Reminder</h5>
-            <p>Monthly assembly at Barangay Hall tomorrow. Your attendance is encouraged.</p>
-            <div class="notif-time">2 days ago</div>
-          </div>
-        </div>
-        <div style="height:16px;"></div>
+        <div id="notif-list"></div>
       </div>
     </div>
 
@@ -3452,6 +3393,7 @@
     // never see another account's cached reports from the same browser. When
     // there is no session (demo/offline preview) we use the shared demo seed.
     let currentUid = null;
+    let submittingReport = false;
     function reportsKey() {
       return currentUid ? (LS_KEY_REPORTS + '_' + currentUid) : LS_KEY_REPORTS;
     }
@@ -3874,6 +3816,13 @@
       const timeEl = document.getElementById('report-time');
       if (dateEl) dateEl.value = d.toISOString().split('T')[0];
       if (timeEl) timeEl.value = d.toTimeString().slice(0, 5);
+      submittingReport = false;
+      const submitBtn = document.getElementById('submit-report-btn');
+      const submitLabel = document.getElementById('submit-report-label');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('btn-sent'); }
+      if (submitLabel) submitLabel.textContent = 'Submit Report';
+      const consentChk = document.getElementById('announce-consent');
+      if (consentChk) consentChk.checked = false;
     }
 
     function handleReportBack() {
@@ -3950,6 +3899,16 @@
     }
 
     function submitReport() {
+      // Guard against double-click / double submission creating duplicate reports.
+      if (submittingReport) {
+        showToast('Your report is already being submitted.');
+        return;
+      }
+      submittingReport = true;
+      const submitBtn = document.getElementById('submit-report-btn');
+      const submitLabel = document.getElementById('submit-report-label');
+      if (submitBtn) submitBtn.disabled = true;
+      if (submitLabel) submitLabel.textContent = 'Submitting...';
       const rid = generateReportNo();
       document.getElementById('report-id').textContent = rid;
       const now = new Date();
@@ -3962,6 +3921,7 @@
         type: selectedType || 'Incident',
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
         description: document.getElementById('report-description')?.value || '',
+        announceConsent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked),
         date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         status: 'responding',
         source: 'BRGY',
@@ -3991,6 +3951,10 @@
 
       pushReportToSupabase(rid);
       showModal('success-modal');
+      if (submitBtn) {
+        submitBtn.classList.add('btn-sent');
+        if (submitLabel) submitLabel.textContent = 'Report Submitted';
+      }
     }
 
     function pushReportToSupabase(rid) {
@@ -4012,7 +3976,8 @@
         lat: reportMarker ? reportMarker.getLatLng().lat : BRGY_CENTER[0],
         lng: reportMarker ? reportMarker.getLatLng().lng : BRGY_CENTER[1],
         source: 'resident',
-        status: 'pending'
+        status: 'pending',
+        announce_consent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked)
       };
       // Attach the real reporter_id so "My Reports" filtering and the
       // notification triggers work (NULL → notifications can't be routed).
@@ -4369,13 +4334,29 @@
         list.innerHTML = `<div class="empty-state"><p>No announcements here yet.</p></div><div style="height:16px;"></div>`;
         return;
       }
-      list.innerHTML = items.map(a => `
+      list.innerHTML = items.map(a => {
+        // Expand "[photo] <url>" markers (attached incident photo) into an <img>.
+        const photoMatch = /\[photo\]\s*(\S+)/.exec(a.body || '');
+        const bodyText = (a.body || '').replace(/\[photo\]\s*\S+\s*/g, '').trim();
+        const photoHtml = photoMatch && photoMatch[1]
+          ? `<img src="${esc(photoMatch[1])}" alt="Incident photo" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:10px;background:var(--surface2);" onclick="openAnnouncementPhoto('${esc(photoMatch[1])}')">`
+          : '';
+        return `
         <div class="announcement-card ${annCardClass(a.category)}">
-          <h4>${a.title}</h4>
-          <div class="meta">${fmtDate(a.created_at)}</div>
-          <p>${a.body}</p><span class="read-more">Read more →</span>
+          <h4>${esc(a.title)}</h4>
+          <div class="meta">${esc(fmtDate(a.created_at))}</div>
+          <p>${esc(bodyText)}</p>${photoHtml}<span class="read-more">Read more →</span>
         </div>
-      `).join('') + `<div style="height:16px;"></div>`;
+      `;
+      }).join('') + `<div style="height:16px;"></div>`;
+    }
+
+    function openAnnouncementPhoto(url) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+      overlay.innerHTML = `<img src="${esc(url)}" alt="Incident photo" style="max-width:92vw;max-height:92vh;border-radius:10px;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      document.body.appendChild(overlay);
     }
 
     function filterAnn(el, filter) {
@@ -4386,8 +4367,96 @@
     }
 
     // ========== NOTIFICATIONS ==========
+    const LS_KEY_NOTIFS = 'calye_safe_community_notifs';
+    let notifs = [];
+    function notifsKey() {
+      return currentUid ? (LS_KEY_NOTIFS + '_' + currentUid) : LS_KEY_NOTIFS;
+    }
+    const NOTIF_STEP_META = {
+      2: { label: 'Verified', bg: '#E3F2FD', color: '#1565C0', icon: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+        defaultMsg: no => `Your report ${no} has been verified by the barangay operator.` },
+      3: { label: 'Responder Dispatched', bg: '#FFF3E0', color: '#F57C00', icon: '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>',
+        defaultMsg: (no, type) => `A responder is on the way to your ${(type || 'report').toLowerCase()} ${no}.` },
+      4: { label: 'On-Site Response', bg: '#EDE7F6', color: '#7B1FA2', icon: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+        defaultMsg: (no, type) => `The responder is now on-site for your ${(type || 'report').toLowerCase()} ${no}.` },
+      5: { label: 'Resolved', bg: '#E8F5E9', color: '#2E7D32', icon: '<polyline points="20 6 9 17 4 12"/>',
+        defaultMsg: (no, type) => `Your ${(type || 'report').toLowerCase()} ${no} has been resolved.` }
+    };
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    // Derives resident notifications from report_timeline steps (verified,
+    // dispatched, on-site, resolved) so the resident gets alerted to every
+    // update on their own reports, regardless of who made the change.
+    function buildReportNotifs(dbReports, tlByReport) {
+      if (!dbReports || !dbReports.length || !tlByReport) return;
+      const known = {};
+      notifs.forEach(n => { known[n.key] = true; });
+      let added = 0;
+      dbReports.forEach(r => {
+        const rows = (tlByReport[r.id] || []);
+        const tl = rows.slice().sort((a, b) => a.step - b.step) || [];
+        tl.forEach(t => {
+          const step = Number(t.step);
+          if (step < 2 || step > 5) return;
+          if (t.state !== 'done' || !t.happened_at || t.happened_at === '—') return;
+          const key = r.id + ':' + step;
+          if (known[key]) return;
+          known[key] = true;
+          const meta = NOTIF_STEP_META[step];
+          notifs.unshift({
+            key: key,
+            reportNo: r.report_no || '#BRGY',
+            type: r.type || 'Incident',
+            step: step,
+            label: meta.label,
+            message: (t.note && t.note !== '—') ? t.note : meta.defaultMsg(r.report_no || '#BRGY', r.type),
+            time: t.happened_at,
+            read: false
+          });
+          added++;
+        });
+      });
+      if (added) {
+        saveStoredData(notifsKey(), notifs);
+        renderNotifications();
+      }
+    }
+    function renderNotifications() {
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      const unread = notifs.filter(n => !n.read);
+      const read = notifs.filter(n => n.read);
+      if (!unread.length && !read.length) {
+        list.innerHTML = `<div style="padding:26px 8px;text-align:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><p style="font-size:12.5px;color:var(--text3);margin-top:8px;font-weight:600;">No updates yet. Status changes on your reports will appear here.</p></div><div style="height:16px;"></div>`;
+      } else {
+        const itemHtml = n => `
+          <div class="notif-item${n.read ? '' : ' unread'} update">
+            <div class="notif-icon" style="background:${NOTIF_STEP_META[n.step].bg};">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${NOTIF_STEP_META[n.step].color}" stroke-width="2">${NOTIF_STEP_META[n.step].icon}</svg>
+            </div>
+            <div class="notif-text">
+              <h5>${esc(n.reportNo)} — ${esc(n.label)}</h5>
+              <p>${esc(n.message)}</p>
+              <div class="notif-time">${esc(n.time)}</div>
+            </div>
+          </div>`;
+        list.innerHTML =
+          (unread.length ? `<div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">NEW · ${unread.length} UNREAD</div>` + unread.map(itemHtml).join('') : '') +
+          (read.length ? `<div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin:16px 0 8px;">EARLIER</div>` + read.map(itemHtml).join('') : '') +
+          `<div style="height:16px;"></div>`;
+      }
+      const badge = document.getElementById('notif-badge');
+      if (badge) {
+        const n = unread.length;
+        badge.textContent = n > 9 ? '9+' : n;
+        badge.style.display = n ? 'flex' : 'none';
+      }
+    }
     function openNotifPanel() {
-      document.getElementById('notif-badge').style.display = 'none';
+      notifs.forEach(n => { n.read = true; });
+      saveStoredData(notifsKey(), notifs);
+      renderNotifications();
       document.getElementById('notif-panel').classList.add('open');
     }
     function closeNotifPanel() {
@@ -4908,6 +4977,7 @@
             (acc[t.report_id] = acc[t.report_id] || []).push(t);
             return acc;
           }, {});
+          buildReportNotifs(dbReports, tlByReport);
           CalyeDB.fetch('report_media', { filters: [['report_id', 'in', ids]], limit: 250 }).then(mediaRows => {
             const mediaByReport = (mediaRows || []).reduce((acc, m) => {
               if (m.report_id && m.url && !acc[m.report_id]) acc[m.report_id] = m.url;
@@ -4960,6 +5030,8 @@
     CalyeAuth.currentSession().then(function (s) {
       if (s && s.user && s.user.id) currentUid = s.user.id;
       loadInitialReports();
+      notifs = loadStoredData(notifsKey(), []);
+      renderNotifications();
       renderReports();
       refreshCommunityStats();
       renderProfileHeader();
