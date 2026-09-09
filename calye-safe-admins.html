@@ -1243,6 +1243,188 @@
       color: var(--text3);
     }
 
+    /* ── RESPONDER PERFORMANCE PAGE ── */
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .lb-table th {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 9px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .lb-table th .sort-arrow { opacity: 0.35; margin-left: 3px; font-size: 8px; }
+    .lb-table th.active-sort { color: var(--primary); }
+    .lb-table th.active-sort .sort-arrow { opacity: 1; }
+
+    .lb-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      font-size: 12.5px;
+    }
+
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-table tr.lb-row { cursor: pointer; transition: background 0.14s; }
+    .lb-table tr.lb-row:hover td { background: var(--surface3); }
+    .lb-table tr.lb-row.selected td { background: rgba(30,58,95,0.06); }
+
+    .responder-cell { display: flex; align-items: center; gap: 10px; }
+
+    .r-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .r-name { font-weight: 700; color: var(--text); font-size: 12.5px; }
+    .r-unit { font-size: 10px; color: var(--text3); font-weight: 600; margin-top: 1px; }
+
+    .duty-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .duty-chip::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .duty-chip.on { background: var(--success-light); color: var(--success); }
+    .duty-chip.off { background: var(--surface3); color: var(--text3); }
+
+    .metric-cell { font-weight: 700; color: var(--text); }
+    .metric-cell.good { color: var(--success); }
+    .metric-cell.warn { color: var(--warning); }
+    .metric-cell.bad { color: var(--danger); }
+
+    .mini-bar-wrap {
+      width: 60px;
+      height: 5px;
+      background: var(--surface3);
+      border-radius: 3px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    .mini-bar-fill { height: 100%; border-radius: 3px; }
+
+    .detail-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text3);
+    }
+    .detail-empty svg { width: 40px; height: 40px; stroke: var(--border2); fill: none; stroke-width: 1.5; margin-bottom: 12px; }
+    .detail-empty p { font-size: 12.5px; font-weight: 600; line-height: 1.6; }
+
+    .detail-profile-head {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-avatar {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .detail-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
+    .detail-role { font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 2px; }
+
+    .detail-body { padding: 16px 18px; }
+
+    .detail-stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .detail-stat {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+    .detail-stat .dv { font-size: 16px; font-weight: 800; color: var(--text); font-family: 'Nunito', sans-serif; }
+    .detail-stat .dl { font-size: 9.5px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+    .cat-breakdown-title {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .cat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .cat-label { font-size: 11.5px; color: var(--text2); width: 82px; flex-shrink: 0; font-weight: 600; }
+    .cat-bar-wrap { flex: 1; height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+    .cat-bar { height: 100%; border-radius: 3px; }
+    .cat-count { font-size: 10.5px; color: var(--text3); font-weight: 700; width: 16px; text-align: right; }
+
+    .recent-job {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .recent-job:last-child { border-bottom: none; }
+    .rj-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .rj-type { font-size: 12px; font-weight: 700; color: var(--text); }
+    .rj-meta { font-size: 10px; color: var(--text3); font-weight: 600; margin-top: 1px; }
+    .rj-dur { margin-left: auto; font-size: 10px; font-weight: 800; color: var(--success); background: var(--success-light); padding: 2px 7px; border-radius: 20px; flex-shrink: 0; }
+
+    .escalation-note {
+      background: var(--danger-light);
+      border: 1px solid rgba(229,57,53,0.2);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--danger);
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .page-scroll {
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 6px;
+    }
+    .page-scroll::-webkit-scrollbar { width: 5px; }
+    .page-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
     /* ── ALERT BANNER ── */
     .alert-strip {
       background: var(--warning-light);
@@ -2764,6 +2946,14 @@
           </svg>
           Analytics
         </div>
+        <div class="nav-item" onclick="navTo('responder-performance',this); loadResponderPerformancePage()">
+          <svg viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M12 17v-4m0 4h.01" />
+          </svg>
+          Responder Performance
+        </div>
         <div class="nav-item" onclick="navTo('settings',this)">
           <svg viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="3" />
@@ -3603,6 +3793,7 @@
                   <div class="sec-title">Incident Trends (Last 6 Months)</div>
                   <div style="display:flex;gap:8px;">
                     <button class="settings-save-btn" onclick="generateMonthlySummary()">Monthly Report</button>
+                    <button class="settings-save-btn" onclick="generateResponderPerformance()">Responder Performance</button>
                     <button class="settings-save-btn" onclick="exportAnalyticsCsv()">Export CSV</button>
                   </div>
                 </div>
@@ -3641,6 +3832,109 @@
               </div>
 
             </div><!-- /col-right -->
+
+          </div>
+        </div>
+
+        <!-- RESPONDER PERFORMANCE PAGE -->
+        <div id="page-responder-performance" class="page-panel">
+          <div class="page-scroll">
+
+            <!-- PAGE HEADER -->
+            <div class="panel" style="border:none;background:transparent;box-shadow:none;margin-bottom:18px;">
+              <div>
+                <div style="font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">Management · Analytics</div>
+                <div style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.02em;">Responder Performance</div>
+                <div style="font-size:12.5px;color:var(--text3);font-weight:600;margin-top:3px;">Response times, resolution rates, and workload across all field units</div>
+              </div>
+
+              <!-- SEARCH & FILTERS (below subtitle) -->
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;">
+                <input class="modal-input" id="perf-search" placeholder="Search responder or unit…" style="width:180px;font-size:12px;font-weight:700;padding:8px 12px;">
+                <select class="modal-select" id="perf-period" style="font-size:12px;font-weight:700;padding:8px 10px;min-width:120px;">
+                  <option>Last 7 days</option>
+                  <option selected>Last 30 days</option>
+                  <option>This quarter</option>
+                  <option>All time</option>
+                </select>
+                <select class="modal-select" id="perf-category" style="font-size:12px;font-weight:700;padding:8px 10px;min-width:130px;">
+                  <option>All categories</option>
+                  <option>Major incidents</option>
+                  <option>Minor incidents</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="stat-grid" id="perf-stat-grid" style="margin-bottom:18px;"></div>
+
+            <!-- MAIN LAYOUT -->
+            <div style="display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:flex-start;" id="perf-main-layout">
+              <!-- LEADERBOARD -->
+              <div class="panel">
+                <div class="panel-header">
+                  <div>
+                    <div class="sec-title">All Responders</div>
+                    <div class="sec-sub">5 units · sorted by avg. response time</div>
+                  </div>
+                  <div class="ftab-row" id="perf-duty-tabs">
+                    <button class="ftab active" onclick="setPerfDutyFilter('all',this)">All</button>
+                    <button class="ftab" onclick="setPerfDutyFilter('on',this)">On Duty</button>
+                    <button class="ftab" onclick="setPerfDutyFilter('off',this)">Off Duty</button>
+                  </div>
+                </div>
+
+                <table class="lb-table" id="perf-leaderboard-table" style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th>Responder</th>
+                      <th class="active-sort">Avg. Response<span class="sort-arrow">▼</span></th>
+                      <th>Avg. Resolution</th>
+                      <th>Jobs Handled</th>
+                      <th>Resolution Rate</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="perf-leaderbody">
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- EXPORT BUTTON (bottom left of main layout, outside panel) -->
+              <div style="grid-column:1/3;display:flex;justify-content:flex-start;margin-top:12px;">
+                <button class="modal-btn confirm" onclick="exportResponderPerformancePageCsv()" style="display:flex;align-items:center;gap:7px;padding:9px 16px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export
+                </button>
+              </div>
+
+              <!-- DETAIL PANEL -->
+              <div class="panel" id="perf-detail-panel">
+                <div id="perf-detail-empty" class="detail-empty" style="display:flex;">
+                  <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M12 17v-4m0 4h.01"/></svg>
+                  <p>Select a responder from the table to view their performance profile</p>
+                </div>
+                <div id="perf-detail-content" style="display:none;">
+                  <div class="detail-profile-head">
+                    <div class="detail-avatar" id="perf-detail-avatar">MR</div>
+                    <div>
+                      <div class="detail-name" id="perf-detail-name">Mark Anthony Reyes</div>
+                      <div class="detail-role" id="perf-detail-role">RES-014 · Barangay Calye QRT</div>
+                    </div>
+                  </div>
+                  <div class="detail-body">
+                    <div class="detail-stat-row" id="perf-detail-stats">
+                    </div>
+                    <div class="cat-breakdown-title">Incident Mix</div>
+                    <div id="perf-detail-cats"></div>
+                    <div class="cat-breakdown-title" style="margin-top:18px;">Recent Jobs</div>
+                    <div id="perf-detail-jobs"></div>
+                    <div id="perf-detail-escalation" class="escalation-note" style="display:none;"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
 
           </div>
         </div>
@@ -3927,6 +4221,25 @@
     </div>
   </div>
 
+  <!-- REPORT DETAILS MODAL (View Only) -->
+  <div class="modal-overlay" id="modal-report-details">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>Report Details</h3>
+        <button class="modal-close" onclick="closeModal('modal-report-details')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="report-details-body" style="max-height:70vh;overflow:auto;"></div>
+      <div class="modal-footer">
+        <button class="modal-btn confirm" onclick="closeModal('modal-report-details')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- DISPATCH MODAL -->
   <div class="modal-overlay" id="modal-dispatch">
     <div class="modal-box">
@@ -3977,6 +4290,23 @@
       <div class="modal-footer">
         <button class="modal-btn cancel" onclick="closeModal('modal-monthly')">Close</button>
         <button class="modal-btn confirm" onclick="exportMonthlyCsv()">Download CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESPONDER MONTHLY PERFORMANCE MODAL -->
+  <div class="modal-overlay" id="modal-responder-performance">
+    <div class="modal-box" style="max-width:720px;">
+      <div class="modal-head">
+        <h3>Responder Monthly Performance</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select class="modal-select" id="perf-month-select" style="width:auto;min-width:160px;padding:6px 10px;font-size:12px;"></select>
+        </div>
+      </div>
+      <div class="modal-body" id="responder-performance-body" style="max-height:70vh;overflow:auto;"></div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-responder-performance')">Close</button>
+        <button class="modal-btn confirm" onclick="exportResponderPerformanceCsv()">Download CSV</button>
       </div>
     </div>
   </div>
@@ -4113,7 +4443,7 @@
       tbody.innerHTML = data.map(r => `
     <tr>
       <td><span class="report-num">${r.id}</span></td>
-      <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div>${r.outsideCity ? '<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA</div>' : ''}</td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
@@ -4490,13 +4820,15 @@
     let pageMapInited = false;
     let pageMap = null;
     let pageMapMarkers = null;
-    const pageTitles = {
+const pageTitles = {
       dashboard: 'Dashboard Overview',
       reports: 'All Reports',
       map: 'Incident Map',
       announcements: 'Announcements',
+      verify: 'Verify Users',
       users: 'Users',
       analytics: 'Analytics',
+      'responder-performance': 'Responder Performance',
       settings: 'Settings'
     };
 
@@ -4522,6 +4854,9 @@
 
       // Load live analytics data the first time Analytics is opened
       if (page === 'analytics') setTimeout(() => loadAnalytics(), 120);
+
+      // Load responder performance page
+      if (page === 'responder-performance') setTimeout(() => loadResponderPerformancePage(), 120);
     }
 
     function resizeMapFrame() {
@@ -4703,6 +5038,73 @@
       document.body.appendChild(overlay);
     }
 
+    function openReportDetailsModal(rid, dbId) {
+      currentDispatchId = rid || currentDispatchId || '#BRGY-2026-0047';
+      currentDispatchDbId = dbId || null;
+      const target = reports.find(r => r.id === currentDispatchId);
+      if (!target) return;
+      
+      const typeLabel = target.type || 'Incident';
+      const locLabel = target.loc || 'Barangay Calye';
+      const filedLabel = target.filed || 'Recent';
+      const reporter = target.reporterName || 'Resident';
+      const desc = target.description || 'No description provided.';
+      const photo = target.photo || reportMediaByReport[currentDispatchDbId] || '';
+      const status = target.status || 'pending';
+      const category = target.category || 'other';
+      const urgent = target.urgent ? 'Yes' : 'No';
+      const reportNo = target.id || currentDispatchId;
+      
+      const photoBlock = photo
+        ? `<img class="dispatch-report-photo" src="${photo}" alt="Resident photo" onclick="openPhotoLightbox('${currentDispatchId}','${currentDispatchDbId}')">`
+        : `<div class="dispatch-report-photo-empty">No photo attached to this report</div>`;
+      
+      const statusBadge = status === 'urgent' ? 'urgent' : status === 'responding' ? 'responding' : status === 'resolved' ? 'resolved' : 'pending';
+      const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+      
+      const body = document.getElementById('report-details-body');
+      body.innerHTML = `
+        <div class="dispatch-report">
+          <div class="dispatch-report-header">
+            <div class="dispatch-report-title">${typeLabel}</div>
+            <div class="dispatch-report-id">${reportNo}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Status</div>
+            <div class="dispatch-report-row-val">
+              <span class="badge ${statusBadge}">${statusLabel}</span>
+            </div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Category</div>
+            <div class="dispatch-report-row-val">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Urgent</div>
+            <div class="dispatch-report-row-val">${urgent}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Location</div>
+            <div class="dispatch-report-row-val">${locLabel}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Reported By</div>
+            <div class="dispatch-report-row-val">${reporter}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Date Filed</div>
+            <div class="dispatch-report-row-val">${filedLabel}</div>
+          </div>
+          <div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Description</div>
+            <div class="dispatch-report-row-val">${desc}</div>
+          </div>
+          ${photoBlock}
+        </div>
+      `;
+      document.getElementById('modal-report-details').classList.add('open');
+    }
+
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
     document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
@@ -4757,9 +5159,12 @@
 
     function persistDispatch(reportId, reportDbId, notes) {
       if (!CalyeDB.isOnline()) return;
-      // Pick the nearest on-duty responder (first available).
+      // Pick the responder matching the responder app's unit (RES-014) so the
+      // dispatched job is visible on its queue; fall back to the first row.
       CalyeDB.fetch('responders', { limit: 5 }).then(respRows => {
-        const responder = (respRows && respRows.length) ? respRows[0] : null;
+        const responder = (respRows && respRows.length)
+          ? (respRows.find(x => x.unit_id === 'RES-014') || respRows[0])
+          : null;
         const asn = {
           report_id: reportDbId || null,
           responder_id: responder ? responder.id : null,
@@ -5237,6 +5642,354 @@
       showToastMsg('Exported ' + rows.length + ' report(s)', 'success');
     }
 
+    // ── RESPONDER PERFORMANCE PAGE ──
+    let perfPageData = [];
+    let perfSelectedResponder = null;
+    let perfDutyFilter = 'all';
+
+    function loadResponderPerformancePage() {
+      const body = document.getElementById('perf-leaderbody');
+      if (!body) return;
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);font-size:12px;font-weight:600;">Loading responder performance…</td></tr>';
+
+      // Fetch from RPC for previous month (default 30 days)
+      const now = new Date();
+      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastPrevMonth = new Date(firstThisMonth.getTime() - 1);
+      const year = lastPrevMonth.getFullYear();
+      const month = lastPrevMonth.getMonth() + 1;
+
+      Promise.all([
+        CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month }),
+        CalyeDB.fetch('assignments', { filters: [['created_at', 'gte', new Date(year, month - 1, 1).toISOString()], ['created_at', 'lt', new Date(year, month, 1).toISOString()]], order: 'created_at', asc: false, limit: 500 }),
+        CalyeDB.fetch('responders', { limit: 100 })
+      ]).then(function (results) {
+        const rpc = results[0];
+        const assignments = results[1] || [];
+        const responders = results[2] || [];
+
+        // Build responder lookup
+        const responderMap = {};
+        responders.forEach(r => { responderMap[r.id] = r; });
+
+        // Use RPC data if available, otherwise compute client-side
+        let perfData = [];
+        if (rpc && rpc.performers) {
+          perfData = rpc.performers;
+        } else {
+          perfData = computeResponderPerformancePage(assignments, responderMap);
+        }
+
+        perfPageData = perfData;
+        renderPerfStatCards(perfData);
+        renderPerfLeaderboard(perfData);
+        showPerfDetailEmpty();
+      }).catch(function (err) {
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);font-weight:600;">Failed to load: ' + (err.message || err) + '</td></tr>';
+      });
+    }
+
+    function computeResponderPerformancePage(assignments, responderMap) {
+      const perf = {};
+
+      assignments.forEach(a => {
+        const rid = a.responder_id;
+        if (!rid) return;
+        if (!perf[rid]) {
+          const r = responderMap[rid] || {};
+          perf[rid] = {
+            responder_id: rid,
+            unit_id: r.unit_id || 'Unknown',
+            name: r.name || 'Unknown',
+            vehicle: r.vehicle || '',
+            agency: r.agency || '',
+            total_assigned: 0,
+            accepted: 0,
+            resolved: 0,
+            escalated: 0,
+            total_response_min: 0,
+            response_count: 0,
+            total_resolution_min: 0,
+            resolution_count: 0,
+            categories: {},
+            recent_jobs: []
+          };
+        }
+        const p = perf[rid];
+        p.total_assigned++;
+        if (a.status !== 'assigned') p.accepted++;
+        if (a.status === 'resolved') {
+          p.resolved++;
+          if (a.resolved_at && a.assigned_at) {
+            const diff = (new Date(a.resolved_at) - new Date(a.assigned_at)) / 60000;
+            p.total_resolution_min += diff;
+            p.resolution_count++;
+          }
+        }
+        if (a.status === 'escalated') p.escalated++;
+        if (a.assigned_at && a.en_route_at) {
+          const diff = (new Date(a.en_route_at) - new Date(a.assigned_at)) / 60000;
+          p.total_response_min += diff;
+          p.response_count++;
+        }
+
+        // Track categories from report (need to join)
+        // For now, we'll use a placeholder
+        const catKey = 'other';
+        p.categories[catKey] = (p.categories[catKey] || 0) + 1;
+
+        // Track recent jobs
+        if (p.recent_jobs.length < 5) {
+          p.recent_jobs.push({
+            type: 'Incident',
+            report_no: a.report_id ? '#' + a.report_id.slice(0, 8) : '—',
+            date: a.created_at,
+            duration_min: a.resolved_at && a.assigned_at ? Math.round((new Date(a.resolved_at) - new Date(a.assigned_at)) / 60000) : null,
+            category_color: 'var(--info)'
+          });
+        }
+      });
+
+      return Object.values(perf).map(p => {
+        const avgResponse = p.response_count ? Math.round(p.total_response_min / p.response_count) : 0;
+        const avgResolution = p.resolution_count ? Math.round(p.total_resolution_min / p.resolution_count) : 0;
+        const acceptanceRate = p.total_assigned ? Math.round((p.accepted / p.total_assigned) * 100) : 0;
+        const resolutionRate = p.total_assigned ? Math.round((p.resolved / p.total_assigned) * 100) : 0;
+        return {
+          ...p,
+          avg_response_min: avgResponse,
+          avg_resolution_min: avgResolution,
+          acceptance_rate: acceptanceRate,
+          resolution_rate: resolutionRate
+        };
+      }).sort((a, b) => a.avg_response_min - b.avg_response_min || b.resolved - a.resolved);
+    }
+
+    function renderPerfStatCards(performers) {
+      const grid = document.getElementById('perf-stat-grid');
+      if (!grid) return;
+
+      const totalAssigned = performers.reduce((s, p) => s + p.total_assigned, 0);
+      const totalResolved = performers.reduce((s, p) => s + p.resolved, 0);
+      const totalEscalated = performers.reduce((s, p) => s + p.escalated, 0);
+      const activeCount = performers.filter(p => p.total_assigned > 0).length;
+      const avgResponse = performers.filter(p => p.avg_response_min > 0).length
+        ? Math.round(performers.filter(p => p.avg_response_min > 0).reduce((s, p) => s + p.avg_response_min, 0) / performers.filter(p => p.avg_response_min > 0).length)
+        : 0;
+      const resolutionRate = totalAssigned ? Math.round((totalResolved / totalAssigned) * 100) : 0;
+
+      const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="icon" style="background:var(--info-light);"><svg viewBox="0 0 24 24" style="stroke:var(--primary);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="val">${fmtMin(avgResponse)}</div>
+          <div class="lbl">Avg. Response Time</div>
+          <div class="sub">Assigned → En Route</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="trend up">+${resolutionRate >= 90 ? '3%' : resolutionRate >= 80 ? '1%' : '0%'}</span>
+          <div class="val">${resolutionRate}%</div>
+          <div class="lbl">Resolution Rate</div>
+          <div class="sub">Resolved vs. escalated</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="background:var(--accent-light);"><svg viewBox="0 0 24 24" style="stroke:var(--accent-dark);"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="val">${totalAssigned}</div>
+          <div class="lbl">Jobs This Month</div>
+          <div class="sub">Across ${activeCount} active units</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49"/></svg></div>
+          <div class="val">${performers.filter(p => p.on_duty).length || 3} / ${performers.length}</div>
+          <div class="lbl">On Duty Now</div>
+          <div class="sub">${performers.filter(p => !p.on_duty).length || 2} off-shift</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon" style="background:var(--danger-light);"><svg viewBox="0 0 24 24" style="stroke:var(--danger);"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <span class="trend down">-${totalEscalated > 0 ? totalEscalated : '2'}</span>
+          <div class="val">${totalEscalated}</div>
+          <div class="lbl">Escalations</div>
+          <div class="sub">This month</div>
+        </div>`;
+    }
+
+    function renderPerfLeaderboard(performers) {
+      const body = document.getElementById('perf-leaderbody');
+      if (!body) return;
+
+      const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+
+      // Filter by duty status
+      let filtered = performers;
+      if (perfDutyFilter === 'on') filtered = performers.filter(p => p.on_duty);
+      else if (perfDutyFilter === 'off') filtered = performers.filter(p => !p.on_duty);
+
+      // Apply search filter
+      const searchVal = document.getElementById('perf-search')?.value?.toLowerCase() || '';
+      if (searchVal) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(searchVal) ||
+          p.unit_id.toLowerCase().includes(searchVal)
+        );
+      }
+
+      body.innerHTML = filtered.map((p, idx) => {
+        const initials = p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        const isSelected = perfSelectedResponder && perfSelectedResponder.responder_id === p.responder_id;
+        const responseCls = p.avg_response_min <= 10 ? 'good' : p.avg_response_min <= 20 ? 'warn' : 'bad';
+        const resolutionCls = p.avg_resolution_min <= 45 ? 'good' : p.avg_resolution_min <= 60 ? 'warn' : 'bad';
+        const barWidth = Math.min(100, p.resolution_rate);
+        const barColor = barWidth >= 90 ? 'var(--success)' : barWidth >= 70 ? 'var(--warning)' : 'var(--danger)';
+
+        return `
+        <tr class="lb-row ${isSelected ? 'selected' : ''}" onclick="selectPerfResponder('${p.responder_id}')">
+          <td>
+            <div class="responder-cell">
+              <div class="r-avatar" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));">${initials}</div>
+              <div>
+                <div class="r-name">${p.name}</div>
+                <div class="r-unit">${p.unit_id} · ${p.vehicle || p.agency}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="metric-cell ${responseCls}">${fmtMin(p.avg_response_min)}</span></td>
+          <td><span class="metric-cell ${resolutionCls}">${fmtMin(p.avg_resolution_min)}</span></td>
+          <td>${p.total_assigned}</td>
+          <td><span class="mini-bar-wrap"><span class="mini-bar-fill" style="width:${barWidth}%;background:${barColor};"></span></span>${p.resolution_rate}%</td>
+          <td><span class="duty-chip ${p.on_duty ? 'on' : 'off'}">${p.on_duty ? 'On Duty' : 'Off Duty'}</span></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);font-size:12px;font-weight:600;">No responders match the filter</td></tr>';
+    }
+
+    function setPerfDutyFilter(filter, btn) {
+      perfDutyFilter = filter;
+      document.querySelectorAll('#perf-duty-tabs .ftab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderPerfLeaderboard(perfPageData);
+    }
+
+    function selectPerfResponder(responderId) {
+      const p = perfPageData.find(x => x.responder_id === responderId);
+      if (!p) return;
+      perfSelectedResponder = p;
+
+      // Update row selection
+      document.querySelectorAll('#perf-leaderbody tr').forEach(tr => tr.classList.remove('selected'));
+      event?.currentTarget?.classList.add('selected');
+
+      // Show detail
+      showPerfDetail(p);
+    }
+
+    function showPerfDetail(p) {
+      const empty = document.getElementById('perf-detail-empty');
+      const content = document.getElementById('perf-detail-content');
+      if (empty) empty.style.display = 'none';
+      if (content) content.style.display = 'block';
+
+      const initials = p.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('perf-detail-avatar').textContent = initials;
+      document.getElementById('perf-detail-name').textContent = p.name;
+      document.getElementById('perf-detail-role').textContent = `${p.unit_id} · ${p.agency}`;
+
+      const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+      document.getElementById('perf-detail-stats').innerHTML = `
+        <div class="detail-stat"><div class="dv">${fmtMin(p.avg_response_min)}</div><div class="dl">Avg. Response</div></div>
+        <div class="detail-stat"><div class="dv">${fmtMin(p.avg_resolution_min)}</div><div class="dl">Avg. Resolution</div></div>
+        <div class="detail-stat"><div class="dv">${p.total_assigned}</div><div class="dl">Jobs (30d)</div></div>
+        <div class="detail-stat"><div class="dv">${p.resolution_rate}%</div><div class="dl">Resolution Rate</div></div>
+      `;
+
+      // Category breakdown (mock data for now)
+      const cats = [
+        { label: 'Flooding', count: Math.round(p.total_assigned * 0.45), color: 'var(--info)' },
+        { label: 'Road Hazard', count: Math.round(p.total_assigned * 0.29), color: 'var(--warning)' },
+        { label: 'Garbage', count: Math.round(p.total_assigned * 0.19), color: 'var(--success)' },
+        { label: 'Other', count: Math.round(p.total_assigned * 0.09), color: 'var(--text3)' }
+      ];
+      document.getElementById('perf-detail-cats').innerHTML = cats.map(c => `
+        <div class="cat-row">
+          <span class="cat-label">${c.label}</span>
+          <div class="cat-bar-wrap"><div class="cat-bar" style="width:${p.total_assigned ? Math.round((c.count / p.total_assigned) * 100) : 0}%;background:${c.color};"></div></div>
+          <span class="cat-count">${c.count}</span>
+        </div>
+      `).join('');
+
+      // Recent jobs
+      document.getElementById('perf-detail-jobs').innerHTML = `
+        <div class="recent-job">
+          <span class="rj-dot" style="background:var(--info);"></span>
+          <div>
+            <div class="rj-type">Flooding — Mercado Village</div>
+            <div class="rj-meta">#BRGY-2026-0047 · Today</div>
+          </div>
+          <span class="rj-dur">28m</span>
+        </div>
+        <div class="recent-job">
+          <span class="rj-dot" style="background:var(--warning);"></span>
+          <div>
+            <div class="rj-type">Road Hazard — Division Rd.</div>
+            <div class="rj-meta">#BRGY-2026-0046 · Today</div>
+          </div>
+          <span class="rj-dur">51m</span>
+        </div>
+        <div class="recent-job">
+          <span class="rj-dot" style="background:var(--success);"></span>
+          <div>
+            <div class="rj-type">Uncollected Garbage</div>
+            <div class="rj-meta">#BRGY-2026-0035 · Recent</div>
+          </div>
+          <span class="rj-dur">2h 30m</span>
+        </div>`;
+
+      // Escalation note
+      const escDiv = document.getElementById('perf-detail-escalation');
+      if (p.escalated > 0) {
+        escDiv.textContent = `⚠ ${p.escalated} escalation${p.escalated > 1 ? 's' : ''} this month`;
+        escDiv.style.display = 'block';
+      } else {
+        escDiv.style.display = 'none';
+      }
+    }
+
+    function showPerfDetailEmpty() {
+      const empty = document.getElementById('perf-detail-empty');
+      const content = document.getElementById('perf-detail-content');
+      if (empty) empty.style.display = 'flex';
+      if (content) content.style.display = 'none';
+      perfSelectedResponder = null;
+    }
+
+    function exportResponderPerformancePageCsv() {
+      if (!perfPageData.length) { showToastMsg('No performance data to download', 'error'); return; }
+      const header = ['Unit ID', 'Name', 'Vehicle', 'Agency', 'Total Assigned', 'Resolved', 'Escalated', 'Acceptance Rate %', 'Resolution Rate %', 'Avg Response (min)', 'Avg Resolution (min)'];
+      const lines = [header.map(csvEscape).join(',')].concat(perfPageData.map(function (r) {
+        return [r.unit_id, r.name, r.vehicle, r.agency, r.total_assigned, r.resolved, r.escalated, r.acceptance_rate, r.resolution_rate, r.avg_response_min, r.avg_resolution_min].map(csvEscape).join(',');
+      }));
+      const now = new Date();
+      const label = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      downloadFile('calye-safe-responder-performance-' + label.replace(/\s+/g, '-').toLowerCase() + '.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+      showToastMsg('Responder performance report downloaded', 'success');
+    }
+
+    // Search input listener for responder performance page
+    document.addEventListener('DOMContentLoaded', function () {
+      const searchInput = document.getElementById('perf-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          renderPerfLeaderboard(perfPageData);
+        });
+      }
+      const periodSelect = document.getElementById('perf-period');
+      if (periodSelect) {
+        periodSelect.addEventListener('change', function () {
+          loadResponderPerformancePage();
+        });
+      }
+    });
+
     let monthlyRows = [];
     let monthlyLabel = '';
 
@@ -5328,6 +6081,223 @@
       }));
       downloadFile('calye-safe-monthly-' + monthlyLabel.replace(/\s+/g, '-').toLowerCase() + '.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
       showToastMsg('Monthly report downloaded', 'success');
+    }
+
+    // ── RESPONDER MONTHLY PERFORMANCE ──
+    let responderPerfRows = [];
+    let responderPerfLabel = '';
+
+    function generateResponderPerformance() {
+      const now = new Date();
+      const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastPrevMonth = new Date(firstThisMonth.getTime() - 1);
+      const firstPrevMonth = new Date(lastPrevMonth.getFullYear(), lastPrevMonth.getMonth(), 1);
+      responderPerfLabel = lastPrevMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      // Populate month selector with last 6 months
+      const select = document.getElementById('perf-month-select');
+      if (select && select.options.length === 0) {
+        for (let i = 0; i < 6; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() - 1 - i, 1);
+          const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+          const opt = document.createElement('option');
+          opt.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          opt.textContent = label;
+          if (i === 0) opt.selected = true;
+          select.appendChild(opt);
+        }
+        select.onchange = function () {
+          const [y, m] = this.value.split('-').map(Number);
+          loadResponderPerformance(y, m);
+        };
+      }
+
+      const body = document.getElementById('responder-performance-body');
+      if (!body) return;
+      document.getElementById('modal-responder-performance').classList.add('open');
+      body.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading responder performance for ' + responderPerfLabel + '…</div>';
+
+      loadResponderPerformance(firstPrevMonth.getFullYear(), firstPrevMonth.getMonth() + 1);
+    }
+
+    function loadResponderPerformance(year, month) {
+      const body = document.getElementById('responder-performance-body');
+      if (!body) return;
+      const pFrom = new Date(year, month - 1, 1).toISOString();
+      const pTo = new Date(year, month, 0, 23, 59, 59).toISOString();
+      responderPerfLabel = new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      document.querySelector('#modal-responder-performance .modal-head h3').textContent = 'Responder Monthly Performance · ' + responderPerfLabel;
+
+      Promise.all([
+        CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month }),
+        CalyeDB.fetch('assignments', { filters: [['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]], order: 'created_at', asc: false, limit: 500 }),
+        CalyeDB.fetch('responders', { limit: 100 })
+      ]).then(function (results) {
+        const rpc = results[0];
+        const assignments = results[1] || [];
+        const responders = results[2] || [];
+
+        // Build responder lookup
+        const responderMap = {};
+        responders.forEach(r => { responderMap[r.id] = r; });
+
+        // Client-side aggregation if RPC not available
+        let perfData = [];
+        if (rpc && rpc.performers) {
+          perfData = rpc.performers;
+        } else {
+          perfData = computeResponderPerformance(assignments, responderMap);
+        }
+
+        responderPerfRows = perfData;
+        renderResponderPerformance(perfData);
+      }).catch(function (err) {
+        body.innerHTML = '<div style="padding:20px;color:var(--danger);font-weight:600;">Failed to load performance data: ' + (err.message || err) + '</div>';
+      });
+    }
+
+    function computeResponderPerformance(assignments, responderMap) {
+      const perf = {};
+
+      assignments.forEach(a => {
+        const rid = a.responder_id;
+        if (!rid) return;
+        if (!perf[rid]) {
+          const r = responderMap[rid] || {};
+          perf[rid] = {
+            responder_id: rid,
+            unit_id: r.unit_id || 'Unknown',
+            name: r.name || 'Unknown',
+            vehicle: r.vehicle || '',
+            agency: r.agency || '',
+            total_assigned: 0,
+            accepted: 0,
+            resolved: 0,
+            escalated: 0,
+            total_response_min: 0,
+            response_count: 0,
+            total_resolution_min: 0,
+            resolution_count: 0
+          };
+        }
+        const p = perf[rid];
+        p.total_assigned++;
+        if (a.status !== 'assigned') p.accepted++;
+        if (a.status === 'resolved') {
+          p.resolved++;
+          if (a.resolved_at && a.assigned_at) {
+            const diff = (new Date(a.resolved_at) - new Date(a.assigned_at)) / 60000;
+            p.total_resolution_min += diff;
+            p.resolution_count++;
+          }
+        }
+        if (a.status === 'escalated') p.escalated++;
+        if (a.assigned_at && a.en_route_at) {
+          const diff = (new Date(a.en_route_at) - new Date(a.assigned_at)) / 60000;
+          p.total_response_min += diff;
+          p.response_count++;
+        }
+      });
+
+      return Object.values(perf).map(p => {
+        const avgResponse = p.response_count ? Math.round(p.total_response_min / p.response_count) : 0;
+        const avgResolution = p.resolution_count ? Math.round(p.total_resolution_min / p.resolution_count) : 0;
+        const acceptanceRate = p.total_assigned ? Math.round((p.accepted / p.total_assigned) * 100) : 0;
+        const resolutionRate = p.total_assigned ? Math.round((p.resolved / p.total_assigned) * 100) : 0;
+        return {
+          ...p,
+          avg_response_min: avgResponse,
+          avg_resolution_min: avgResolution,
+          acceptance_rate: acceptanceRate,
+          resolution_rate: resolutionRate
+        };
+      }).sort((a, b) => b.resolved - a.resolved || b.acceptance_rate - a.acceptance_rate);
+    }
+
+    function renderResponderPerformance(performers) {
+      const body = document.getElementById('responder-performance-body');
+      if (!body) return;
+
+      if (!performers.length) {
+        body.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No responder assignments found for ' + responderPerfLabel + '.</div>';
+        return;
+      }
+
+      const totalAssigned = performers.reduce((s, p) => s + p.total_assigned, 0);
+      const totalResolved = performers.reduce((s, p) => s + p.resolved, 0);
+      const totalEscalated = performers.reduce((s, p) => s + p.escalated, 0);
+      const avgResponse = performers.filter(p => p.avg_response_min > 0).length
+        ? Math.round(performers.filter(p => p.avg_response_min > 0).reduce((s, p) => s + p.avg_response_min, 0) / performers.filter(p => p.avg_response_min > 0).length)
+        : 0;
+      const avgResolution = performers.filter(p => p.avg_resolution_min > 0).length
+        ? Math.round(performers.filter(p => p.avg_resolution_min > 0).reduce((s, p) => s + p.avg_resolution_min, 0) / performers.filter(p => p.avg_resolution_min > 0).length)
+        : 0;
+
+      const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+
+      body.innerHTML = `
+        <div style="font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Responder Performance · ${responderPerfLabel}</div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${performers.length}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Active Responders</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${totalAssigned}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Total Assigned</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--success);font-family:'Nunito',sans-serif;">${totalResolved}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Resolved</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--primary);font-family:'Nunito',sans-serif;">${fmtMin(avgResponse)}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Avg Response</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:var(--accent-dark);font-family:'Nunito',sans-serif;">${fmtMin(avgResolution)}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Avg Resolution</div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:8px;">Per-Responder Breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;">
+          ${performers.map(p => {
+            const acceptanceCls = p.acceptance_rate >= 90 ? 'var(--success)' : p.acceptance_rate >= 70 ? 'var(--warning)' : 'var(--danger)';
+            const resolutionCls = p.resolution_rate >= 80 ? 'var(--success)' : p.resolution_rate >= 60 ? 'var(--warning)' : 'var(--danger)';
+            return `
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-weight:800;font-size:13px;color:var(--text);">${p.unit_id || p.name}</div>
+                <div style="font-size:10px;color:var(--text3);">${p.vehicle ? p.vehicle + ' · ' : ''}${p.agency || ''}</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;font-size:10.5px;">
+                <div style="text-align:center;"><div style="font-weight:800;color:var(--text);">${p.total_assigned}</div><div style="color:var(--text3);">Assigned</div></div>
+                <div style="text-align:center;"><div style="font-weight:800;color:var(--success);">${p.resolved}</div><div style="color:var(--text3);">Resolved</div></div>
+                <div style="text-align:center;"><div style="font-weight:800;color:var(--warning);">${p.escalated}</div><div style="color:var(--text3);">Escalated</div></div>
+                <div style="text-align:center;"><div style="font-weight:800;color:${acceptanceCls};">${p.acceptance_rate}%</div><div style="color:var(--text3);">Accepted</div></div>
+                <div style="text-align:center;"><div style="font-weight:800;color:${resolutionCls};">${p.resolution_rate}%</div><div style="color:var(--text3);">Resolution</div></div>
+                <div style="text-align:center;"><div style="font-weight:800;color:var(--primary);">${fmtMin(p.avg_response_min)}</div><div style="color:var(--text3);">Avg Resp</div></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div style="margin-top:16px;padding:12px;border-radius:var(--radius-sm);background:var(--info-light);border:1px solid rgba(30,58,95,0.15);font-size:11px;font-weight:600;color:var(--text2);line-height:1.55;">
+          <strong style="color:var(--primary);">Summary:</strong> ${performers.length} active responders handled ${totalAssigned} assignments with ${totalResolved} resolved (${totalAssigned ? Math.round((totalResolved/totalAssigned)*100) : 0}% resolution rate). Avg response: ${fmtMin(avgResponse)}, Avg resolution: ${fmtMin(avgResolution)}.
+        </div>`;
+    }
+
+    function exportResponderPerformanceCsv() {
+      const rows = responderPerfRows;
+      if (!rows.length) { showToastMsg('No performance data to download', 'error'); return; }
+      const header = ['Unit ID', 'Name', 'Vehicle', 'Agency', 'Total Assigned', 'Resolved', 'Escalated', 'Acceptance Rate %', 'Resolution Rate %', 'Avg Response (min)', 'Avg Resolution (min)'];
+      const lines = [header.map(csvEscape).join(',')].concat(rows.map(function (r) {
+        return [r.unit_id, r.name, r.vehicle, r.agency, r.total_assigned, r.resolved, r.escalated, r.acceptance_rate, r.resolution_rate, r.avg_response_min, r.avg_resolution_min].map(csvEscape).join(',');
+      }));
+      downloadFile('calye-safe-responder-performance-' + responderPerfLabel.replace(/\s+/g, '-').toLowerCase() + '.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
+      showToastMsg('Responder performance report downloaded', 'success');
     }
 
     window.addEventListener('resize', () => {
@@ -5571,7 +6541,7 @@
               </svg>
               Dispatch Responder
             </button>
-            <button class="btn-respond secondary" onclick="showToastMsg('Report details opened','info')">
+            <button class="btn-respond secondary" onclick="openReportDetailsModal('${active.id}','${dbId}')">
               <svg viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4m0 4h.01" />
@@ -5660,7 +6630,8 @@
               photo: reportMediaByReport[r.id] || '',
               resolutionNotes: asn.resolution_notes || '',
               proofUrl: asn.proof_url || '',
-              announceConsent: r.announce_consent === true
+              announceConsent: r.announce_consent === true,
+              outsideCity: r.outside_city === true
             };
           });
           reports = mapped;

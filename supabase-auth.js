@@ -195,10 +195,30 @@ window.CalyeAuth = (function () {
         if (!session) { resolve({ session: null, profile: null, status: null }); return; }
         CalyeDB.fetchOne('profiles', [['id', 'eq', session.user.id]]).then(function (profile) {
           if (!profile) {
-            // Session exists but the account was deleted server-side
-            // (or the profile row is missing) — clear the stale session.
-            c.auth.signOut().then(function () {
-              resolve({ session: null, profile: null, status: null });
+            // Session exists but the profile row is missing — most commonly an
+            // account created before the on_auth_user_created trigger existed.
+            // Recreate the pending profile from the session's metadata so the
+            // gate can proceed to the ID-upload step. If the auth user itself
+            // is gone server-side (insert fails its FK), clear the stale session.
+            var meta = (session.user && session.user.user_metadata) || {};
+            CalyeDB.insert('profiles', [{
+              id: session.user.id,
+              email: (session.user.email || '').toLowerCase(),
+              full_name: meta.full_name || ((session.user.email || '').split('@')[0]) || '',
+              role: meta.role === 'responder' ? 'responder' : 'resident',
+              verification_status: 'pending'
+            }]).then(function (rows) {
+              if (!rows || !rows.length) {
+                c.auth.signOut().then(function () {
+                  resolve({ session: null, profile: null, status: null });
+                });
+                return;
+              }
+              resolve({
+                session: session,
+                profile: rows[0],
+                status: 'pending'
+              });
             });
             return;
           }

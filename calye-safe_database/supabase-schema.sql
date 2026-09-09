@@ -133,6 +133,7 @@ create table if not exists reports (
   source        text not null default 'resident', -- 'resident' or 'BRGY' (admin-entered)
   status        report_status not null default 'pending',
   announce_consent boolean not null default false, -- resident consent to publish as a public announcement
+  outside_city boolean not null default false, -- pinned location fell outside the Santa Rosa boundary
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );

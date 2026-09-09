@@ -45,3 +45,15 @@ alter table public.notifications       disable row level security;
 --   alter table public.hotlines            enable row level security;
 --   alter table public.map_incidents       enable row level security;
 --   alter table public.notifications       enable row level security;
+
+-- ============================================================================
+-- VERIFICATION (run this after the ALTERs above; expect ZERO rows returned)
+-- ============================================================================
+-- select schemaname, tablename
+-- from pg_tables
+-- where schemaname = 'public'
+--   and tablename in ('profiles','reports','report_timeline','report_media',
+--                     'responders','assignments','assignment_timeline',
+--                     'resolved_history','announcements','hotlines',
+--                     'map_incidents','verification_requests','notifications')
+--   and rowsecurity;

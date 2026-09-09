@@ -741,6 +741,13 @@
     }
 
     function showGate(status, profile, reason) {
+      // No active session (account missing server-side, expired, or demo mode
+      // with RLS-on) — never show the ID-upload form to a signed-out user.
+      if (!status) {
+        document.getElementById('status-card').style.display = 'none';
+        document.getElementById('auth-card').style.display = 'block';
+        return;
+      }
       document.getElementById('auth-card').style.display = 'none';
       const card = document.getElementById('status-card');
       card.style.display = 'block';

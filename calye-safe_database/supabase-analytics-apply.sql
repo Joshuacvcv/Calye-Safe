@@ -207,7 +207,8 @@ declare
   v_to     timestamptz;
   v_summary jsonb;
 begin
-  v_from := make_timestamptz(p_year, p_month, 1, 0, 0, 0, 'Asia/Manila');
+  -- Construct UTC midnight of 1st day of month (avoid timezone shift from make_timestamptz)
+  v_from := (p_year || '-' || lpad(p_month::text, 2, '0') || '-01 00:00:00+00')::timestamptz;
   v_to   := v_from + interval '1 month';
 
   select public.fn_incident_summary(v_from, v_to) into v_summary;
@@ -220,9 +221,83 @@ begin
   );
 end;
 $$;
-
 revoke all on function fn_monthly_summary(int, int) from public;
 grant execute on function fn_monthly_summary(int, int) to anon, authenticated, service_role;
+
+
+-- ============================================================================
+-- 5b. RESPONDER MONTHLY PERFORMANCE
+--    fn_responder_monthly_performance(p_year, p_month) -> jsonb
+--    Returns per-responder performance metrics for the given calendar month.
+--    The UI calls this from the "Responder Performance" button.
+-- ============================================================================
+create or replace function fn_responder_monthly_performance(p_year int, p_month int)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_from   timestamptz;
+  v_to     timestamptz;
+  v_result jsonb;
+begin
+  -- Construct UTC midnight of 1st day of month (avoid timezone shift from make_timestamptz)
+  v_from := (p_year || '-' || lpad(p_month::text, 2, '0') || '-01 00:00:00+00')::timestamptz;
+  v_to   := v_from + interval '1 month';
+
+  with assignment_stats as (
+    select
+      a.responder_id,
+      r.unit_id,
+      r.name,
+      r.vehicle,
+      r.agency,
+      count(*) as total_assigned,
+      count(*) filter (where a.status in ('en_route', 'on_site', 'resolved', 'escalated')) as accepted,
+      count(*) filter (where a.status = 'resolved') as resolved,
+      count(*) filter (where a.status = 'escalated') as escalated,
+      avg(extract(epoch from (a.en_route_at - a.assigned_at)) / 60) filter (where a.en_route_at is not null and a.assigned_at is not null) as avg_response_min,
+      avg(extract(epoch from (a.resolved_at - a.assigned_at)) / 60) filter (where a.resolved_at is not null and a.assigned_at is not null) as avg_resolution_min
+    from assignments a
+    left join responders r on r.id = a.responder_id
+    where a.created_at >= v_from
+      and a.created_at < v_to
+      and a.responder_id is not null
+    group by a.responder_id, r.unit_id, r.name, r.vehicle, r.agency
+  ),
+  performer_data as (
+    select
+      responder_id,
+      unit_id,
+      name,
+      vehicle,
+      agency,
+      total_assigned,
+      accepted,
+      resolved,
+      escalated,
+      case when accepted > 0 then round((accepted::numeric / total_assigned) * 100) else 0 end as acceptance_rate,
+      case when total_assigned > 0 then round((resolved::numeric / total_assigned) * 100) else 0 end as resolution_rate,
+      round(coalesce(avg_response_min, 0)) as avg_response_min,
+      round(coalesce(avg_resolution_min, 0)) as avg_resolution_min
+    from assignment_stats
+  )
+  select jsonb_build_object(
+    'report_month', to_char(v_from, 'YYYY-MM'),
+    'report_label', to_char(v_from, 'FMMonth YYYY'),
+    'generated_at', now(),
+    'performers', coalesce(jsonb_agg(to_jsonb(p) order by p.resolved desc, p.acceptance_rate desc), '[]'::jsonb)
+  ) into v_result
+  from performer_data p;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function fn_responder_monthly_performance(int, int) from public;
+grant execute on function fn_responder_monthly_performance(int, int) to anon, authenticated, service_role;
+
 
 -- ============================================================================
 -- ENABLE pg_cron + SCHEDULE THE AUTOMATED MONTHLY REPORT

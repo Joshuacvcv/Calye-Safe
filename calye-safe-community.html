@@ -2495,6 +2495,14 @@
           </svg>
           <span id="loc-confirmed-text" style="font-size:12px;color:#1B5E20;font-weight:600;"></span>
         </div>
+        <div id="loc-outside-msg"
+          style="display:none;background:#FFEBEE;border:1.5px solid #E53935;border-radius:var(--radius-sm);padding:9px 12px;margin-top:8px;align-items:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4m0 4h.01" />
+          </svg>
+          <span style="font-size:12px;color:#C62828;font-weight:600;">⚠ This location is outside Santa Rosa City. Incidents outside the city may be filtered out and not shown to responders.</span>
+        </div>
         <div class="form-group" style="margin-top:12px;">
           <label>Street / Address *</label>
           <input id="report-address" type="text" placeholder="e.g. 123 Calye Street, Barangay Calye">
@@ -3520,6 +3528,7 @@
       mapIncidents.forEach(inc => {
         if (activeMapFilter !== 'all' && inc.type !== activeMapFilter) return;
         if (q && !inc.label.toLowerCase().includes(q) && !inc.loc.toLowerCase().includes(q) && !inc.type.toLowerCase().includes(q)) return;
+        if (typeof isPointInSantaRosa === 'function' && !isPointInSantaRosa(inc.lat, inc.lng)) return;
         const color = typeColors[inc.type] || '#2E7D32';
         const marker = L.marker([inc.lat, inc.lng], { icon: makePinIcon(color) })
           .addTo(incidentMap)
@@ -3754,6 +3763,18 @@
       const bar = document.getElementById('loc-confirmed-bar');
       bar.style.display = 'flex';
       document.getElementById('loc-confirmed-text').textContent = `📍 ${lat}, ${lng}`;
+      const outsideMsg = document.getElementById('loc-outside-msg');
+      const reportLocationOutside = typeof isPointInSantaRosa === 'function' && !isPointInSantaRosa(latlng.lat, latlng.lng);
+      if (outsideMsg) outsideMsg.style.display = reportLocationOutside ? 'flex' : 'none';
+      if (bar && reportLocationOutside) {
+        bar.style.background = '#FFF3CD';
+        bar.style.border = '1.5px solid #F9A825';
+        document.getElementById('loc-confirmed-text').style.color = '#7B4A00';
+      } else if (bar) {
+        bar.style.background = '#E8F5E9';
+        bar.style.border = 'none';
+        document.getElementById('loc-confirmed-text').style.color = '#1B5E20';
+      }
     }
 
     // Nominatim reverse geocode (OSM — free, no API key) to fill the address
@@ -3809,6 +3830,8 @@
       if (confirmedText) confirmedText.textContent = '';
       const locReq = document.getElementById('loc-required-msg');
       if (locReq) locReq.style.display = 'flex';
+      const outsideMsg = document.getElementById('loc-outside-msg');
+      if (outsideMsg) outsideMsg.style.display = 'none';
       const pinLabel = document.getElementById('report-map-pin-label');
       if (pinLabel) pinLabel.textContent = '📍 Tap to drop a pin';
       const d = new Date();
@@ -3913,6 +3936,7 @@
       document.getElementById('report-id').textContent = rid;
       const now = new Date();
       const destLatLng = reportMarker ? reportMarker.getLatLng() : { lat: BRGY_CENTER[0], lng: BRGY_CENTER[1] };
+      const reportLocationOutside = typeof isPointInSantaRosa === 'function' && !isPointInSantaRosa(destLatLng.lat, destLatLng.lng);
       // Simulated responder starting ~600-900m away from the pinned incident location
       const respLat = destLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (0.004 + Math.random() * 0.003);
       const respLng = destLatLng.lng + (Math.random() > 0.5 ? 1 : -1) * (0.004 + Math.random() * 0.003);
@@ -3922,6 +3946,7 @@
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
         description: document.getElementById('report-description')?.value || '',
         announceConsent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked),
+        outsideCity: reportLocationOutside || false,
         date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' · ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         status: 'responding',
         source: 'BRGY',
@@ -3945,7 +3970,8 @@
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
         status: 'pending',
         lat: destLatLng.lat,
-        lng: destLatLng.lng
+        lng: destLatLng.lng,
+        outsideCity: reportLocationOutside || false
       });
       saveStoredData(LS_KEY_INCIDENTS, mapIncidents);
 
@@ -3977,6 +4003,9 @@
         lng: reportMarker ? reportMarker.getLatLng().lng : BRGY_CENTER[1],
         source: 'resident',
         status: 'pending',
+        outside_city: typeof isPointInSantaRosa === 'function' &&
+          !isPointInSantaRosa(reportMarker ? reportMarker.getLatLng().lat : BRGY_CENTER[0],
+                              reportMarker ? reportMarker.getLatLng().lng : BRGY_CENTER[1]),
         announce_consent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked)
       };
       // Attach the real reporter_id so "My Reports" filtering and the
@@ -4036,6 +4065,7 @@
           <div class="report-source">${r.source}</div>
           <h4>${r.type}</h4>
           <div class="report-location">📍 ${r.loc}</div>
+          ${r.outsideCity ? '<div style="display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:2px 6px;margin-top:4px;font-size:10px;font-weight:700;color:#C62828;">⚠ Outside Santa Rosa City</div>' : ''}
         </div>
         <span class="badge ${r.status}">${r.status === 'responding' ? 'Responding' : r.status === 'resolved' ? 'Resolved' : 'Pending'}</span>
       </div>
