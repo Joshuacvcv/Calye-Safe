@@ -119,6 +119,71 @@
       }
     }
 
+    /* ── RESPONSIVE LAYOUT FIXES ── */
+    @media (max-width: 1600px) {
+      :root { --sidebar-w: 232px; }
+      .col-right { width: 360px; }
+      #content { padding: 20px 22px; }
+      .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .stat-card { padding: 16px; }
+      .stat-card .val { font-size: 24px; }
+    }
+
+    @media (max-width: 1440px) {
+      :root { --sidebar-w: 220px; }
+      .col-right { width: 340px; }
+      #content { padding: 18px 20px; }
+      .stat-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-card { padding: 14px; }
+      .stat-card .val { font-size: 22px; }
+      .panel-body { padding: 16px; }
+      .panel-header { padding: 12px 16px; }
+    }
+
+    @media (max-width: 1366px) {
+      :root { --sidebar-w: 208px; }
+      .col-right { width: 320px; }
+      #content { padding: 16px 18px; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stat-card { padding: 14px; }
+      .stat-card .val { font-size: 20px; }
+      .col-left { gap: 14px; }
+      .panel-body { padding: 14px; }
+      .panel-header { padding: 10px 14px; }
+      .sec-title { font-size: 13px; }
+    }
+
+    @media (max-width: 1280px) {
+      :root { --sidebar-w: 200px; }
+      .col-right { width: 300px; }
+      #content { padding: 14px 16px; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .col-left { gap: 12px; }
+      .stat-card { padding: 12px; }
+      .stat-card .val { font-size: 19px; }
+    }
+
+    @media (max-width: 1100px) {
+      .col-right { width: 100%; max-width: none; }
+      .main-layout, #perf-main-layout { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      #perf-stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .col-right { display: none; }
+    }
+
+    @media (max-width: 700px) {
+      #perf-stat-grid { grid-template-columns: 1fr; }
+      :root { --sidebar-w: 64px; }
+      .sidebar-logo .brand, .sidebar-logo .sub, .nav-item span, .nav-label, .sidebar-footer { display: none; }
+      .nav-item { justify-content: center; padding: 12px; }
+      .nav-item::before { display: none; }
+      #content { padding: 12px; }
+    }
+
     /* ── LAYOUT ── */
     #shell {
       display: flex;
