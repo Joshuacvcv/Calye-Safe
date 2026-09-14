@@ -249,10 +249,6 @@ begin
   with assignment_stats as (
     select
       a.responder_id,
-      r.unit_id,
-      r.name,
-      r.vehicle,
-      r.agency,
       count(*) as total_assigned,
       count(*) filter (where a.status in ('en_route', 'on_site', 'resolved', 'escalated')) as accepted,
       count(*) filter (where a.status = 'resolved') as resolved,
@@ -260,28 +256,30 @@ begin
       avg(extract(epoch from (a.en_route_at - a.assigned_at)) / 60) filter (where a.en_route_at is not null and a.assigned_at is not null) as avg_response_min,
       avg(extract(epoch from (a.resolved_at - a.assigned_at)) / 60) filter (where a.resolved_at is not null and a.assigned_at is not null) as avg_resolution_min
     from assignments a
-    left join responders r on r.id = a.responder_id
     where a.created_at >= v_from
       and a.created_at < v_to
       and a.responder_id is not null
-    group by a.responder_id, r.unit_id, r.name, r.vehicle, r.agency
+    group by a.responder_id
   ),
   performer_data as (
     select
-      responder_id,
-      unit_id,
-      name,
-      vehicle,
-      agency,
-      total_assigned,
-      accepted,
-      resolved,
-      escalated,
-      case when accepted > 0 then round((accepted::numeric / total_assigned) * 100) else 0 end as acceptance_rate,
-      case when total_assigned > 0 then round((resolved::numeric / total_assigned) * 100) else 0 end as resolution_rate,
-      round(coalesce(avg_response_min, 0)) as avg_response_min,
-      round(coalesce(avg_resolution_min, 0)) as avg_resolution_min
-    from assignment_stats
+      r.id as responder_id,
+      r.unit_id,
+      r.name,
+      r.vehicle,
+      r.agency,
+      coalesce(s.total_assigned, 0) as total_assigned,
+      coalesce(s.accepted, 0) as accepted,
+      coalesce(s.resolved, 0) as resolved,
+      coalesce(s.escalated, 0) as escalated,
+      case when coalesce(s.total_assigned, 0) > 0
+           then round((coalesce(s.accepted, 0)::numeric / s.total_assigned) * 100) else 0 end as acceptance_rate,
+      case when coalesce(s.total_assigned, 0) > 0
+           then round((coalesce(s.resolved, 0)::numeric / s.total_assigned) * 100) else 0 end as resolution_rate,
+      round(coalesce(s.avg_response_min, 0)) as avg_response_min,
+      round(coalesce(s.avg_resolution_min, 0)) as avg_resolution_min
+    from responders r
+    left join assignment_stats s on s.responder_id = r.id
   )
   select jsonb_build_object(
     'report_month', to_char(v_from, 'YYYY-MM'),

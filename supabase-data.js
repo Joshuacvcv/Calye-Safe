@@ -99,7 +99,9 @@ window.CalyeDB = (function () {
     return new Promise(function (resolve) {
       var c = client();
       if (!c) { resolve(null); return; }
-      var q = c.from(table).update(patch);
+      // .select() is required: without it PostgREST returns 204 with
+      // data:null, which callers misread as failure (see decline flow).
+      var q = c.from(table).update(patch).select();
       normalizeFilters(filters).forEach(function (f) {
         q = q.eq(f[0], f[1]);
       });
@@ -114,7 +116,8 @@ window.CalyeDB = (function () {
     return new Promise(function (resolve) {
       var c = client();
       if (!c) { resolve(null); return; }
-      var q = c.from(table).delete();
+      // .select() so callers can distinguish success (rows) from failure.
+      var q = c.from(table).delete().select();
       normalizeFilters(filters).forEach(function (f) {
         q = q.eq(f[0], f[1]);
       });

@@ -43,7 +43,8 @@ create type report_status as enum (
   'verified',      -- checked by an operator
   'responding',    -- a responder unit has been dispatched
   'on_site',       -- responder arrived at location
-  'resolved'       -- completed with proof
+  'resolved',      -- completed with proof
+  'declined'       -- rejected by admin (e.g. outside city boundary)
 );
 
 -- Incident category (drives the map pin colors / admin groupings)
@@ -61,7 +62,7 @@ create type incident_category as enum (
 create type severity_level as enum ('minor', 'major');
 
 -- Priority as shown on badges in the admin dashboard
-create type priority_level as enum ('urgent', 'pending', 'responding', 'resolved');
+create type priority_level as enum ('urgent', 'pending', 'responding', 'resolved', 'declined');
 
 -- A responder assignment status (matches responder app statuses)
 create type job_status as enum (
@@ -127,6 +128,7 @@ create table if not exists reports (
   severity      severity_level not null default 'minor',
   priority      priority_level not null default 'pending',
   description   text default '',
+  resolution_notes text default '',            -- admin outcome note (decline reason, closure remarks)
   location      text default '',               -- street / area name
   lat           double precision not null default 0,
   lng           double precision not null default 0,

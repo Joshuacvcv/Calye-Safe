@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calye Safe – Responder App</title>
+    <link rel="icon" type="image/png" href="calye-safe-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
@@ -2008,6 +2009,7 @@
         <!-- ===== HOME ===== -->
         <div class="screen active once" id="screen-home">
             <div class="screen-header">
+                <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
                 <div class="head-row">
                     <div>
                         <h2 id="home-greeting">Good morning, Mark</h2>
@@ -2274,6 +2276,7 @@
                     <div class="dispatch-icon" id="dispatch-icon"></div>
                 </div>
                 <h3 id="dispatch-type">Flooding</h3>
+                <div id="dispatch-subtype" style="display:none;font-size:12px;font-weight:600;opacity:0.85;margin-top:2px;"></div>
                 <div class="loc" id="dispatch-loc">Mercado Village</div>
                 <div class="dispatch-note" id="dispatch-note" style="display:none;"></div>
                 <div class="dispatch-meta-row">
@@ -2822,14 +2825,22 @@
             if (name === 'history') renderHistory();
         }
 
+        // Active tab: open the incident the responder is currently resolving.
+        // 1. The job they already have open, if it is still live.
+        // 2. Otherwise the live job furthest along (on-site beats en route).
+        // 3. Otherwise the newest assigned job awaiting start.
+        // 4. Otherwise fall back to the queue.
+        const JOB_STAGE_RANK = { on_site: 3, en_route: 2, assigned: 1 };
         function openMostRelevantJob() {
-            const live = jobs.find(j => j.status === 'en_route' || j.status === 'on_site');
-            const target = live || jobs.find(j => j.status === 'assigned');
-            if (!target) {
+            const live = jobs.filter(j => j.status === 'en_route' || j.status === 'on_site' || j.status === 'assigned');
+            if (!live.length) {
                 switchScreen('queue');
                 showToast('No active assignment right now');
                 return;
             }
+            const current = currentJobId && live.find(j => j.id === currentJobId);
+            if (current) { openJob(current.id); return; }
+            const target = live.slice().sort((a, b) => (JOB_STAGE_RANK[b.status] || 0) - (JOB_STAGE_RANK[a.status] || 0))[0];
             openJob(target.id);
         }
 
@@ -2927,6 +2938,7 @@
             <div class="qc-top">
               <div>
                 <h4>${j.type}</h4>
+                ${j.subtype ? `<div style="font-size:10.5px;color:var(--text3);font-weight:600;">${j.subtype}</div>` : ''}
                 <div class="qc-loc">📍 ${j.loc}</div>
               </div>
               <span class="severity-tag ${j.severity}">${j.severity.toUpperCase()}</span>
@@ -3021,6 +3033,7 @@
               </div>
               <div style="flex:1;">
                 <h4 style="font-size:15px;">${j.type}</h4>
+                ${j.subtype ? `<div style="font-size:11px;color:var(--text3);font-weight:600;">${j.subtype}</div>` : ''}
                 <div style="font-size:11.5px;color:var(--text2);">📍 ${j.loc}</div>
               </div>
               <span class="severity-tag ${j.severity}">${j.severity.toUpperCase()}</span>
@@ -3637,6 +3650,7 @@
             <div class="hc-icon"><svg viewBox="0 0 24 24" stroke="var(--success)">${c.icon}</svg></div>
             <div class="hc-body">
               <h4>${h.type}</h4>
+              ${h.subtype ? `<div style="font-size:10.5px;color:var(--text3);font-weight:600;">${h.subtype}</div>` : ''}
               <div class="hc-loc">📍 ${h.loc} · ${h.id}</div>
               <div class="hc-footer">
                 <span class="hc-date">${h.resolvedDate}</span>
@@ -3672,6 +3686,9 @@
             const c = CAT[job.cat] || CAT.other;
             document.getElementById('dispatch-icon').innerHTML = `<svg viewBox="0 0 24 24" stroke="#fff">${c.icon}</svg>`;
             document.getElementById('dispatch-type').textContent = job.type;
+            const subEl = document.getElementById('dispatch-subtype');
+            if (job.subtype) { subEl.textContent = job.subtype; subEl.style.display = 'block'; }
+            else { subEl.textContent = ''; subEl.style.display = 'none'; }
             document.getElementById('dispatch-loc').textContent = job.loc + ' · ' + job.id;
             document.getElementById('dispatch-distance').textContent = job.distanceKm + ' km';
             document.getElementById('dispatch-severity').textContent = job.severity.charAt(0).toUpperCase() + job.severity.slice(1);
@@ -3787,8 +3804,19 @@
                     let myAsn = dbAssignments;
                     CalyeDB.fetch('responders', { limit: 100 }).then(responders => {
                         if (responders && responders.length) {
-                            const match = responders.find(x => x.unit_id === rProfile.unit) || responders[0];
-                            if (match) myAsn = dbAssignments.filter(a => !a.responder_id || a.responder_id === match.id);
+                            // Match responder by auth user's email or name from profile
+                            const p = g.profile;
+                            const match = responders.find(x => 
+                                x.name === p.full_name || x.unit_id === rProfile.unit
+                            ) || responders[0];
+                            if (match) {
+                                // Update local profile with the matched responder's unit
+                                if (match.unit_id && rProfile.unit !== match.unit_id) {
+                                    rProfile.unit = match.unit_id;
+                                    saveResponderProfileData(rProfile);
+                                }
+                                myAsn = dbAssignments.filter(a => !a.responder_id || a.responder_id === match.id);
+                            }
                         }
                         const activeAsn = myAsn.filter(a => a.status !== 'resolved');
 
@@ -3809,6 +3837,7 @@
                                 return {
                                     id: r.report_no || '#BRGY',
                                     type: r.type || 'Incident',
+                                    subtype: r.subtype || '',
                                     cat: r.category || 'other',
                                     loc: r.location || 'Barangay Calye',
                                     resolvedDate: fmtTime(resolvedAt),
@@ -3835,6 +3864,7 @@
                                     reportId: r.id || null,
                                     id: r.report_no || '#BRGY',
                                     type: r.type || 'Incident',
+                                    subtype: r.subtype || '',
                                     cat: r.category || 'other',
                                     severity: r.severity || 'minor',
                                     loc: r.location || 'Barangay Calye',

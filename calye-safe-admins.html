@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calye Safe — Admin Dashboard</title>
+  <link rel="icon" type="image/png" href="calye-safe-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -148,9 +149,11 @@
       .stat-card { padding: 14px; }
       .stat-card .val { font-size: 20px; }
       .col-left { gap: 14px; }
+      .col-right { gap: 14px; }
       .panel-body { padding: 14px; }
       .panel-header { padding: 10px 14px; }
       .sec-title { font-size: 13px; }
+      .map-container { height: 360px; }
     }
 
     @media (max-width: 1280px) {
@@ -243,6 +246,14 @@
       stroke: #fff;
       fill: none;
       stroke-width: 2;
+    }
+
+    .sidebar-logo .icon-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
     }
 
     .sidebar-logo .brand {
@@ -554,6 +565,8 @@
       flex-direction: column;
       gap: 18px;
       min-width: 0;
+      min-height: 0;
+      max-height: 100%;
       overflow-y: auto;
       padding-right: 6px;
     }
@@ -574,6 +587,8 @@
       flex-direction: column;
       gap: 18px;
       overflow-y: auto;
+      min-height: 0;
+      max-height: 100%;
     }
 
     .col-right::-webkit-scrollbar {
@@ -1485,10 +1500,49 @@
     .page-scroll {
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
+      min-width: 0;
       padding-right: 6px;
     }
     .page-scroll::-webkit-scrollbar { width: 5px; }
     .page-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── RESPONDER PERFORMANCE 100%-ZOOM FIT ── */
+    #perf-main-layout {
+      grid-template-columns: minmax(0, 1fr) 380px;
+    }
+    #perf-stat-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    #perf-main-layout > * {
+      min-width: 0;
+    }
+    #perf-main-layout .panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .perf-table-scroll::-webkit-scrollbar { height: 6px; }
+    .perf-table-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    .perf-filter {
+      width: auto;
+      flex: 0 0 auto;
+    }
+    @media (max-width: 1366px) {
+      #perf-stat-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      #perf-main-layout {
+        grid-template-columns: minmax(0, 1fr) 340px;
+      }
+    }
+    @media (max-width: 1100px) {
+      #perf-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      #perf-main-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
 
     /* ── ALERT BANNER ── */
     .alert-strip {
@@ -2283,6 +2337,20 @@
       border-radius: 3px;
     }
 
+    /* ── SCROLL ROBUSTNESS (100% zoom fix) ──
+       Page sections must keep their natural height and scroll — never get
+       flex-squashed by the fixed-height shell (which clipped panel bodies
+       and forced users to 50% zoom to see everything). */
+    #main {
+      min-width: 0;
+      min-height: 0;
+    }
+    .page-scroll > *,
+    .col-left > *,
+    .col-right > * {
+      flex-shrink: 0;
+    }
+
     /* ── REPORTS PAGE: category groups ── */
     .report-group-label {
       padding: 11px 18px;
@@ -2889,6 +2957,10 @@
       width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1d6fe0, #1ab3a6); color: #fff; font-weight: 900; font-size: 22px;
+      overflow: hidden;
+    }
+    .gate-logo img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
     }
     .gate-title { font-size: 20px; font-weight: 900; color: #0f1a2b; }
     .gate-sub { font-size: 12.5px; font-weight: 700; color: #5b6b82; margin: 6px 0 20px; }
@@ -2918,7 +2990,7 @@
   <!-- ── AUTH GATE (admin dashboard is session-protected) ── -->
   <div id="admin-gate">
     <div class="gate-card">
-      <div class="gate-logo">C</div>
+      <div class="gate-logo" onclick="location.reload()" title="Reload page" style="cursor:pointer;"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
       <div class="gate-title">Calye-Safe Admin</div>
       <div class="gate-sub">Sign in with an admin or staff account</div>
       <div id="gate-msg" class="gate-msg"></div>
@@ -2937,10 +3009,8 @@
     <aside id="sidebar">
       <div class="sidebar-logo">
         <div class="badge-logo">
-          <div class="icon-wrap">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
+          <div class="icon-wrap" onclick="location.reload()" title="Reload dashboard" style="cursor:pointer;">
+            <img src="calye-safe-logo.png" alt="Calye Safe logo">
           </div>
           <div>
             <div class="brand">Calye Safe</div>
@@ -3134,15 +3204,14 @@
               </div>
             </div>
 
-            <!-- ACTIVE ALERT -->
-            <div class="alert-strip">
+            <!-- ACTIVE ALERT (live — filled by renderAlertStrip()) -->
+            <div class="alert-strip" id="alert-strip" style="display:none;">
               <svg viewBox="0 0 24 24">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <p><strong>Flood Advisory Active</strong> — PAGASA warns of possible flooding in Mercado Village. 3
-                related reports pending response.</p>
+              <p id="alert-strip-text"></p>
             </div>
 
             <!-- PRIORITY REPORT -->
@@ -3164,6 +3233,7 @@
                   <button class="ftab" onclick="filterTable('urgent',this)">Urgent</button>
                   <button class="ftab" onclick="filterTable('responding',this)">Responding</button>
                   <button class="ftab" onclick="filterTable('resolved',this)">Resolved</button>
+                  <button class="ftab" onclick="filterTable('declined',this)">Declined</button>
                 </div>
               </div>
               <table class="report-table" id="report-table">
@@ -3217,89 +3287,27 @@
               </div>
             </div>
 
-            <!-- RESPONSE TIMELINE -->
+            <!-- RESPONSE TIMELINE (live — filled by renderResponseTimeline()) -->
             <div class="panel" style="animation-delay:0.1s;">
               <div class="panel-header">
                 <div class="sec-title">Response Timeline</div>
-                <div class="sec-action">#BRGY-2026-0047</div>
+                <div class="sec-action" id="response-timeline-ref">—</div>
               </div>
               <div class="panel-body">
                 <div class="timeline" id="response-timeline">
-                  <div class="tl-step">
-                    <div class="tl-left">
-                      <div class="tl-circle done"><svg viewBox="0 0 24 24">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg></div>
-                      <div class="tl-line done"></div>
-                    </div>
-                    <div class="tl-content">
-                      <div class="tl-title">Report Submitted</div>
-                      <div class="tl-time">10:14 AM · Maria Santos</div>
-                      <div class="tl-note">Flooding on Mercado Village road. 12 households affected.</div>
-                    </div>
-                  </div>
-                  <div class="tl-step">
-                    <div class="tl-left">
-                      <div class="tl-circle done"><svg viewBox="0 0 24 24">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg></div>
-                      <div class="tl-line done"></div>
-                    </div>
-                    <div class="tl-content">
-                      <div class="tl-title">Received by Admin</div>
-                      <div class="tl-time">10:15 AM · Auto-assigned</div>
-                      <div class="tl-note">Flagged as high priority due to immediate danger response.</div>
-                    </div>
-                  </div>
-                  <div class="tl-step" id="tl-dispatch-step">
-                    <div class="tl-left">
-                      <div class="tl-circle active" id="tl-dispatch-circle"><svg viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="3" />
-                        </svg></div>
-                      <div class="tl-line" id="tl-dispatch-line"></div>
-                    </div>
-                    <div class="tl-content" id="tl-dispatch-content">
-                      <div class="tl-title">Awaiting Dispatch</div>
-                      <div class="tl-time">Now · Pending action</div>
-                      <div class="tl-note">Admin needs to assign a responder or team.</div>
-                    </div>
-                  </div>
-                  <div class="tl-step" id="tl-sent-step">
-                    <div class="tl-left">
-                      <div class="tl-circle" id="tl-sent-circle"><svg viewBox="0 0 24 24">
-                          <path d="M5 12h14" />
-                          <path d="M12 5l7 7-7 7" />
-                        </svg></div>
-                      <div class="tl-line" id="tl-sent-line"></div>
-                    </div>
-                    <div class="tl-content" id="tl-sent-content">
-                      <div class="tl-title">Responder Dispatched</div>
-                      <div class="tl-time" id="tl-sent-time">—</div>
-                    </div>
-                  </div>
-                  <div class="tl-step">
-                    <div class="tl-left">
-                      <div class="tl-circle" id="tl-resolved-circle"><svg viewBox="0 0 24 24">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg></div>
-                    </div>
-                    <div class="tl-content">
-                      <div class="tl-title">Resolved</div>
-                      <div class="tl-time" id="tl-resolved-time">—</div>
-                    </div>
-                  </div>
+                  <div style="padding:18px 4px;color:var(--text3);font-size:12px;font-weight:600;">Loading latest incident…</div>
                 </div>
               </div>
             </div>
 
-            <!-- INCIDENT BREAKDOWN -->
+            <!-- INCIDENT BREAKDOWN (live — filled by renderDashCategory()) -->
             <div class="panel" style="animation-delay:0.15s;">
               <div class="panel-header">
                 <div class="sec-title">By Category (This Week)</div>
               </div>
               <div class="panel-body" style="padding-bottom:10px;">
                 <div style="margin-bottom:12px;">
-                  <div class="chart-bars">
+                  <div class="chart-bars" id="dash-week-bars">
                     <div class="bar-wrap">
                       <div class="bar" style="height:60%;background:rgba(30,58,95,0.45);"></div>
                       <div class="bar-label">Mon</div>
@@ -3330,7 +3338,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="cat-list">
+                <div class="cat-list" id="dash-week-cats">
                   <div class="cat-row">
                     <span class="cat-label">Flooding</span>
                     <div class="cat-bar-wrap">
@@ -3715,13 +3723,13 @@
             </div>
 
             <!-- DETAIL / REVIEW -->
-            <div style="flex:1;min-height:0;">
-              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <div style="flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;">
+              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
                 <div class="panel-header">
                   <div class="sec-title" id="verify-detail-title">Select an account to review</div>
                 </div>
-                <div class="panel-body" id="verify-detail" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;font-weight:600;">
-                  Click an account in the queue to review their valid ID.
+                <div class="panel-body" id="verify-detail" style="flex:1;overflow-y:auto;min-height:0;color:var(--text3);font-size:13px;font-weight:600;">
+                  <div style="display:flex;align-items:center;justify-content:center;min-height:100%;text-align:center;">Click an account in the queue to review their valid ID.</div>
                 </div>
               </div>
             </div>
@@ -3826,16 +3834,16 @@
               </div>
 
               <!-- GEOSPATIAL HOTSPOT MAP -->
-              <div class="panel" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+              <div class="panel" style="display:flex;flex-direction:column;">
                 <div class="panel-header">
                   <div class="sec-title">Geospatial Hotspot Map</div>
                   <div class="sec-action"
                     onclick="document.querySelector('.nav-item[onclick*=\'map\']').click()">View Full Map</div>
                 </div>
                 <div class="panel-body"
-                  style="flex:1;display:flex;flex-direction:column;min-height:0;position:relative;padding:14px;">
+                  style="display:flex;flex-direction:column;position:relative;padding:14px;">
                   <div id="analytics-heatmap-box"
-                    style="flex:1;min-height:0;border-radius:var(--radius-sm);overflow:hidden;position:relative;z-index:0;background:#E9EDF3;">
+                    style="height:420px;min-height:380px;flex:none;border-radius:var(--radius-sm);overflow:hidden;position:relative;z-index:0;background:#E9EDF3;">
                     <div id="analytics-heatmap-loading"
                       style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);background:#E9EDF3;z-index:500;">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)"
@@ -3915,14 +3923,14 @@
 
               <!-- SEARCH & FILTERS (below subtitle) -->
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;">
-                <input class="modal-input" id="perf-search" placeholder="Search responder or unit…" style="width:180px;font-size:12px;font-weight:700;padding:8px 12px;">
-                <select class="modal-select" id="perf-period" style="font-size:12px;font-weight:700;padding:8px 10px;min-width:120px;">
+                <input class="modal-input" id="perf-search" placeholder="Search responder or unit…" style="width:180px;max-width:100%;flex:0 0 auto;font-size:12px;font-weight:700;padding:8px 12px;">
+                <select class="modal-select perf-filter" id="perf-period" style="width:auto;flex:0 0 auto;font-size:12px;font-weight:700;padding:8px 10px;min-width:120px;max-width:180px;">
                   <option>Last 7 days</option>
                   <option selected>Last 30 days</option>
                   <option>This quarter</option>
                   <option>All time</option>
                 </select>
-                <select class="modal-select" id="perf-category" style="font-size:12px;font-weight:700;padding:8px 10px;min-width:130px;">
+                <select class="modal-select perf-filter" id="perf-category" style="width:auto;flex:0 0 auto;font-size:12px;font-weight:700;padding:8px 10px;min-width:130px;max-width:180px;">
                   <option>All categories</option>
                   <option>Major incidents</option>
                   <option>Minor incidents</option>
@@ -3934,9 +3942,11 @@
             <div class="stat-grid" id="perf-stat-grid" style="margin-bottom:18px;"></div>
 
             <!-- MAIN LAYOUT -->
-            <div style="display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:flex-start;" id="perf-main-layout">
+            <div style="display:grid;gap:18px;align-items:flex-start;" id="perf-main-layout">
+              <!-- LEFT COLUMN: leaderboard + export -->
+              <div style="min-width:0;display:flex;flex-direction:column;gap:12px;">
               <!-- LEADERBOARD -->
-              <div class="panel">
+              <div class="panel" style="min-width:0;">
                 <div class="panel-header">
                   <div>
                     <div class="sec-title">All Responders</div>
@@ -3949,7 +3959,8 @@
                   </div>
                 </div>
 
-                <table class="lb-table" id="perf-leaderboard-table" style="width:100%;">
+                <div class="perf-table-scroll" style="overflow-x:auto;">
+                <table class="lb-table" id="perf-leaderboard-table" style="width:100%;min-width:640px;">
                   <thead>
                     <tr>
                       <th>Responder</th>
@@ -3963,14 +3974,16 @@
                   <tbody id="perf-leaderbody">
                   </tbody>
                 </table>
+                </div>
               </div>
 
-              <!-- EXPORT BUTTON (bottom left of main layout, outside panel) -->
-              <div style="grid-column:1/3;display:flex;justify-content:flex-start;margin-top:12px;">
+              <!-- EXPORT BUTTON (bottom left, outside panel border) -->
+              <div style="display:flex;justify-content:flex-start;">
                 <button class="modal-btn confirm" onclick="exportResponderPerformancePageCsv()" style="display:flex;align-items:center;gap:7px;padding:9px 16px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Export
                 </button>
+              </div>
               </div>
 
               <!-- DETAIL PANEL -->
@@ -4198,91 +4211,12 @@
       <span class="notif-mark-read" onclick="markAllRead()">Mark all read</span>
     </div>
     <div class="notif-list" id="notif-list">
-      <div class="notif-item unread">
-        <div class="notif-dot"></div>
-        <div class="notif-icon-wrap" style="background:var(--danger-light);color:var(--danger);">
-          <svg viewBox="0 0 24 24">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">New flood report — Mercado Village</div>
-          <div class="nbody">Maria Santos filed Report #BRGY-2026-0047. Immediate danger flagged.</div>
-          <div class="ntime">10:14 AM · Just now</div>
-        </div>
-      </div>
-      <div class="notif-item unread">
-        <div class="notif-dot"></div>
-        <div class="notif-icon-wrap" style="background:var(--warning-light);color:var(--warning);">
-          <svg viewBox="0 0 24 24">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">Road hazard on Division Road</div>
-          <div class="nbody">Report #BRGY-2026-0046 submitted. Awaiting response.</div>
-          <div class="ntime">9:50 AM · 24 min ago</div>
-        </div>
-      </div>
-      <div class="notif-item unread">
-        <div class="notif-dot"></div>
-        <div class="notif-icon-wrap" style="background:var(--info-light);color:var(--info);">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">Jose Reyes now responding</div>
-          <div class="nbody">BDRRM Officer assigned to Barangay Hall disturbance #0041.</div>
-          <div class="ntime">9:32 AM · 42 min ago</div>
-        </div>
-      </div>
-      <div class="notif-item">
-        <div class="notif-dot read"></div>
-        <div class="notif-icon-wrap" style="background:var(--success-light);color:var(--success);">
-          <svg viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">Report #BRGY-2026-0042 resolved</div>
-          <div class="nbody">Flooding at Calye Creek successfully addressed by response team.</div>
-          <div class="ntime">Yesterday · 4:15 PM</div>
-        </div>
-      </div>
-      <div class="notif-item">
-        <div class="notif-dot read"></div>
-        <div class="notif-icon-wrap" style="background:var(--accent-light);color:var(--accent-dark);">
-          <svg viewBox="0 0 24 24">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 01-3.46 0" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">PAGASA flood advisory issued</div>
-          <div class="nbody">Active advisory for Mercado Village area. 3 related reports filed.</div>
-          <div class="ntime">Yesterday · 2:00 PM</div>
-        </div>
-      </div>
-      <div class="notif-item">
-        <div class="notif-dot read"></div>
-        <div class="notif-icon-wrap" style="background:var(--surface3);color:var(--text3);">
-          <svg viewBox="0 0 24 24">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        </div>
-        <div class="notif-text">
-          <div class="ntitle">5 new reports this morning</div>
-          <div class="nbody">Daily summary: 5 reports filed since midnight. 2 pending response.</div>
-          <div class="ntime">Today · 8:00 AM</div>
-        </div>
-      </div>
+      <div style="padding:26px 18px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading notifications…</div>
+
+
+
+
+
     </div>
   </div>
 
@@ -4318,25 +4252,7 @@
         </button>
       </div>
       <div class="modal-body" id="dispatch-modal-body">
-        <div
-          style="background:var(--danger-light);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"
-            style="flex-shrink:0;margin-top:1px;">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">Flooding — Mercado Village</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px;font-weight:600;">Report #BRGY-2026-0047 ·
-              Filed 32 min ago · Immediate Danger</div>
-          </div>
-        </div>
-        <div class="modal-form-group">
-          <div class="modal-label">Response Notes</div>
-          <textarea class="modal-textarea" id="dispatch-notes"
-            placeholder="Provide instructions or notes for the responder…"></textarea>
-        </div>
+        <div style="padding:26px;text-align:center;color:var(--text3);font-size:12.5px;font-weight:600;">Loading report…</div>
       </div>
       <div class="modal-footer">
         <button class="modal-btn cancel" onclick="closeModal('modal-dispatch')">Cancel</button>
@@ -4427,6 +4343,57 @@
     </div>
   </div>
 
+  <!-- DECLINE REPORT (danger) -->
+  <div class="modal-overlay" id="modal-decline-report">
+    <div class="modal-box" style="max-width:440px;border:1px solid rgba(229,57,53,0.35);">
+      <div class="modal-head">
+        <h3>Decline incident report</h3>
+        <button class="modal-close" onclick="closeModal('modal-decline-report')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div
+          style="background:var(--danger-light);border:1px solid rgba(229,57,53,0.25);border-radius:var(--radius-sm);padding:13px 15px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"
+            style="flex-shrink:0;margin-top:1px;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--danger);">The resident will see this decision.</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px;font-weight:600;line-height:1.5;">
+              The report stays on record marked as declined, and your reason below is shown to the resident on their
+              tracker.
+            </div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Report</div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--text);"><span id="decline-report-title"></span>
+            <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:2px;" id="decline-report-sub"></div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Reason for declining (shown to the resident)</div>
+          <textarea class="modal-textarea" id="decline-reason" rows="3" autocomplete="off"
+            oninput="document.getElementById('decline-confirm-btn').disabled = (this.value.trim() === '');"
+            onkeydown="if(event.key==='Enter' && !event.shiftKey && this.value.trim()!==''){event.preventDefault();confirmDeclineReport();}"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-decline-report')">Cancel</button>
+        <button class="modal-btn danger-confirm" id="decline-confirm-btn" onclick="confirmDeclineReport()" disabled>
+          Decline report
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast">
     <div class="toast-icon">
@@ -4473,21 +4440,12 @@
       setTimeout(() => location.reload(), 900);
     }
 
-    // ── SAMPLE DATA ──
-    let reports = loadStoredData(LS_KEY_REPORTS, [
-      { id: '#BRGY-2026-0047', type: 'Flooding', loc: 'Mercado Village', filed: '10:14 AM', status: 'urgent', category: 'flood' },
-      { id: '#BRGY-2026-0046', type: 'Road Hazard', loc: 'Division Road', filed: '9:50 AM', status: 'urgent', category: 'hazard' },
-      { id: '#BRGY-2026-0045', type: 'Vandalism', loc: 'Calye Street', filed: '9:02 AM', status: 'pending', category: 'vandal' },
-      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', loc: 'Bankley Area', filed: '8:30 AM', status: 'responding', category: 'garbage' },
-      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', loc: 'Calye Park', filed: 'Yesterday', status: 'responding', category: 'hazard' },
-      { id: '#BRGY-2026-0042', type: 'Flooding', loc: 'Calye Creek', filed: 'Yesterday', status: 'resolved', category: 'flood' },
-      { id: '#BRGY-2026-0041', type: 'Public Disturbance', loc: 'Barangay Hall', filed: 'May 19', status: 'resolved', category: 'crime' },
-      { id: '#BRGY-2026-0040', type: 'Clogged Drains', loc: 'Mercado St.', filed: 'May 18', status: 'resolved', category: 'flood' },
-    ]);
+    // ── LIVE DATA (no mock rows — empty until Supabase responds) ──
+    let reports = loadStoredData(LS_KEY_REPORTS, []);
 
     function badgeHtml(status) {
-      const labels = { urgent: 'Urgent', pending: 'Pending', responding: 'Responding', resolved: 'Resolved' };
-      return `<span class="badge ${status}">${labels[status]}</span>`;
+      const labels = { urgent: 'Urgent', pending: 'Pending', responding: 'Responding', resolved: 'Resolved', declined: 'Declined' };
+      return `<span class="badge ${status}">${labels[status] || status}</span>`;
     }
 
     function reportActionsCell(r) {
@@ -4496,7 +4454,8 @@
       }
       const btnStyle = 'background:rgba(30,58,95,0.08);color:var(--primary);border:1px solid rgba(30,58,95,0.2);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.16s,color 0.16s,border-color 0.16s;';
       const respondBtn = `<button onclick="openResponseModal('${r.id}','${r.dbId || ''}')" style="${btnStyle}" onmouseover="this.style.background='rgba(30,58,95,0.14)'" onmouseout="this.style.background='rgba(30,58,95,0.08)'">Respond</button>`;
-      return respondBtn;
+      const declineBtn = `<button onclick="declineReport('${r.id}','${r.dbId || ''}')" style="${btnStyle.replace('color:var(--primary);', 'color:var(--danger);').replace('rgba(30,58,95,0.08)', 'rgba(229,57,53,0.08)').replace('rgba(30,58,95,0.2)', 'rgba(229,57,53,0.2)')}" onmouseover="this.style.background='rgba(229,57,53,0.14)'" onmouseout="this.style.background='rgba(229,57,53,0.08)'">Decline</button>`;
+      return `${respondBtn} ${declineBtn}`;
     }
 
     function renderTable(data) {
@@ -4586,22 +4545,7 @@
     renderTable(reports);
 
     // ── ALL REPORTS PAGE (Major / Minor categorized) ──
-    let fullReports = loadStoredData(LS_KEY_FULL_REPORTS, [
-      { id: '#BRGY-2026-0047', type: 'Flooding', category: 'major', loc: 'Mercado Village', filed: '10:14 AM', status: 'urgent' },
-      { id: '#BRGY-2026-0039', type: 'Crime', category: 'major', loc: 'Calye Street Corner', filed: 'May 18', status: 'urgent' },
-      { id: '#BRGY-2026-0037', type: 'Accident', category: 'major', loc: 'National Highway', filed: 'May 17', status: 'responding' },
-      { id: '#BRGY-2026-0038', type: 'Fire', category: 'major', loc: 'Purok 3', filed: 'May 17', status: 'resolved' },
-      { id: '#BRGY-2026-0036', type: 'Crime', category: 'major', loc: 'Basketball Court', filed: 'May 16', status: 'resolved' },
-      { id: '#BRGY-2026-0042', type: 'Flooding', category: 'major', loc: 'Calye Creek', filed: 'Yesterday', status: 'resolved' },
-      { id: '#BRGY-2026-0046', type: 'Road Hazard', category: 'minor', loc: 'Division Road', filed: '9:50 AM', status: 'urgent' },
-      { id: '#BRGY-2026-0035', type: 'Road Hazard', category: 'minor', loc: 'Zone 4', filed: 'May 16', status: 'pending' },
-      { id: '#BRGY-2026-0045', type: 'Vandalism', category: 'minor', loc: 'Calye Street', filed: '9:02 AM', status: 'pending' },
-      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', category: 'minor', loc: 'Bankley Area', filed: '8:30 AM', status: 'responding' },
-      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', category: 'minor', loc: 'Calye Park', filed: 'Yesterday', status: 'responding' },
-      { id: '#BRGY-2026-0041', type: 'Public Disturbance', category: 'minor', loc: 'Barangay Hall', filed: 'May 19', status: 'resolved' },
-      { id: '#BRGY-2026-0040', type: 'Clogged Drains', category: 'minor', loc: 'Mercado St.', filed: 'May 18', status: 'resolved' },
-      { id: '#BRGY-2026-0034', type: 'Clogged Drains', category: 'minor', loc: 'Purok 5', filed: 'May 15', status: 'pending' },
-    ]);
+    let fullReports = loadStoredData(LS_KEY_FULL_REPORTS, []);
 
     function renderReportsGroupTable(bodyId, data) {
       const tbody = document.getElementById(bodyId);
@@ -4628,8 +4572,8 @@
       if (btn) btn.classList.add('active');
 
       const statusFilters = ['urgent', 'pending', 'responding', 'resolved'];
-      let majorData = fullReports.filter(r => r.category === 'major');
-      let minorData = fullReports.filter(r => r.category === 'minor');
+      let majorData = fullReports.filter(r => r.severity === 'major');
+      let minorData = fullReports.filter(r => r.severity === 'minor');
 
       if (statusFilters.includes(filter)) {
         const match = r => filter === 'urgent' ? (r.urgent === true || r.status === 'urgent' || r.priority === 'urgent') : r.status === filter;
@@ -4658,8 +4602,8 @@
     }
 
     function refreshSummaryStats() {
-      const totalMajor = fullReports.filter(r => r.category === 'major').length;
-      const totalMinor = fullReports.filter(r => r.category === 'minor').length;
+      const totalMajor = fullReports.filter(r => r.severity === 'major').length;
+      const totalMinor = fullReports.filter(r => r.severity === 'minor').length;
       const totalEl = document.getElementById('reports-total-count');
       const majEl = document.getElementById('reports-major-count-stat');
       const minEl = document.getElementById('reports-minor-count-stat');
@@ -4686,8 +4630,8 @@
 
     // Initial render of All Reports page + summary stats
     (function initReportsPage() {
-      const totalMajor = fullReports.filter(r => r.category === 'major').length;
-      const totalMinor = fullReports.filter(r => r.category === 'minor').length;
+      const totalMajor = fullReports.filter(r => r.severity === 'major').length;
+      const totalMinor = fullReports.filter(r => r.severity === 'minor').length;
       document.getElementById('reports-total-count').textContent = fullReports.length;
       document.getElementById('reports-major-count-stat').textContent = totalMajor;
       document.getElementById('reports-minor-count-stat').textContent = totalMinor;
@@ -4698,11 +4642,7 @@
     })();
 
     // ── ANNOUNCEMENTS PAGE ──
-    let announcements = loadStoredData(LS_KEY_ANNOUNCEMENTS, [
-      { id: 3, title: 'Flood Advisory — Mercado Village', body: 'Residents near Mercado Village and low-lying areas are advised to prepare for possible flooding due to continuous rainfall. Please secure valuables and move to higher ground if water levels rise.', category: 'advisory', date: 'May 20, 2026 · 9:15 AM', pushed: true },
-      { id: 2, title: 'Barangay Assembly — May 25', body: 'All households are requested to send at least one representative to the Barangay Assembly on May 25, 8:00 AM at the Barangay Hall for the quarterly community briefing.', category: 'event', date: 'May 18, 2026 · 2:00 PM', pushed: true },
-      { id: 1, title: 'Garbage Collection Schedule Update', body: 'Garbage collection for Purok 3 and Purok 4 will move from Tuesdays/Fridays to Mondays/Thursdays starting next week. Please prepare your garbage accordingly.', category: 'general', date: 'May 15, 2026 · 8:00 AM', pushed: false },
-    ]);
+    let announcements = loadStoredData(LS_KEY_ANNOUNCEMENTS, []);
     let announcementIdSeq = announcements.length ? Math.max(...announcements.map(a => (typeof a.id === 'number' ? a.id : 0))) + 1 : 1;
 
     function annCatLabel(cat) {
@@ -4959,6 +4899,51 @@ const pageTitles = {
       showToastMsg('All notifications marked as read', 'success');
     }
 
+    // ── LIVE NOTIFICATIONS (derived from real reports — newest first) ──
+    function renderNotifList() {
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      const dot = document.querySelector('#notif-btn .dot');
+      if (!reports.length) {
+        list.innerHTML = '<div style="padding:26px 18px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No notifications yet.</div>';
+        if (dot) dot.style.display = 'none';
+        return;
+      }
+      const tones = {
+        resolved: { bg: 'var(--success-light)', fg: 'var(--success)', icon: '<polyline points="20 6 9 17 4 12"/>' },
+        responding: { bg: 'var(--info-light)', fg: 'var(--primary)', icon: '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />' },
+        pending: { bg: 'var(--warning-light)', fg: 'var(--warning)', icon: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />' },
+        declined: { bg: 'var(--surface3)', fg: 'var(--text3)', icon: '<line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />' }
+      };
+      const items = reports.slice()
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 8)
+        .map(r => {
+          const unread = r.status === 'pending';
+          const tone = r.status === 'resolved' ? tones.resolved : r.status === 'responding' ? tones.responding : r.status === 'declined' ? tones.declined : tones.pending;
+          const urgentTone = (r.status === 'pending' && r.urgent) ? { bg: 'var(--danger-light)', fg: 'var(--danger)' } : null;
+          const bg = urgentTone ? urgentTone.bg : tone.bg;
+          const fg = urgentTone ? urgentTone.fg : tone.fg;
+          const title = r.status === 'resolved' ? `Report ${r.id} resolved`
+            : r.status === 'responding' ? `${r.type} — responder dispatched`
+            : r.status === 'declined' ? `Report ${r.id} declined`
+            : `New ${(r.type || 'incident').toLowerCase()} report — ${r.loc}`;
+          const body = r.status === 'resolved'
+            ? `${r.type} at ${r.loc} closed${r.resolutionNotes ? ': ' + r.resolutionNotes : '.'}`
+            : r.status === 'declined'
+              ? `${r.type} at ${r.loc} declined${r.resolutionNotes ? ': ' + r.resolutionNotes : '.'}`
+              : `${r.reporterName} filed ${r.id}. ${r.status === 'responding' ? 'Unit on the way.' : 'Awaiting response.'}`;
+          return `<div class="notif-item${unread ? ' unread' : ''}">
+            <div class="notif-dot${unread ? '' : ' read'}"></div>
+            <div class="notif-icon-wrap" style="background:${bg};color:${fg};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${tone.icon}</svg></div>
+            <div class="notif-text"><div class="ntitle">${title}</div><div class="nbody">${body}</div><div class="ntime">${r.filed} · ${timeAgo(r.createdAt)}</div></div>
+          </div>`;
+        });
+      list.innerHTML = items.join('');
+      const unreadN = reports.filter(r => r.status === 'pending').length;
+      if (dot) dot.style.display = unreadN ? 'block' : 'none';
+    }
+
     // Close notif panel when clicking outside
     document.addEventListener('click', function (e) {
       const panel = document.getElementById('notif-panel');
@@ -4982,6 +4967,7 @@ const pageTitles = {
       currentDispatchDbId = dbId || null;
       const target = reports.find(r => r.id === currentDispatchId);
       const typeLabel = target ? target.type : 'Incident';
+      const subtypeLabel = target && target.subtype ? target.subtype : '';
       const locLabel = target ? target.loc : 'Barangay Calye';
       const filedLabel = target ? target.filed : 'Recent';
       const reporter = target ? target.reporterName : 'Resident';
@@ -5007,6 +4993,10 @@ const pageTitles = {
         <div class="dispatch-report-title">${typeLabel}</div>
         <div class="dispatch-report-id">${currentDispatchId}</div>
       </div>
+      ${subtypeLabel ? `<div class="dispatch-report-row">
+        <div class="dispatch-report-row-label">Specific Incident</div>
+        <div class="dispatch-report-row-val">${subtypeLabel}</div>
+      </div>` : ''}
       <div class="dispatch-report-row">
         <div class="dispatch-report-row-label">Location</div>
         <div class="dispatch-report-row-val">${locLabel}</div>
@@ -5110,13 +5100,14 @@ const pageTitles = {
       if (!target) return;
       
       const typeLabel = target.type || 'Incident';
+      const subtypeLabel = target.subtype || '';
       const locLabel = target.loc || 'Barangay Calye';
       const filedLabel = target.filed || 'Recent';
       const reporter = target.reporterName || 'Resident';
       const desc = target.description || 'No description provided.';
       const photo = target.photo || reportMediaByReport[currentDispatchDbId] || '';
       const status = target.status || 'pending';
-      const category = target.category || 'other';
+      const severityLabel = (target.severity || 'minor').charAt(0).toUpperCase() + (target.severity || 'minor').slice(1);
       const urgent = target.urgent ? 'Yes' : 'No';
       const reportNo = target.id || currentDispatchId;
       
@@ -5142,8 +5133,12 @@ const pageTitles = {
           </div>
           <div class="dispatch-report-row">
             <div class="dispatch-report-row-label">Category</div>
-            <div class="dispatch-report-row-val">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+            <div class="dispatch-report-row-val">${severityLabel}</div>
           </div>
+          ${subtypeLabel ? `<div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Specific Incident</div>
+            <div class="dispatch-report-row-val">${subtypeLabel}</div>
+          </div>` : ''}
           <div class="dispatch-report-row">
             <div class="dispatch-report-row-label">Urgent</div>
             <div class="dispatch-report-row-val">${urgent}</div>
@@ -5174,28 +5169,20 @@ const pageTitles = {
     document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
     function confirmDispatch() {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
       const reportId = currentDispatchId || '#BRGY-2026-0047';
       const reportDbId = currentDispatchDbId;
       const notes = document.getElementById('dispatch-notes');
       const notesVal = notes ? notes.value.trim() : '';
 
-      // Update timeline
-      const dispatchCircle = document.getElementById('tl-dispatch-circle');
-      const dispatchLine = document.getElementById('tl-dispatch-line');
-      const dispatchContent = document.getElementById('tl-dispatch-content');
-      dispatchCircle.className = 'tl-circle done';
-      dispatchCircle.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
-      dispatchLine.className = 'tl-line done';
-      dispatchContent.innerHTML = `<div class="tl-title">Responder Assigned</div><div class="tl-time">${timeStr} · Auto-assigned</div><div class="tl-note">A responder has been automatically assigned to this incident.</div>`;
-
-      // Update sent step
-      const sentCircle = document.getElementById('tl-sent-circle');
-      const sentLine = document.getElementById('tl-sent-line');
-      sentCircle.className = 'tl-circle active';
-      sentCircle.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>';
-      document.getElementById('tl-sent-time').textContent = `${timeStr} · En Route`;
+      // Optimistically reflect the dispatch locally, then re-render the live
+      // timeline (DB rows arrive via persistDispatch → syncFromSupabase).
+      const local = reports.find(r => r.id === reportId);
+      if (local) {
+        local.status = 'responding';
+        local.asnStatus = local.asnStatus || 'assigned';
+        local.assignedAt = local.assignedAt || new Date().toISOString();
+      }
+      renderResponseTimeline();
 
       // Persist to Supabase (assignment + report status). ETA is provided by
       // the responder when they start the trip (Start → En Route).
@@ -5220,6 +5207,51 @@ const pageTitles = {
       document.querySelector('#modal-dispatch .modal-btn.cancel').style.display = 'none';
 
       showToastMsg('Responder assigned to ' + reportId, 'success');
+    }
+
+    let declineTargetId = null;
+    let declineTargetDbId = null;
+    const DECLINE_DEFAULT_REASON = 'Pinned location is outside Santa Rosa City boundary';
+
+    function declineReport(rid, dbId) {
+      const target = reports.find(r => r.id === rid);
+      declineTargetId = rid;
+      declineTargetDbId = dbId || null;
+      document.getElementById('decline-report-title').textContent = (target ? target.type : 'Incident') + ' · ' + rid;
+      document.getElementById('decline-report-sub').textContent = target ? (target.loc + ' · Filed ' + target.filed) : '';
+      const reasonEl = document.getElementById('decline-reason');
+      reasonEl.value = DECLINE_DEFAULT_REASON;
+      document.getElementById('decline-confirm-btn').disabled = false;
+      document.getElementById('modal-decline-report').classList.add('open');
+      setTimeout(() => { reasonEl.focus(); reasonEl.select(); }, 60);
+    }
+
+    function confirmDeclineReport() {
+      const reasonEl = document.getElementById('decline-reason');
+      const reason = reasonEl ? reasonEl.value.trim() : '';
+      if (!reason) return;
+      const rid = declineTargetId;
+      const dbId = declineTargetDbId;
+      if (!dbId) { showToastMsg('Cannot decline: report not found in database', 'error'); return; }
+      if (!CalyeDB.isOnline()) { showToastMsg('Offline — cannot decline report', 'error'); return; }
+      const btn = document.getElementById('decline-confirm-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Declining…'; }
+      CalyeDB.update('reports', { id: dbId }, { status: 'declined', priority: 'declined', resolution_notes: `Declined by admin: ${reason}` }).then(res => {
+        if (btn) { btn.disabled = false; btn.textContent = 'Decline report'; }
+        if (!res || res.error) { showToastMsg('Failed to decline report', 'error'); return; }
+        const local = reports.find(r => r.id === rid);
+        if (local) { local.status = 'declined'; local.priority = 'declined'; local.resolutionNotes = `Declined by admin: ${reason}`; }
+        // Surface the decision + reason on the resident's tracker (step 2 note).
+        if (dbId) markReportStep(dbId, 2, 'done', fmtDateTime(new Date().toISOString()), `Declined by admin: ${reason}`);
+        closeModal('modal-decline-report');
+        renderTable(getFilteredData());
+        renderPriorityCard();
+        renderAlertStrip();
+        renderResponseTimeline();
+        renderDashCategory();
+        renderNotifList();
+        showToastMsg('Report declined: ' + rid, 'success');
+      });
     }
 
     function persistDispatch(reportId, reportDbId, notes) {
@@ -5262,10 +5294,11 @@ const pageTitles = {
 
     // Update a single step in the resident's report_timeline (used to keep the
     // community tracker in sync as the report moves through its lifecycle).
-    function markReportStep(reportDbId, step, state, timeStr) {
+    function markReportStep(reportDbId, step, state, timeStr, note) {
       if (!CalyeDB.isOnline() || !reportDbId) return;
       const patch = { state: state };
       if (timeStr) patch.happened_at = timeStr;
+      if (note) patch.note = note;
       CalyeDB.update('report_timeline', [['report_id', reportDbId], ['step', step]], patch);
     }
 
@@ -5366,19 +5399,7 @@ const pageTitles = {
     }
 
     // ── FULL PAGE MAP ──
-    let incidentPins = loadStoredData(LS_KEY_PINS, [
-      { id: '#BRGY-2026-0047', type: 'Flooding', loc: 'Mercado Village', status: 'pending', cat: 'flood', severity: 'major', lat: 14.3148, lon: 121.1140, filed: '10:14 AM' },
-      { id: '#BRGY-2026-0046', type: 'Road Hazard', loc: 'Division Road', status: 'pending', cat: 'hazard', severity: 'minor', lat: 14.3122, lon: 121.1155, filed: '9:50 AM' },
-      { id: '#BRGY-2026-0045', type: 'Vandalism', loc: 'Calye Street', status: 'pending', cat: 'other', severity: 'minor', lat: 14.3105, lon: 121.1092, filed: '9:02 AM' },
-      { id: '#BRGY-2026-0044', type: 'Uncollected Garbage', loc: 'Bankley Area', status: 'responding', cat: 'garbage', severity: 'minor', lat: 14.3090, lon: 121.1128, filed: '8:30 AM' },
-      { id: '#BRGY-2026-0043', type: 'Broken Streetlight', loc: 'Calye Park', status: 'responding', cat: 'hazard', severity: 'minor', lat: 14.3135, lon: 121.1078, filed: 'Yesterday' },
-      { id: '#BRGY-2026-0042', type: 'Flooding', loc: 'Calye Creek', status: 'resolved', cat: 'flood', severity: 'major', lat: 14.3162, lon: 121.1118, filed: 'Yesterday' },
-      { id: '#BRGY-2026-0041', type: 'Public Disturbance', loc: 'Barangay Hall', status: 'resolved', cat: 'other', severity: 'minor', lat: 14.3122, lon: 121.1114, filed: 'May 19' },
-      { id: '#BRGY-2026-0040', type: 'Clogged Drains', loc: 'Mercado St.', status: 'resolved', cat: 'flood', severity: 'minor', lat: 14.3155, lon: 121.1135, filed: 'May 18' },
-      { id: '#BRGY-2026-0039', type: 'Crime', loc: 'Calye Street Corner', status: 'pending', cat: 'crime', severity: 'major', lat: 14.3110, lon: 121.1105, filed: 'May 18' },
-      { id: '#BRGY-2026-0038', type: 'Fire', loc: 'Purok 3', status: 'resolved', cat: 'fire', severity: 'major', lat: 14.3096, lon: 121.1160, filed: 'May 17' },
-      { id: '#BRGY-2026-0037', type: 'Accident', loc: 'National Highway', status: 'responding', cat: 'accident', severity: 'major', lat: 14.3170, lon: 121.1090, filed: 'May 17' },
-    ]);
+    let incidentPins = loadStoredData(LS_KEY_PINS, []);
 
     let pageMapFilter_active = 'all';
 
@@ -5745,10 +5766,25 @@ const pageTitles = {
           perfData = computeResponderPerformancePage(assignments, responderMap);
         }
 
-        perfPageData = perfData;
-        renderPerfStatCards(perfData);
-        renderPerfLeaderboard(perfData);
-        showPerfDetailEmpty();
+        // Real duty status from responder profiles (unit_id ↔ responders
+        // link). Non-fatal: if profiles are unreadable, duty stays off.
+        const applyDutyAndRender = function (dutyProfiles) {
+          const dutyByUnit = {};
+          (dutyProfiles || []).forEach(pr => { if (pr.unit_id) dutyByUnit[pr.unit_id] = pr.on_duty === true; });
+          perfData.forEach(p => { p.on_duty = dutyByUnit[p.unit_id] === true; });
+          perfPageData = perfData;
+          renderPerfStatCards(perfData);
+          renderPerfLeaderboard(perfData);
+          showPerfDetailEmpty();
+        };
+        if (CalyeDB.isOnline()) {
+          CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 }).then(
+            function (dutyProfiles) { applyDutyAndRender(dutyProfiles); },
+            function () { applyDutyAndRender([]); }
+          );
+        } else {
+          applyDutyAndRender([]);
+        }
       }).catch(function (err) {
         body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);font-weight:600;">Failed to load: ' + (err.message || err) + '</td></tr>';
       });
@@ -5756,6 +5792,28 @@ const pageTitles = {
 
     function computeResponderPerformancePage(assignments, responderMap) {
       const perf = {};
+
+      // Seed every known responder so units with zero jobs still appear.
+      Object.keys(responderMap || {}).forEach(rid => {
+        const r = responderMap[rid] || {};
+        perf[rid] = {
+          responder_id: rid,
+          unit_id: r.unit_id || 'Unknown',
+          name: r.name || 'Unknown',
+          vehicle: r.vehicle || '',
+          agency: r.agency || '',
+          total_assigned: 0,
+          accepted: 0,
+          resolved: 0,
+          escalated: 0,
+          total_response_min: 0,
+          response_count: 0,
+          total_resolution_min: 0,
+          resolution_count: 0,
+          categories: {},
+          recent_jobs: []
+        };
+      });
 
       assignments.forEach(a => {
         const rid = a.responder_id;
@@ -5838,6 +5896,7 @@ const pageTitles = {
       const totalResolved = performers.reduce((s, p) => s + p.resolved, 0);
       const totalEscalated = performers.reduce((s, p) => s + p.escalated, 0);
       const activeCount = performers.filter(p => p.total_assigned > 0).length;
+      const onDutyCount = performers.filter(p => p.on_duty).length;
       const avgResponse = performers.filter(p => p.avg_response_min > 0).length
         ? Math.round(performers.filter(p => p.avg_response_min > 0).reduce((s, p) => s + p.avg_response_min, 0) / performers.filter(p => p.avg_response_min > 0).length)
         : 0;
@@ -5854,7 +5913,6 @@ const pageTitles = {
         </div>
         <div class="stat-card">
           <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><polyline points="20 6 9 17 4 12"/></svg></div>
-          <span class="trend up">+${resolutionRate >= 90 ? '3%' : resolutionRate >= 80 ? '1%' : '0%'}</span>
           <div class="val">${resolutionRate}%</div>
           <div class="lbl">Resolution Rate</div>
           <div class="sub">Resolved vs. escalated</div>
@@ -5867,13 +5925,12 @@ const pageTitles = {
         </div>
         <div class="stat-card">
           <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49"/></svg></div>
-          <div class="val">${performers.filter(p => p.on_duty).length || 3} / ${performers.length}</div>
+          <div class="val">${onDutyCount} / ${performers.length}</div>
           <div class="lbl">On Duty Now</div>
-          <div class="sub">${performers.filter(p => !p.on_duty).length || 2} off-shift</div>
+          <div class="sub">${performers.length - onDutyCount} off-shift</div>
         </div>
         <div class="stat-card">
           <div class="icon" style="background:var(--danger-light);"><svg viewBox="0 0 24 24" style="stroke:var(--danger);"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          <span class="trend down">-${totalEscalated > 0 ? totalEscalated : '2'}</span>
           <div class="val">${totalEscalated}</div>
           <div class="lbl">Escalations</div>
           <div class="sub">This month</div>
@@ -5967,47 +6024,70 @@ const pageTitles = {
         <div class="detail-stat"><div class="dv">${p.resolution_rate}%</div><div class="dl">Resolution Rate</div></div>
       `;
 
-      // Category breakdown (mock data for now)
-      const cats = [
-        { label: 'Flooding', count: Math.round(p.total_assigned * 0.45), color: 'var(--info)' },
-        { label: 'Road Hazard', count: Math.round(p.total_assigned * 0.29), color: 'var(--warning)' },
-        { label: 'Garbage', count: Math.round(p.total_assigned * 0.19), color: 'var(--success)' },
-        { label: 'Other', count: Math.round(p.total_assigned * 0.09), color: 'var(--text3)' }
-      ];
-      document.getElementById('perf-detail-cats').innerHTML = cats.map(c => `
-        <div class="cat-row">
-          <span class="cat-label">${c.label}</span>
-          <div class="cat-bar-wrap"><div class="cat-bar" style="width:${p.total_assigned ? Math.round((c.count / p.total_assigned) * 100) : 0}%;background:${c.color};"></div></div>
-          <span class="cat-count">${c.count}</span>
-        </div>
-      `).join('');
-
-      // Recent jobs
-      document.getElementById('perf-detail-jobs').innerHTML = `
-        <div class="recent-job">
-          <span class="rj-dot" style="background:var(--info);"></span>
-          <div>
-            <div class="rj-type">Flooding — Mercado Village</div>
-            <div class="rj-meta">#BRGY-2026-0047 · Today</div>
+      // Incident mix + recent jobs — live from this responder's assignments.
+      const catsEl = document.getElementById('perf-detail-cats');
+      const jobsEl = document.getElementById('perf-detail-jobs');
+      const loadingNote = '<div style="padding:10px 4px;color:var(--text3);font-size:11.5px;font-weight:600;">Loading jobs…</div>';
+      if (catsEl) catsEl.innerHTML = loadingNote;
+      if (jobsEl) jobsEl.innerHTML = loadingNote;
+      const paintPerfDetailJobs = (asns, repMap) => {
+        const list = asns || [];
+        if (!list.length) {
+          if (catsEl) catsEl.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:11.5px;font-weight:600;">No jobs on record.</div>';
+          if (jobsEl) jobsEl.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:11.5px;font-weight:600;">No jobs on record.</div>';
+          return;
+        }
+        const cap = s => (s || 'other').charAt(0).toUpperCase() + (s || 'other').slice(1);
+        const byCat = {};
+        list.forEach(a => {
+          const rep = (repMap || {})[a.report_id] || {};
+          const c = (rep.category || 'other').toLowerCase();
+          byCat[c] = (byCat[c] || 0) + 1;
+        });
+        const catEntries = Object.keys(byCat).map(c => ({ label: cap(c), count: byCat[c], color: DASH_CAT_COLORS[c] || 'var(--text3)' })).sort((a, b) => b.count - a.count);
+        const catTop = catEntries.length ? catEntries[0].count : 1;
+        if (catsEl) catsEl.innerHTML = catEntries.map(c => `
+          <div class="cat-row">
+            <span class="cat-label">${c.label}</span>
+            <div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round(c.count / catTop * 100)}%;background:${c.color};"></div></div>
+            <span class="cat-count">${c.count}</span>
           </div>
-          <span class="rj-dur">28m</span>
-        </div>
-        <div class="recent-job">
-          <span class="rj-dot" style="background:var(--warning);"></span>
-          <div>
-            <div class="rj-type">Road Hazard — Division Rd.</div>
-            <div class="rj-meta">#BRGY-2026-0046 · Today</div>
-          </div>
-          <span class="rj-dur">51m</span>
-        </div>
-        <div class="recent-job">
-          <span class="rj-dot" style="background:var(--success);"></span>
-          <div>
-            <div class="rj-type">Uncollected Garbage</div>
-            <div class="rj-meta">#BRGY-2026-0035 · Recent</div>
-          </div>
-          <span class="rj-dur">2h 30m</span>
-        </div>`;
+        `).join('');
+        if (jobsEl) jobsEl.innerHTML = list.slice(0, 5).map(a => {
+          const rep = (repMap || {})[a.report_id] || {};
+          const cat = (rep.category || 'other').toLowerCase();
+          const mins = a.resolved_at && a.assigned_at ? Math.round((new Date(a.resolved_at) - new Date(a.assigned_at)) / 60000) : null;
+          const dur = mins == null ? (a.status || 'assigned') : (mins < 60 ? mins + 'm' : Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm');
+          return `<div class="recent-job">
+            <span class="rj-dot" style="background:${DASH_CAT_COLORS[cat] || 'var(--text3)'};"></span>
+            <div>
+              <div class="rj-type">${rep.type || 'Incident'}${rep.location ? ' — ' + rep.location : ''}</div>
+              <div class="rj-meta">${rep.report_no || ''}${rep.report_no ? ' · ' : ''}${a.created_at ? timeAgo(a.created_at) : ''}</div>
+            </div>
+            <span class="rj-dur">${dur}</span>
+          </div>`;
+        }).join('');
+      };
+      if (CalyeDB.isOnline()) {
+        CalyeDB.fetch('assignments', { filters: [['responder_id', 'eq', p.responder_id]], order: 'created_at', asc: false, limit: 20 }).then(
+          function (asns) {
+            const list = asns || [];
+            const repIds = [...new Set(list.map(a => a.report_id).filter(Boolean))];
+            if (!repIds.length) { paintPerfDetailJobs(list, {}); return; }
+            CalyeDB.fetch('reports', { filters: [['id', 'in', repIds]], limit: 20 }).then(
+              function (reps) {
+                const repMap = {};
+                (reps || []).forEach(r => { repMap[r.id] = r; });
+                paintPerfDetailJobs(list, repMap);
+              },
+              function () { paintPerfDetailJobs(list, {}); }
+            );
+          },
+          function () { paintPerfDetailJobs([], {}); }
+        );
+      } else {
+        paintPerfDetailJobs([], {});
+      }
 
       // Escalation note
       const escDiv = document.getElementById('perf-detail-escalation');
@@ -6223,6 +6303,26 @@ const pageTitles = {
 
     function computeResponderPerformance(assignments, responderMap) {
       const perf = {};
+
+      // Seed every known responder so units with zero jobs still appear.
+      Object.keys(responderMap || {}).forEach(rid => {
+        const r = responderMap[rid] || {};
+        perf[rid] = {
+          responder_id: rid,
+          unit_id: r.unit_id || 'Unknown',
+          name: r.name || 'Unknown',
+          vehicle: r.vehicle || '',
+          agency: r.agency || '',
+          total_assigned: 0,
+          accepted: 0,
+          resolved: 0,
+          escalated: 0,
+          total_response_min: 0,
+          response_count: 0,
+          total_resolution_min: 0,
+          resolution_count: 0
+        };
+      });
 
       assignments.forEach(a => {
         const rid = a.responder_id;
@@ -6535,6 +6635,7 @@ const pageTitles = {
 
     function adminStatus(r) {
       if (r.status === 'resolved') return 'resolved';
+      if (r.status === 'declined') return 'declined';
       if (r.status === 'responding' || r.status === 'on_site') return 'responding';
       return 'pending';
     }
@@ -6583,6 +6684,7 @@ const pageTitles = {
             <div class="priority-type-info">
               <h3>${active.type || 'Incident'} — ${active.loc}</h3>
               <p>Filed by <strong style="color:var(--text);">${active.reporterName}</strong> · ${timeAgo(active.createdAt)}</p>
+              ${active.outsideCity ? '<div style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA — MAY NEED DECLINE</div>' : ''}
             </div>
           </div>
           <div class="priority-meta">
@@ -6615,6 +6717,151 @@ const pageTitles = {
             </button>
           </div>
         </div>`;
+    }
+
+    // ── LIVE RESPONSE TIMELINE (latest incident, DB-driven) ──
+    // Tracks the newest report. Step rows come from the report_timeline
+    // table (kept truthful by DB triggers); only when those rows are
+    // missing do we derive states from the report + assignment — never mock.
+    function latestReport() {
+      if (!reports || !reports.length) return null;
+      const live = reports.filter(r => r.status !== 'declined');
+      const pool = live.length ? live : reports;
+      return pool.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    }
+
+    function tlStepHtml(step, isLast) {
+      const circleCls = step.state === 'done' ? 'tl-circle done' : step.state === 'active' ? 'tl-circle active' : 'tl-circle';
+      const icon = step.state === 'done'
+        ? '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
+        : step.state === 'active'
+          ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg>'
+          : '<svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>';
+      const line = isLast ? '' : `<div class="tl-line${step.state === 'done' ? ' done' : ''}"></div>`;
+      return `<div class="tl-step">
+        <div class="tl-left"><div class="${circleCls}">${icon}</div>${line}</div>
+        <div class="tl-content">
+          <div class="tl-title">${step.label}</div>
+          <div class="tl-time">${step.time || '—'}</div>
+          ${step.note ? `<div class="tl-note">${step.note}</div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    function deriveTimelineSteps(r) {
+      const filed = fmtDateTime(r.createdAt);
+      const asn = r.asnStatus || null;
+      const hasAsn = !!asn;
+      const resolved = r.status === 'resolved';
+      const onSite = asn === 'on_site' || resolved;
+      const moving = asn === 'en_route' || onSite;
+      const steps = [
+        { label: 'Report Submitted', time: filed + ' · ' + r.reporterName, note: r.description || (r.type + ' reported at ' + r.loc + '.'), state: 'done' },
+        { label: 'Received by Admin', time: filed, note: r.urgent ? 'Flagged as urgent — needs immediate response.' : 'In the response queue.', state: 'done' },
+        moving
+          ? { label: 'Responder Dispatched', time: fmtDateTime(r.assignedAt) + ' · En Route', note: 'A responder is heading to the site.', state: 'done' }
+          : hasAsn
+            ? { label: 'Responder Assigned', time: fmtDateTime(r.assignedAt), note: 'Assigned — unit preparing to roll out.', state: 'pending' }
+            : { label: 'Awaiting Dispatch', time: 'Now · Pending action', note: 'Admin needs to assign a responder or team.', state: 'pending' },
+        onSite
+          ? { label: 'On-Site', time: fmtDateTime(r.resolvedAt || r.assignedAt), note: 'Responder reached ' + r.loc + '.', state: 'done' }
+          : moving
+            ? { label: 'En Route', time: fmtDateTime(r.assignedAt), note: 'Unit on the way to ' + r.loc + '.', state: 'pending' }
+            : { label: 'On-Site', time: '—', note: '', state: 'pending' },
+        resolved
+          ? { label: 'Resolved', time: fmtDateTime(r.resolvedAt), note: r.resolutionNotes || 'Incident closed.', state: 'done' }
+          : onSite
+            ? { label: 'Resolving', time: 'Now', note: 'Unit on site — work in progress.', state: 'pending' }
+            : { label: 'Resolved', time: '—', note: '', state: 'pending' }
+      ];
+      const firstOpen = steps.findIndex(s => s.state !== 'done');
+      if (firstOpen !== -1) steps[firstOpen].state = 'active';
+      return steps;
+    }
+
+    function renderResponseTimeline() {
+      const box = document.getElementById('response-timeline');
+      const ref = document.getElementById('response-timeline-ref');
+      if (!box) return;
+      const target = latestReport();
+      if (!target) {
+        if (ref) ref.textContent = '—';
+        box.innerHTML = '<div style="padding:18px 4px;color:var(--text3);font-size:12px;font-weight:600;">No incidents yet — the timeline will appear here when the first report is filed.</div>';
+        return;
+      }
+      if (ref) ref.textContent = target.id;
+      const paint = (steps) => {
+        box.innerHTML = steps.map((s, i) => tlStepHtml(s, i === steps.length - 1)).join('');
+      };
+      if (CalyeDB.isOnline() && target.dbId) {
+        CalyeDB.fetch('report_timeline', { filters: [['report_id', 'eq', target.dbId]], order: 'step', asc: true, limit: 10 }).then(
+          function (rows) {
+            if (rows && rows.length) {
+              paint(rows.slice(0, 5).map(r => ({
+                label: r.label || 'Step',
+                time: r.happened_at || '—',
+                note: r.note || '',
+                state: r.state || 'pending'
+              })));
+            } else {
+              paint(deriveTimelineSteps(target));
+            }
+          },
+          function () { paint(deriveTimelineSteps(target)); }
+        );
+      } else {
+        paint(deriveTimelineSteps(target));
+      }
+    }
+
+    // ── LIVE ALERT STRIP (derived from real pending/responding reports) ──
+    function renderAlertStrip() {
+      const strip = document.getElementById('alert-strip');
+      const txt = document.getElementById('alert-strip-text');
+      if (!strip || !txt) return;
+      const actionable = reports.filter(r => r.status === 'pending' || r.status === 'responding');
+      if (!actionable.length) { strip.style.display = 'none'; return; }
+      const byType = {};
+      actionable.forEach(r => { byType[r.type] = (byType[r.type] || 0) + 1; });
+      const top = Object.keys(byType).sort((a, b) => byType[b] - byType[a])[0];
+      const locs = [...new Set(actionable.filter(r => r.type === top).map(r => r.loc))].slice(0, 2).join(' · ');
+      const urgentN = actionable.filter(r => r.urgent).length;
+      txt.innerHTML = `<strong>${actionable.length} report${actionable.length === 1 ? '' : 's'} needing response</strong> — most common: ${top}${locs ? ' near ' + locs : ''}${urgentN ? ` (${urgentN} urgent)` : ''}.`;
+      strip.style.display = 'flex';
+    }
+
+    // ── LIVE BY-CATEGORY (THIS WEEK) — real counts from reports ──
+    const DASH_CAT_COLORS = { flood: 'var(--info)', hazard: 'var(--warning)', garbage: 'var(--success)', crime: 'var(--crime)', fire: 'var(--fire)', accident: 'var(--accident)', other: 'var(--text3)' };
+
+    function renderDashCategory() {
+      const barsEl = document.getElementById('dash-week-bars');
+      const catsEl = document.getElementById('dash-week-cats');
+      if (!barsEl || !catsEl) return;
+      const now = new Date();
+      const days = [];
+      for (let i = 6; i >= 0; i--) { const d = new Date(now); d.setDate(now.getDate() - i); days.push(d); }
+      const counts = days.map(d => reports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === d.toDateString()).length);
+      const max = Math.max(1, ...counts);
+      barsEl.innerHTML = days.map((d, i) => {
+        const h = Math.max(4, Math.round(counts[i] / max * 100));
+        const isToday = i === days.length - 1;
+        return `<div class="bar-wrap"><div class="bar" style="height:${h}%;background:${isToday ? 'var(--accent)' : 'rgba(30,58,95,0.45)'};"></div><div class="bar-label"${isToday ? ' style="color:var(--accent);"' : ''}>${isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}</div></div>`;
+      }).join('');
+      const weekAgo = new Date(now);
+      weekAgo.setDate(now.getDate() - 7);
+      const byType = {};
+      reports.filter(r => r.createdAt && new Date(r.createdAt) >= weekAgo).forEach(r => {
+        const k = r.type || 'Incident';
+        if (!byType[k]) byType[k] = { count: 0, category: r.category || 'other' };
+        byType[k].count++;
+      });
+      const entries = Object.keys(byType).map(k => ({ label: k, count: byType[k].count, category: byType[k].category })).sort((a, b) => b.count - a.count).slice(0, 6);
+      if (!entries.length) {
+        catsEl.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:12px;font-weight:600;">No incidents this week.</div>';
+        return;
+      }
+      const top = entries[0].count;
+      catsEl.innerHTML = entries.map(e => `<div class="cat-row"><span class="cat-label">${e.label}</span><div class="cat-bar-wrap"><div class="cat-bar" style="width:${Math.round(e.count / top * 100)}%;background:${DASH_CAT_COLORS[e.category] || 'var(--text3)'};"></div></div><span class="cat-count">${e.count}</span></div>`).join('');
     }
 
     function syncFromSupabase() {
@@ -6655,6 +6902,10 @@ const pageTitles = {
       if (!CalyeDB.isOnline()) {
         showToastMsg('Offline — reports may be out of date.', 'error');
         renderTable(getFilteredData());
+        renderAlertStrip();
+        renderResponseTimeline();
+        renderDashCategory();
+        renderNotifList();
         return;
       }
       CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 200 }).then(rows => {
@@ -6669,6 +6920,10 @@ const pageTitles = {
           filterReportsPage('all', document.querySelector('#page-reports .ftab'));
           refreshSummaryStats();
           renderPriorityCard();
+          renderAlertStrip();
+          renderResponseTimeline();
+          renderDashCategory();
+          renderNotifList();
           return;
         }
         const reportIds = rows.map(r => r.id);
@@ -6682,16 +6937,21 @@ const pageTitles = {
             return {
               id: r.report_no || r.id.slice(0, 8),
               type: r.type,
+              subtype: r.subtype || '',
               loc: r.location || 'Barangay Calye',
               filed: fmtDateTime(r.created_at),
               status: adminStatus(r),
               category: r.category || 'other',
+              severity: r.severity || 'minor',
               urgent: r.priority === 'urgent' || r.status === 'urgent',
               dbId: r.id,
               description: r.description || '',
               reporterName: r.reporter_name || 'Resident',
               createdAt: r.created_at,
               resolvedAt: asn.resolved_at || null,
+              assignedAt: asn.assigned_at || null,
+              asnStatus: asn.status || null,
+              responderId: asn.responder_id || null,
               photo: reportMediaByReport[r.id] || '',
               resolutionNotes: asn.resolution_notes || '',
               proofUrl: asn.proof_url || '',
@@ -6701,13 +6961,17 @@ const pageTitles = {
           });
           reports = mapped;
           fullReports = mapped.map(r => ({
-            id: r.id, type: r.type, category: r.category === 'crime' || r.category === 'fire' || r.category === 'accident' || r.category === 'flood' ? 'major' : 'minor',
+            id: r.id, type: r.type, category: r.category, severity: r.severity,
             loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId
           }));
           renderTable(getFilteredData());
           filterReportsPage('all', document.querySelector('#page-reports .ftab'));
           refreshSummaryStats();
           renderPriorityCard();
+          renderAlertStrip();
+          renderResponseTimeline();
+          renderDashCategory();
+          renderNotifList();
         });
       });
     }
@@ -6825,9 +7089,6 @@ const pageTitles = {
         ? `<div style="background:var(--danger-light);border-radius:var(--radius-sm);padding:11px 13px;font-size:12.5px;color:var(--danger);font-weight:700;margin-bottom:14px;">Rejected: ${r.review_note}</div>`
         : '';
 
-      detail.style.display = 'block';
-      detail.style.alignItems = 'initial';
-      detail.style.justifyContent = 'initial';
       detail.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
           <div>
@@ -6957,7 +7218,7 @@ const pageTitles = {
           showToastMsg((row.message) || 'Account deleted.', 'success');
           selectedVerifyId = null;
           const vd = document.getElementById('verify-detail');
-          if (vd) vd.innerHTML = 'Click an account in the queue to review their valid ID.';
+          if (vd) vd.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100%;text-align:center;">Click an account in the queue to review their valid ID.</div>';
           loadVerifyQueue();
           loadUsers();
         });

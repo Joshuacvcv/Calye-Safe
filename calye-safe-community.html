@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Calye Safe – Barangay Community App</title>
+  <link rel="icon" type="image/png" href="calye-safe-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
@@ -323,6 +324,62 @@
       stroke: #F9A825;
     }
 
+    .nearby-dot.crime {
+      background: #FCE4EC;
+    }
+
+    .nearby-dot.crime svg {
+      stroke: #AD1457;
+    }
+
+    .nearby-dot.accident {
+      background: #FFF3E0;
+    }
+
+    .nearby-dot.accident svg {
+      stroke: #EF6C00;
+    }
+
+    .nearby-dot.medical {
+      background: #FCE4EC;
+    }
+
+    .nearby-dot.medical svg {
+      stroke: #C2185B;
+    }
+
+    .nearby-dot.structural {
+      background: #EFEBE9;
+    }
+
+    .nearby-dot.structural svg {
+      stroke: #5D4037;
+    }
+
+    .nearby-dot.utility {
+      background: #E0F7FA;
+    }
+
+    .nearby-dot.utility svg {
+      stroke: #00838F;
+    }
+
+    .nearby-dot.health {
+      background: #F3E5F5;
+    }
+
+    .nearby-dot.health svg {
+      stroke: #7B1FA2;
+    }
+
+    .nearby-dot.other {
+      background: #ECEFF1;
+    }
+
+    .nearby-dot.other svg {
+      stroke: #607D8B;
+    }
+
     .nearby-item .info {
       flex: 1;
     }
@@ -417,6 +474,11 @@
     .badge.urgent {
       background: #FFEBEE;
       color: #C62828;
+    }
+
+    .badge.declined {
+      background: #ECEFF1;
+      color: #546E7A;
     }
 
     .badge::before {
@@ -519,7 +581,8 @@
     }
 
     .form-group input.field-error,
-    .form-group textarea.field-error {
+    .form-group textarea.field-error,
+    .form-group select.field-error {
       border-color: var(--danger);
       animation: fieldShake 0.4s;
     }
@@ -2019,9 +2082,10 @@
     <!-- ===== DASHBOARD ===== -->
     <div class="screen active" id="screen-home">
       <div class="screen-header" style="padding-bottom:24px;">
+        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div>
-            <h2 style="font-size:26px;">Good morning, Juan</h2>
+            <div>
+              <h2 style="font-size:21px;">Good morning, Juan</h2>
             <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:2px;">Barangay Calye</p>
           </div>
           <div style="position:relative;cursor:pointer;" onclick="openNotifPanel()">
@@ -2047,16 +2111,16 @@
       </div>
 
       <div class="scroll-content" style="padding-top:16px;">
-        <!-- Alert Banner -->
-        <div class="alert-banner">
+        <!-- Alert Banner (live — newest active major incident, hidden if none) -->
+        <div class="alert-banner" id="home-alert-banner" style="display:none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
           <div class="txt">
-            <h4>Flood Advisory — Mercado Village</h4>
-            <p>PAGASA warns of possible flooding in low-lying areas due to heavy rainfall. Stay informed.</p>
+            <h4 data-ab-title></h4>
+            <p data-ab-body></p>
           </div>
         </div>
 
@@ -2065,50 +2129,8 @@
           <span class="section-label" style="margin:0;">Nearby Alerts</span>
           <span class="see-all" onclick="openAllAlertsModal()">See all</span>
         </div>
-        <div class="card" style="margin-top:8px;padding:4px 16px;">
-          <div class="nearby-item">
-            <div class="nearby-dot vandal">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <div class="info">
-              <h4>Vandalism</h4>
-              <p>Brgy. Calye • 120m away</p>
-            </div>
-            <div class="time">2 hrs ago</div>
-          </div>
-          <div class="nearby-item">
-            <div class="nearby-dot garbage">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14H6L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-              </svg>
-            </div>
-            <div class="info">
-              <h4>Uncollected Garbage</h4>
-              <p>Calye Street • 350m away</p>
-            </div>
-            <div class="time">1 hr ago</div>
-          </div>
-          <div class="nearby-item">
-            <div class="nearby-dot flood">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
-                <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-                <path d="M3 18h18" />
-                <circle cx="12" cy="6" r="4" />
-              </svg>
-            </div>
-            <div class="info">
-              <h4>Flooding</h4>
-              <p>Mercado Village • 800m away</p>
-            </div>
-            <div class="time">30 min ago</div>
-          </div>
+        <div class="card" style="margin-top:8px;padding:4px 16px;" id="home-nearby-list">
+          <div style="padding:18px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading nearby alerts…</div>
         </div>
 
         <!-- Community Stats -->
@@ -2216,6 +2238,10 @@
             style="padding:6px 12px;white-space:nowrap;">Flooding</div>
           <div class="filter-tab major" onclick="filterMapTab(this,'accident')"
             style="padding:6px 12px;white-space:nowrap;">Accidents</div>
+          <div class="filter-tab major" onclick="filterMapTab(this,'medical')"
+            style="padding:6px 12px;white-space:nowrap;">Medical</div>
+          <div class="filter-tab major" onclick="filterMapTab(this,'structural')"
+            style="padding:6px 12px;white-space:nowrap;">Structural</div>
           <div class="filter-tab-divider"></div>
           <div class="filter-tab" onclick="filterMapTab(this,'clogged')" style="padding:6px 12px;white-space:nowrap;">
             Clogged Drains</div>
@@ -2229,6 +2255,10 @@
             style="padding:6px 12px;white-space:nowrap;">Public Disturbance</div>
           <div class="filter-tab" onclick="filterMapTab(this,'road')" style="padding:6px 12px;white-space:nowrap;">Road
             Hazards</div>
+          <div class="filter-tab" onclick="filterMapTab(this,'utility')" style="padding:6px 12px;white-space:nowrap;">
+            Utilities</div>
+          <div class="filter-tab" onclick="filterMapTab(this,'health')" style="padding:6px 12px;white-space:nowrap;">
+            Health</div>
         </div>
 
         <!-- Mapbox Map -->
@@ -2320,38 +2350,8 @@
             <h4>Major Incidents</h4>
             <span class="count">Priority response</span>
           </div>
-          <div class="incident-grid">
-            <div class="incident-type major" onclick="selectType(this,'Crime')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#B71C1C" stroke-width="1.8">
-                <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
-                <path d="M9.5 12l1.8 1.8L15 10" />
-              </svg>
-              <span>Crime</span>
-            </div>
-            <div class="incident-type major" onclick="selectType(this,'Fire')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#D84315" stroke-width="1.8">
-                <path
-                  d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z" />
-              </svg>
-              <span>Fire</span>
-            </div>
-            <div class="incident-type major" onclick="selectType(this,'Flooding')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="1.8">
-                <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-                <path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-                <path d="M12 2v6" />
-                <path d="M8 5h8" />
-              </svg>
-              <span>Flooding</span>
-            </div>
-            <div class="incident-type major" onclick="selectType(this,'Accidents')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#B71C1C" stroke-width="1.8">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <span>Accidents</span>
-            </div>
+          <div class="incident-grid" id="major-grid">
+            <!-- filled by renderIncidentTiles() from INCIDENT_GROUPS -->
           </div>
         </div>
 
@@ -2361,65 +2361,8 @@
             <h4>Minor Incidents</h4>
             <span class="count">Standard response</span>
           </div>
-          <div class="incident-grid">
-            <div class="incident-type minor" onclick="selectType(this,'Clogged Drains')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.8">
-                <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-                <path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-                <path d="M12 2v6" />
-                <path d="M8 5h8" />
-              </svg>
-              <span>Clogged Drains</span>
-            </div>
-            <div class="incident-type minor" onclick="selectType(this,'Broken Streetlights')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#F9A825" stroke-width="1.8">
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <circle cx="12" cy="12" r="5" />
-                <path d="M4.93 4.93l2.83 2.83" />
-                <path d="M16.24 16.24l2.83 2.83" />
-                <path d="M2 12h4" />
-                <path d="M18 12h4" />
-                <path d="M4.93 19.07l2.83-2.83" />
-                <path d="M16.24 7.76l2.83-2.83" />
-                <line x1="12" y1="12" x2="12" y2="12.01" stroke-width="3" />
-              </svg>
-              <span>Broken Streetlights</span>
-            </div>
-            <div class="incident-type minor" onclick="selectType(this,'Uncollected Garbage')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="1.8">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14H6L5 6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-                <path d="M9 6V4h6v2" />
-              </svg>
-              <span>Uncollected Garbage</span>
-            </div>
-            <div class="incident-type minor" onclick="selectType(this,'Vandalism')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="1.8">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
-              <span>Vandalism</span>
-            </div>
-            <div class="incident-type minor" onclick="selectType(this,'Public Disturbance')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="1.8">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                <path d="M16 3.13a4 4 0 010 7.75" />
-              </svg>
-              <span>Public Disturbance</span>
-            </div>
-            <div class="incident-type minor" onclick="selectType(this,'Road Hazards')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="1.8">
-                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <span>Road Hazards</span>
-            </div>
+          <div class="incident-grid" id="minor-grid">
+            <!-- filled by renderIncidentTiles() from INCIDENT_GROUPS -->
           </div>
         </div>
         <div id="others-note" style="display:none;margin-top:12px;">
@@ -2544,6 +2487,20 @@
       <div id="report-step-3" class="scroll-content" style="display:none;">
         <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Add more information</h3>
         <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Help responders with more context</p>
+        <div class="form-group">
+          <label>Specific incident *<span id="subtype-group-hint" style="font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;"></span></label>
+          <select id="report-subtype"
+            onchange="this.classList.remove('field-error');document.getElementById('subtype-error-msg').classList.remove('show')">
+            <option value="">Select an incident type first…</option>
+          </select>
+          <div class="field-error-msg" id="subtype-error-msg">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4m0 4h.01" />
+            </svg>
+            Please select the specific incident.
+          </div>
+        </div>
         <div class="form-group">
           <label>Incident Description (optional)</label>
           <textarea id="report-description" rows="3"
@@ -2844,37 +2801,7 @@
         <div class="filter-tab" onclick="filterAnn(this,'alerts')">Alerts</div>
       </div>
       <div class="scroll-content" id="announcements-list">
-        <div class="announcement-card danger">
-          <h4>🌊 Flood Warning</h4>
-          <div class="meta">May 26, 2026 · 10:36 AM</div>
-          <p>PAGASA warns of possible flooding in low-level areas due to the approaching low-pressure area. Residents
-            near esteros are advised to evacuate.</p><span class="read-more">Read more →</span>
-        </div>
-        <div class="announcement-card info">
-          <h4>🏛 Barangay Assembly</h4>
-          <div class="meta">May 19, 2026 · 6:30 AM</div>
-          <p>Monthly barangay officials assembly will be held at the Barangay Hall. All residents are encouraged to
-            attend.</p><span class="read-more">Read more →</span>
-        </div>
-        <div class="announcement-card warning">
-          <h4>⚡ Power Interruption</h4>
-          <div class="meta">May 13, 2026 · 8:00 AM</div>
-          <p>Electricity service will be interrupted on May 13 from 9 PM – 12 AM for maintenance by Meralco.</p><span
-            class="read-more">Read more →</span>
-        </div>
-        <div class="announcement-card">
-          <h4>💧 Water Interruption</h4>
-          <div class="meta">May 8, 2026 · 5:00 AM</div>
-          <p>Maynilad scheduled maintenance will cause water interruption on May 9 from 8 AM – 5 PM. Please store water
-            in advance.</p><span class="read-more">Read more →</span>
-        </div>
-        <div class="announcement-card">
-          <h4>🧹 Clean-Up Drive</h4>
-          <div class="meta">May 6, 2026 · 7:00 AM</div>
-          <p>Barangay-wide clean-up drive every Saturday from 6 AM – 9 AM. Bring your own gloves and bags. Free
-            breakfast for volunteers!</p><span class="read-more">Read more →</span>
-        </div>
-        <div style="height:16px;"></div>
+        <div class="empty-state"><p>Loading announcements…</p></div><div style="height:16px;"></div>
       </div>
     </div>
 
@@ -3074,103 +3001,12 @@
           <span class="live-dot"></span> Nearby Alerts
         </h3>
         <div class="alert-section-title" style="margin-top:4px;">🔴 Active Alerts</div>
-        <div class="alert-list-item active-alert">
-          <div class="al-dot" style="background:#FFEBEE;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#C62828" stroke-width="2">
-              <path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0" />
-            </svg></div>
-          <div class="al-info">
-            <h5>🌊 Flooding — Mercado Village</h5>
-            <p>800m away · Ongoing flooding in low-lying areas near estero</p>
-            <div class="al-time">30 min ago · <span class="badge responding"
-                style="font-size:9px;padding:2px 6px;">Responding</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item active-alert">
-          <div class="al-dot" style="background:#FFF3E0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#F57C00" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            </svg></div>
-          <div class="al-info">
-            <h5>⚠️ Vandalism — Brgy. Calye</h5>
-            <p>120m away · Wall graffiti near waiting shed on Calye St.</p>
-            <div class="al-time">2 hrs ago · <span class="badge pending"
-                style="font-size:9px;padding:2px 6px;">Pending</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item active-alert">
-          <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#2E7D32" stroke-width="2">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14H6L5 6" />
-            </svg></div>
-          <div class="al-info">
-            <h5>🗑 Uncollected Garbage — Calye St.</h5>
-            <p>350m away · Garbage pile accumulating near sari-sari store</p>
-            <div class="al-time">1 hr ago · <span class="badge responding"
-                style="font-size:9px;padding:2px 6px;">Responding</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item active-alert">
-          <div class="al-dot" style="background:#FFEBEE;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#E53935" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg></div>
-          <div class="al-info">
-            <h5>🚔 Theft Incident — Phase 2</h5>
-            <p>500m away · Reported theft of motorcycle in Phase 2 area</p>
-            <div class="al-time">45 min ago · <span class="badge urgent"
-                style="font-size:9px;padding:2px 6px;">Urgent</span></div>
-          </div>
+        <div id="all-alerts-active">
+          <div style="padding:16px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading alerts…</div>
         </div>
         <div class="alert-section-title">⏱ Past Alerts (Last 7 Days)</div>
-        <div class="alert-list-item past-alert">
-          <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#2E7D32" stroke-width="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg></div>
-          <div class="al-info">
-            <h5>Road Accident — Division Rd.</h5>
-            <p>Vehicular collision, minor injuries. PNP responded.</p>
-            <div class="al-time">May 16 · <span class="badge resolved"
-                style="font-size:9px;padding:2px 6px;">Resolved</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item past-alert">
-          <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#2E7D32" stroke-width="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg></div>
-          <div class="al-info">
-            <h5>Street Hazard — Near Calye Elem.</h5>
-            <p>Pothole repaired by DPWH after 2 days.</p>
-            <div class="al-time">May 14 · <span class="badge resolved"
-                style="font-size:9px;padding:2px 6px;">Resolved</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item past-alert">
-          <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#2E7D32" stroke-width="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg></div>
-          <div class="al-info">
-            <h5>Power Outage — Sitio B</h5>
-            <p>Restored after 3 hours. Meralco crew on site.</p>
-            <div class="al-time">May 12 · <span class="badge resolved"
-                style="font-size:9px;padding:2px 6px;">Resolved</span></div>
-          </div>
-        </div>
-        <div class="alert-list-item past-alert">
-          <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="#2E7D32" stroke-width="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg></div>
-          <div class="al-info">
-            <h5>Flooding — Bankley Alley</h5>
-            <p>Flash flood from heavy rain, subsided after 2 hours.</p>
-            <div class="al-time">May 10 · <span class="badge resolved"
-                style="font-size:9px;padding:2px 6px;">Resolved</span></div>
-          </div>
+        <div id="all-alerts-past">
+          <div style="padding:16px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading alerts…</div>
         </div>
         <div style="height:16px;"></div>
       </div>
@@ -3429,13 +3265,100 @@
       { id: 9, type: 'flooding', label: 'Flooding', loc: 'Mercado Village', status: 'responding', lat: 14.3148, lng: 121.1140 },
       { id: 10, type: 'accident', label: 'Road Accident', loc: 'Division Road', status: 'urgent', lat: 14.3122, lng: 121.1114 },
     ]);
-    const typeColors = { clogged: '#1565C0', streetlight: '#F9A825', garbage: '#2E7D32', vandalism: '#F57C00', disturbance: '#E53935', road: '#C62828', crime: '#B71C1C', fire: '#D84315', flooding: '#0D47A1', accident: '#6A1B9A' };
-    const reportTypeToMapKey = {
-      'Crime': 'crime', 'Fire': 'fire', 'Flooding': 'flooding', 'Accidents': 'accident',
-      'Clogged Drains': 'clogged', 'Broken Streetlights': 'streetlight',
-      'Uncollected Garbage': 'garbage', 'Vandalism': 'vandalism',
-      'Public Disturbance': 'disturbance', 'Road Hazards': 'road'
+    const typeColors = { clogged: '#1565C0', streetlight: '#F9A825', garbage: '#2E7D32', vandalism: '#F57C00', disturbance: '#E53935', road: '#C62828', crime: '#B71C1C', fire: '#D84315', flooding: '#0D47A1', accident: '#6A1B9A', medical: '#C2185B', structural: '#5D4037', utility: '#00838F', health: '#7B1FA2' };
+    // ========== INCIDENT TAXONOMY (step 1 groups + step 3 specifics) ==========
+    // severity drives the Major/Minor grouping AND the DB severity value.
+    // mapKey drives the community map pin/filter (local map keys).
+    // dbCat maps onto the closed reports.category enum (flood/hazard/garbage/
+    // crime/fire/accident/other) so admin analytics keep working unchanged.
+    const GROUP_ICONS = {
+      flood: '<path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/><path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/><path d="M12 2v6"/><path d="M8 5h8"/>',
+      fire: '<path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z"/>',
+      crime: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9.5 12l1.8 1.8L15 10"/>',
+      medical: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/>',
+      structural: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M12 13l-1.5 2 2 1.5-1 2.5"/>',
+      road: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+      garbage: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>',
+      disturbance: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+      utility: '<path d="M9 2v6M15 2v6"/><path d="M6 8h12v3a6 6 0 01-12 0V8z"/><path d="M12 17v5"/>',
+      health: '<circle cx="12" cy="12" r="10"/><path d="M7 12h3l2-4 3 8 2-4h1"/>'
     };
+    const INCIDENT_GROUPS = [
+      { key: 'flood-disaster', tile: 'Flood & Disaster', name: 'Natural Disasters & Flooding', severity: 'major', icon: 'flood', color: '#0D47A1', mapKey: 'flooding', dbCat: 'flood', items: [
+        'Flash floods / rising floodwater (baha)',
+        'Landslides near hilly barangays',
+        'Storm surge during typhoons',
+        'Creek or estero overflow',
+        'Clogged drainage causing severe flooding'
+      ] },
+      { key: 'fire', tile: 'Fire', name: 'Fire (Sunog)', severity: 'major', icon: 'fire', color: '#D84315', mapKey: 'fire', dbCat: 'fire', items: [
+        'Residential house fires',
+        'Informal settler area fires (spread risk is high)',
+        'Grass fires / cogon fires near communities',
+        'Electrical fire from faulty wiring'
+      ] },
+      { key: 'crime', tile: 'Crime & Safety', name: 'Crime & Public Safety', severity: 'major', icon: 'crime', color: '#B71C1C', mapKey: 'crime', dbCat: 'crime', items: [
+        'Robbery / hold-up incidents',
+        'Physical assault or mauling',
+        'Illegal drug-related incidents',
+        'Theft (vehicle, livestock, valuables)',
+        'Illegal gambling (sugal) operations',
+        'Domestic violence / VAWC',
+        'Missing persons (especially children or elderly)'
+      ] },
+      { key: 'medical', tile: 'Medical Emergency', name: 'Medical Emergencies', severity: 'major', icon: 'medical', color: '#C2185B', mapKey: 'medical', dbCat: 'accident', items: [
+        'Vehicular accidents',
+        'Motorcycle crashes (habal-habal, motor accidents)',
+        'Drowning incidents (especially near rivers and during floods)',
+        'Suspected poisoning or food poisoning in community events',
+        'Sudden cardiac arrest or stroke in a public area'
+      ] },
+      { key: 'structural', tile: 'Structural Damage', name: 'Structural & Infrastructure', severity: 'major', icon: 'structural', color: '#5D4037', mapKey: 'structural', dbCat: 'hazard', items: [
+        'Collapsed structures (bahay-bahay)',
+        'Downed electrical posts or live wires on the road',
+        'Bridge damage or collapse risk',
+        'Building fire risk from LPG gas leaks'
+      ] },
+      { key: 'road', tile: 'Road Hazards', name: 'Road & Infrastructure Hazards', severity: 'minor', icon: 'road', color: '#C62828', mapKey: 'road', dbCat: 'hazard', items: [
+        'Potholes and road deterioration (malalim na butas sa kalsada)',
+        'Broken or flickering streetlights (sira na ilaw sa daan)',
+        'Fallen trees blocking roads after storms',
+        'Damaged road signs or traffic barriers',
+        'Broken drainage covers / open manholes'
+      ] },
+      { key: 'garbage', tile: 'Garbage & Sanitation', name: 'Garbage & Sanitation', severity: 'minor', icon: 'garbage', color: '#2E7D32', mapKey: 'garbage', dbCat: 'garbage', items: [
+        'Uncollected garbage / missed collection schedule',
+        'Illegal dumping on vacant lots or waterways',
+        'Clogged estero or drainage ditches (not yet flooding)',
+        'Burning of trash in residential areas (open burning)',
+        'Dead animals on public roads or waterways'
+      ] },
+      { key: 'disturbance', tile: 'Disturbances', name: 'Community Disturbances', severity: 'minor', icon: 'disturbance', color: '#E53935', mapKey: 'disturbance', dbCat: 'crime', items: [
+        'Loud noise / videoke disturbances late at night',
+        'Neighbor disputes / away-away',
+        'Stray animals causing road hazards or biting incidents',
+        'Illegal vendors blocking sidewalks or roads',
+        'Vandalism and graffiti on public property',
+        'Illegal construction without permit',
+        'Obstruction of fire hydrants or emergency routes'
+      ] },
+      { key: 'utility', tile: 'Utilities', name: 'Environmental / Utility Issues', severity: 'minor', icon: 'utility', color: '#00838F', mapKey: 'utility', dbCat: 'hazard', items: [
+        'Water supply interruption complaints',
+        'Water pipe leaks in public areas',
+        'Electrical wire hazards (hanging wires, exposed cables)',
+        'Sewage or septic tank overflow onto streets',
+        'Pest infestation complaints (rats, mosquitoes — dengue risk)'
+      ] },
+      { key: 'health', tile: 'Health Concerns', name: 'Public Health Concerns', severity: 'minor', icon: 'health', color: '#7B1FA2', mapKey: 'health', dbCat: 'other', items: [
+        'Suspected dengue outbreak cluster in a sitio',
+        'Stray dog bites (rabies risk)',
+        'Food stall or carinderia sanitation complaints',
+        'Waterborne illness reports (especially after flooding)'
+      ] }
+    ];
+    function groupOf() { return INCIDENT_GROUPS.find(g => g.key === selectedGroupKey) || null; }
+    let selectedGroupKey = null;
+    let selectedSubtype = null;
     let mapSearchQuery = '';
 
     let incidentMap = null;
@@ -3817,6 +3740,12 @@
       document.querySelectorAll('.incident-type').forEach(el => { el.classList.remove('selected'); el.style.borderColor = ''; });
       document.querySelectorAll('.radio-opt').forEach(el => el.classList.remove('selected'));
       selectedType = null; selectedDangerVal = null;
+      selectedGroupKey = null; selectedSubtype = null;
+      renderSubtypeOptions();
+      const subSelReset = document.getElementById('report-subtype');
+      if (subSelReset) subSelReset.classList.remove('field-error');
+      const subErrReset = document.getElementById('subtype-error-msg');
+      if (subErrReset) subErrReset.classList.remove('show');
       selectedMediaDataURL = null;
       reportLocationPinned = false;
       if (reportMarker) { reportMarker.remove(); reportMarker = null; }
@@ -3902,12 +3831,51 @@
       goStep(3);
     }
 
-    function selectType(el, type) {
+    function renderIncidentTiles() {
+      const tile = g => `<div class="incident-type ${g.severity}" onclick="selectType(this,'${g.key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="${g.color}" stroke-width="1.8">${GROUP_ICONS[g.icon]}</svg>
+        <span>${g.tile}</span>
+      </div>`;
+      const majorGrid = document.getElementById('major-grid');
+      const minorGrid = document.getElementById('minor-grid');
+      if (majorGrid) majorGrid.innerHTML = INCIDENT_GROUPS.filter(g => g.severity === 'major').map(tile).join('');
+      if (minorGrid) minorGrid.innerHTML = INCIDENT_GROUPS.filter(g => g.severity === 'minor').map(tile).join('');
+    }
+
+    function renderSubtypeOptions() {
+      const sel = document.getElementById('report-subtype');
+      const hint = document.getElementById('subtype-group-hint');
+      const g = groupOf();
+      if (!sel) return;
+      if (!g) {
+        sel.innerHTML = '<option value="">Select an incident type first…</option>';
+        if (hint) hint.textContent = '';
+        return;
+      }
+      if (hint) hint.textContent = ' · ' + g.name;
+      sel.innerHTML = '<option value="">Select specific incident…</option>' +
+        g.items.map(it => `<option value="${it}">${it}</option>`).join('') +
+        '<option value="__other">Others — specify in description</option>';
+    }
+
+    function selectType(el, key) {
       document.querySelectorAll('.incident-type').forEach(e => e.classList.remove('selected'));
       el.classList.add('selected');
-      selectedType = type;
+      selectedGroupKey = key;
+      const g = groupOf();
+      selectedType = g ? g.name : key;
+      selectedSubtype = null;
+      renderSubtypeOptions();
+      const subSel = document.getElementById('report-subtype');
+      if (subSel) subSel.classList.remove('field-error');
+      const subErr = document.getElementById('subtype-error-msg');
+      if (subErr) subErr.classList.remove('show');
       document.getElementById('others-note').style.display = 'none';
     }
+
+    // Paint step-1 tiles from the taxonomy as soon as the script loads.
+    renderIncidentTiles();
+    renderSubtypeOptions();
 
     function selectDanger(el, val) {
       document.querySelectorAll('.radio-opt').forEach(e => e.classList.remove('selected'));
@@ -3927,6 +3895,20 @@
         showToast('Your report is already being submitted.');
         return;
       }
+      // Specific incident (step 3 dropdown) is required.
+      const subtypeSel = document.getElementById('report-subtype');
+      const subtypeVal = subtypeSel ? subtypeSel.value : '';
+      if (!subtypeVal) {
+        if (subtypeSel) {
+          subtypeSel.classList.add('field-error');
+          subtypeSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        const subErr = document.getElementById('subtype-error-msg');
+        if (subErr) subErr.classList.add('show');
+        showToast('Please select the specific incident.');
+        return;
+      }
+      selectedSubtype = subtypeVal === '__other' ? 'Others — see description' : subtypeVal;
       submittingReport = true;
       const submitBtn = document.getElementById('submit-report-btn');
       const submitLabel = document.getElementById('submit-report-label');
@@ -3940,9 +3922,11 @@
       // Simulated responder starting ~600-900m away from the pinned incident location
       const respLat = destLatLng.lat + (Math.random() > 0.5 ? 1 : -1) * (0.004 + Math.random() * 0.003);
       const respLng = destLatLng.lng + (Math.random() > 0.5 ? 1 : -1) * (0.004 + Math.random() * 0.003);
+      const submitGroup = groupOf();
       reports.unshift({
         id: rid,
-        type: selectedType || 'Incident',
+        type: (submitGroup ? submitGroup.name : selectedType) || 'Incident',
+        subtype: selectedSubtype || '',
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
         description: document.getElementById('report-description')?.value || '',
         announceConsent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked),
@@ -3965,8 +3949,8 @@
       // Mirror the new report onto the public incident map
       mapIncidents.unshift({
         id: mapIncidents.length ? Math.max(...mapIncidents.map(i => i.id)) + 1 : 11,
-        type: reportTypeToMapKey[selectedType] || 'other',
-        label: selectedType || 'Incident',
+        type: submitGroup ? submitGroup.mapKey : 'other',
+        label: selectedSubtype || ((submitGroup ? submitGroup.name : selectedType) || 'Incident'),
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
         status: 'pending',
         lat: destLatLng.lat,
@@ -3985,18 +3969,16 @@
 
     function pushReportToSupabase(rid) {
       if (!CalyeDB.isOnline()) return;
-      const cat = reportTypeToMapKey[selectedType] || 'other';
-      const dbCat = ({ crime: 'crime', fire: 'fire', flooding: 'flood', accident: 'accident',
-        clogged: 'flood', streetlight: 'hazard', garbage: 'garbage', vandalism: 'crime',
-        disturbance: 'crime', road: 'hazard' })[cat] || 'other';
+      const g = groupOf();
       const row = {
         report_no: rid,
         reporter_id: null,
         reporter_name: profile.name || 'Resident',
-        category: dbCat,
-        type: selectedType || 'Incident',
-        severity: 'minor',
-        priority: 'pending',
+        category: g ? g.dbCat : 'other',
+        type: g ? g.name : (selectedType || 'Incident'),
+        subtype: selectedSubtype || null,
+        severity: g ? g.severity : 'minor',
+        priority: selectedDangerVal === 'yes' ? 'urgent' : 'pending',
         description: document.getElementById('report-description')?.value || '',
         location: document.getElementById('report-address')?.value || 'Barangay Calye',
         lat: reportMarker ? reportMarker.getLatLng().lat : BRGY_CENTER[0],
@@ -4012,27 +3994,41 @@
       // notification triggers work (NULL → notifications can't be routed).
       CalyeAuth.currentSession().then(function (s) {
         if (s && s.user && s.user.id) row.reporter_id = s.user.id;
-        CalyeDB.insert('reports', row).then(inserted => {
-          if (!inserted || !inserted[0] || !inserted[0].id) {
-            showToast('Could not sync report. Please try again.');
+        insertReportRow(row, 0);
+      });
+    }
+
+    function insertReportRow(row, attempt) {
+      CalyeDB.insert('reports', row).then(inserted => {
+        if (!inserted || !inserted[0] || !inserted[0].id) {
+          // Most likely the `subtype` column does not exist yet (migration
+          // supabase-report-subtype.sql not run) — retry once with the
+          // specific incident folded into the description so no report is lost.
+          if (attempt === 0 && row.subtype) {
+            const retry = Object.assign({}, row);
+            delete retry.subtype;
+            retry.description = '[' + row.subtype + '] ' + (retry.description || '');
+            insertReportRow(retry, 1);
             return;
           }
-          // The initial 5-step timeline and the public map incident are
-          // created automatically by DB triggers (trg_create_report_timeline,
-          // trg_sync_map_incidents) when the report row is inserted — we do
-          // not insert them here to avoid duplicates and RLS conflicts.
-          if (selectedMediaDataURL) {
-              const mediaData = selectedMediaDataURL;
-              const mediaPath = 'reports/report-' + inserted[0].id + '-' + Date.now() + '.jpg';
-              CalyeDB.uploadStorage('evidence', mediaPath, mediaData).then(uploadedUrl => {
-                CalyeDB.insert('report_media', [{
-                  report_id: inserted[0].id,
-                  kind: 'photo',
-                  url: uploadedUrl || mediaData
-                }]);
-              });
-            }
-        });
+          showToast('Could not sync report. Please try again.');
+          return;
+        }
+        // The initial 5-step timeline and the public map incident are
+        // created automatically by DB triggers (trg_create_report_timeline,
+        // trg_sync_map_incidents) when the report row is inserted — we do
+        // not insert them here to avoid duplicates and RLS conflicts.
+        if (selectedMediaDataURL) {
+            const mediaData = selectedMediaDataURL;
+            const mediaPath = 'reports/report-' + inserted[0].id + '-' + Date.now() + '.jpg';
+            CalyeDB.uploadStorage('evidence', mediaPath, mediaData).then(uploadedUrl => {
+              CalyeDB.insert('report_media', [{
+                report_id: inserted[0].id,
+                kind: 'photo',
+                url: uploadedUrl || mediaData
+              }]);
+            });
+          }
       });
     }
 
@@ -4064,10 +4060,11 @@
         <div>
           <div class="report-source">${r.source}</div>
           <h4>${r.type}</h4>
+          ${r.subtype ? `<div style="font-size:11px;color:var(--text3);font-weight:600;margin-top:2px;">${r.subtype}</div>` : ''}
           <div class="report-location">📍 ${r.loc}</div>
           ${r.outsideCity ? '<div style="display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:2px 6px;margin-top:4px;font-size:10px;font-weight:700;color:#C62828;">⚠ Outside Santa Rosa City</div>' : ''}
         </div>
-        <span class="badge ${r.status}">${r.status === 'responding' ? 'Responding' : r.status === 'resolved' ? 'Resolved' : 'Pending'}</span>
+        <span class="badge ${r.status}">${r.status === 'responding' ? 'Responding' : r.status === 'resolved' ? 'Resolved' : r.status === 'declined' ? 'Declined' : 'Pending'}</span>
       </div>
       ${r.photo ? `
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="event.stopPropagation();openSubmittedPhoto('${r.id}')">
@@ -4403,6 +4400,8 @@
       return currentUid ? (LS_KEY_NOTIFS + '_' + currentUid) : LS_KEY_NOTIFS;
     }
     const NOTIF_STEP_META = {
+      0: { label: 'Report Declined', bg: '#FFEBEE', color: '#C62828', icon: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+        defaultMsg: no => `Your report ${no} was declined by the barangay.` },
       2: { label: 'Verified', bg: '#E3F2FD', color: '#1565C0', icon: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
         defaultMsg: no => `Your report ${no} has been verified by the barangay operator.` },
       3: { label: 'Responder Dispatched', bg: '#FFF3E0', color: '#F57C00', icon: '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>',
@@ -4424,6 +4423,27 @@
       notifs.forEach(n => { known[n.key] = true; });
       let added = 0;
       dbReports.forEach(r => {
+        // Declined reports notify the resident with the admin's reason.
+        if ((r.status || '').toLowerCase() === 'declined') {
+          const dkey = r.id + ':declined';
+          if (!known[dkey]) {
+            known[dkey] = true;
+            const drows = (tlByReport[r.id] || []);
+            const step2 = drows.find(t => Number(t.step) === 2);
+            const note = (step2 && step2.note && step2.note !== '—') ? step2.note : null;
+            notifs.unshift({
+              key: dkey,
+              reportNo: r.report_no || '#BRGY',
+              type: r.type || 'Incident',
+              step: 0,
+              label: 'Report Declined',
+              message: note || `Your report ${r.report_no || '#BRGY'} was declined by the barangay.`,
+              time: (step2 && step2.happened_at && step2.happened_at !== '—') ? step2.happened_at : fmtDate(r.created_at),
+              read: false
+            });
+            added++;
+          }
+        }
         const rows = (tlByReport[r.id] || []);
         const tl = rows.slice().sort((a, b) => a.step - b.step) || [];
         tl.forEach(t => {
@@ -4493,18 +4513,23 @@
       document.getElementById('notif-panel').classList.remove('open');
     }
 
-    // ========== SEARCH ==========
-    const searchableData = [
-      { title: 'Flooding — Mercado Village', sub: 'Active · 800m away', tag: 'Alert', tagColor: '#FFEBEE', tagText: '#C62828', screen: 'home' },
-      { title: 'Vandalism — Brgy. Calye', sub: 'Active · 120m away', tag: 'Alert', tagColor: '#FFF3E0', tagText: '#F57C00', screen: 'home' },
-      { title: 'Uncollected Garbage', sub: 'Active · Calye Street', tag: 'Alert', tagColor: '#E8F5E9', tagText: '#2E7D32', screen: 'home' },
-      { title: '🌊 Flood Warning', sub: 'Announcement · May 26, 2026', tag: 'Announce', tagColor: '#FFEBEE', tagText: '#C62828', screen: 'announcements' },
-      { title: '🏛 Barangay Assembly', sub: 'Announcement · May 19, 2026', tag: 'Announce', tagColor: '#E3F2FD', tagText: '#1565C0', screen: 'announcements' },
-      { title: '⚡ Power Interruption', sub: 'Announcement · May 13, 2026', tag: 'Announce', tagColor: '#FFF8E1', tagText: '#F9A825', screen: 'announcements' },
-      { title: 'Road Accident — Division Rd.', sub: 'My Report · Responding', tag: 'Report', tagColor: '#E3F2FD', tagText: '#1565C0', screen: 'myreports' },
-      { title: 'Incident Map', sub: 'View all active incidents on the map', tag: 'Screen', tagColor: '#EDE7F6', tagText: '#7B1FA2', screen: 'map' },
-      { title: 'Emergency Hotlines', sub: 'Quick access to emergency numbers', tag: 'Screen', tagColor: '#FFEBEE', tagText: '#C62828', screen: 'hotlines' },
-    ];
+    // ========== SEARCH (live index — screens + announcements + alerts + my reports) ==========
+    function buildSearchIndex() {
+      const idx = [
+        { title: 'Incident Map', sub: 'View all active incidents on the map', tag: 'Screen', tagColor: '#EDE7F6', tagText: '#7B1FA2', screen: 'map' },
+        { title: 'Emergency Hotlines', sub: 'Quick access to emergency numbers', tag: 'Screen', tagColor: '#FFEBEE', tagText: '#C62828', screen: 'hotlines' },
+      ];
+      (communityAnnouncements || []).slice(0, 10).forEach(a => {
+        idx.push({ title: a.title || 'Announcement', sub: 'Announcement · ' + fmtDate(a.created_at), tag: 'Announce', tagColor: '#E3F2FD', tagText: '#1565C0', screen: 'announcements' });
+      });
+      (homeAlertsCache || []).filter(r => r.status !== 'resolved').slice(0, 10).forEach(r => {
+        idx.push({ title: (r.type || 'Incident') + ' — ' + (r.location || 'Barangay Calye'), sub: 'Active alert · ' + timeAgo(r.created_at), tag: 'Alert', tagColor: '#FFEBEE', tagText: '#C62828', screen: 'home' });
+      });
+      (typeof reports !== 'undefined' ? reports : []).slice(0, 10).forEach(r => {
+        idx.push({ title: (r.type || 'Incident'), sub: 'My Report · ' + (r.status || ''), tag: 'Report', tagColor: '#E3F2FD', tagText: '#1565C0', screen: 'myreports' });
+      });
+      return idx;
+    }
 
     function openSearch() {
       document.getElementById('search-overlay').classList.add('open');
@@ -4523,7 +4548,7 @@
       if (!q) { placeholder.style.display = 'flex'; resList.style.display = 'none'; return; }
       placeholder.style.display = 'none';
       resList.style.display = 'block';
-      const results = searchableData.filter(d => d.title.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q));
+      const results = buildSearchIndex().filter(d => d.title.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q));
       if (!results.length) {
         resList.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><p>No results for "' + val + '"</p></div>';
         return;
@@ -4544,7 +4569,147 @@
 
     // ========== ALL ALERTS MODAL ==========
     function openAllAlertsModal() {
+      fetchHomeAlerts();
       showModal('all-alerts-modal');
+    }
+
+    // ========== LIVE HOME ALERTS (no mock data) ==========
+    // Banner = newest active major incident (title + location only).
+    // Nearby + modal lists = real public reports with real distances/times.
+    let homeAlertsCache = [];
+    let userLoc = null; // [lat, lng] once GPS resolves
+
+    function timeAgo(iso) {
+      if (!iso) return '';
+      const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+      if (mins < 1) return 'Just now';
+      if (mins < 60) return mins + (mins === 1 ? ' min ago' : ' mins ago');
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + (hrs === 1 ? ' hr ago' : ' hrs ago');
+      const days = Math.floor(hrs / 24);
+      if (days < 7) return days + (days === 1 ? ' day ago' : ' days ago');
+      return fmtDate(iso);
+    }
+
+    function fmtDist(m) {
+      if (m == null) return '';
+      return m < 1000 ? (Math.max(10, Math.round(m / 10) * 10)) + 'm away' : (m / 1000).toFixed(1) + 'km away';
+    }
+
+    function ensureUserLoc() {
+      if (userLoc || !navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(pos => {
+        userLoc = [pos.coords.latitude, pos.coords.longitude];
+        paintHomeAlerts();
+      }, () => { }, { enableHighAccuracy: true, timeout: 8000 });
+    }
+
+    const ALERT_DOT_CLASS = { flood: 'flood', fire: 'fire', garbage: 'garbage', crime: 'crime', accident: 'accident', hazard: 'hazard', medical: 'medical', structural: 'structural', utility: 'utility', health: 'health' };
+    const ALERT_TONES = {
+      flood: ['#E3F2FD', '#1565C0'], fire: ['#FFEBEE', '#C62828'], garbage: ['#E8F5E9', '#2E7D32'],
+      crime: ['#FCE4EC', '#AD1457'], accident: ['#FFF3E0', '#EF6C00'], hazard: ['#FFF8E1', '#F9A825'],
+      medical: ['#FCE4EC', '#C2185B'], structural: ['#EFEBE9', '#5D4037'], utility: ['#E0F7FA', '#00838F'],
+      health: ['#F3E5F5', '#7B1FA2'], other: ['#ECEFF1', '#607D8B']
+    };
+    const ALERT_ICONS = {
+      flood: '<path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/><path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/>',
+      fire: '<path d="M12 22c4 0 7-3 7-7 0-5-7-13-7-13S5 10 5 15c0 4 3 7 7 7z"/>',
+      garbage: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+      crime: '<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/>',
+      accident: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+      hazard: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+      medical: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 9v6M9 12h6"/>',
+      structural: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+      utility: '<path d="M9 2v6M15 2v6"/><path d="M6 8h12v3a6 6 0 01-12 0V8z"/><path d="M12 17v5"/>',
+      health: '<circle cx="12" cy="12" r="10"/><path d="M7 12h3l2-4 3 8 2-4h1"/>',
+      other: '<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>'
+    };
+
+    function alertDotFor(r) {
+      const c = (r.category || 'other').toLowerCase();
+      return ALERT_DOT_CLASS[c] || 'other';
+    }
+
+    function statusBadgeFor(r) {
+      if (r.status === 'resolved') return '<span class="badge resolved" style="font-size:9px;padding:2px 6px;">Resolved</span>';
+      if (r.status === 'responding' || r.status === 'on_site') return '<span class="badge responding" style="font-size:9px;padding:2px 6px;">Responding</span>';
+      if (r.priority === 'urgent' || r.status === 'urgent') return '<span class="badge urgent" style="font-size:9px;padding:2px 6px;">Urgent</span>';
+      const label = (r.status || 'pending').charAt(0).toUpperCase() + (r.status || 'pending').slice(1);
+      return `<span class="badge pending" style="font-size:9px;padding:2px 6px;">${label}</span>`;
+    }
+
+    function fetchHomeAlerts() {
+      if (!CalyeDB.isOnline()) { paintHomeAlerts(); return; }
+      CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 30 }).then(
+        rows => { homeAlertsCache = rows || []; paintHomeAlerts(); },
+        () => paintHomeAlerts()
+      );
+    }
+
+    function paintHomeAlerts() {
+      const banner = document.getElementById('home-alert-banner');
+      const list = document.getElementById('home-nearby-list');
+      const activeBox = document.getElementById('all-alerts-active');
+      const pastBox = document.getElementById('all-alerts-past');
+      // Banner: newest ACTIVE major incident only — title + location (hidden when none)
+      const major = (homeAlertsCache || []).find(r => r.severity === 'major' && r.status !== 'resolved');
+      if (banner) {
+        if (major) {
+          banner.style.display = '';
+          banner.querySelector('[data-ab-title]').textContent = major.type || 'Major Incident';
+          banner.querySelector('[data-ab-body]').textContent = major.location || 'Barangay Calye';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+      const rows = (homeAlertsCache || []).filter(r => r.lat && r.lng);
+      const origin = userLoc || BRGY_CENTER;
+      const hasFix = !!userLoc;
+      const active = rows
+        .filter(r => r.status !== 'resolved')
+        .map(r => ({ r, d: haversineMeters(origin, [Number(r.lat), Number(r.lng)]) }))
+        .sort((a, b) => a.d - b.d);
+      const past = rows
+        .filter(r => r.status === 'resolved' && r.created_at && (Date.now() - new Date(r.created_at).getTime()) < 7 * 864e5)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 10);
+      const emptyNote = '<div style="padding:18px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No active alerts nearby. All clear.</div>';
+      if (list) {
+        list.innerHTML = active.length ? active.slice(0, 3).map(({ r, d }) => {
+          const dot = alertDotFor(r);
+          return `<div class="nearby-item">
+            <div class="nearby-dot ${dot}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2">${ALERT_ICONS[dot] || ALERT_ICONS.other}</svg></div>
+            <div class="info"><h4>${r.type || 'Incident'}</h4><p>${r.location || 'Barangay Calye'}${hasFix ? ' • ' + fmtDist(d) : ''}</p></div>
+            <div class="time">${timeAgo(r.created_at)}</div>
+          </div>`;
+        }).join('') : emptyNote;
+      }
+      if (activeBox) {
+        activeBox.innerHTML = active.length ? active.map(({ r, d }) => {
+          const dot = alertDotFor(r);
+          const tone = ALERT_TONES[dot] || ALERT_TONES.other;
+          return `<div class="alert-list-item active-alert">
+            <div class="al-dot" style="background:${tone[0]};"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${tone[1]}" stroke-width="2">${ALERT_ICONS[dot] || ALERT_ICONS.other}</svg></div>
+            <div class="al-info">
+              <h5>${r.type || 'Incident'} — ${r.location || 'Barangay Calye'}</h5>
+              <p>${hasFix ? fmtDist(d) + ' · ' : ''}${r.description || 'Awaiting responder update.'}</p>
+              <div class="al-time">${timeAgo(r.created_at)} · ${statusBadgeFor(r)}</div>
+            </div>
+          </div>`;
+        }).join('') : emptyNote;
+      }
+      if (pastBox) {
+        pastBox.innerHTML = past.length ? past.map(r => `
+          <div class="alert-list-item past-alert">
+            <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="al-info">
+              <h5>${r.type || 'Incident'} — ${r.location || 'Barangay Calye'}</h5>
+              <p>${r.description || 'Resolved by response team.'}</p>
+              <div class="al-time">${fmtDate(r.created_at)} · <span class="badge resolved" style="font-size:9px;padding:2px 6px;">Resolved</span></div>
+            </div>
+          </div>`).join('')
+          : '<div style="padding:16px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No resolved alerts in the last 7 days.</div>';
+      }
     }
 
     // ========== MEDIA (capture-only) ==========
@@ -4972,6 +5137,7 @@
           category: a.category || 'general', created_at: a.created_at
         }));
         renderCommunityAnnouncements();
+        paintHomeAlerts();
       });
       CalyeDB.fetch('map_incidents', { limit: 100 }).then(pins => {
         if (!pins || !pins.length) return;
@@ -5026,7 +5192,7 @@
                   type: r.type,
                   loc: r.location || 'Barangay Calye',
                   date: fmtDate(r.created_at),
-                  status: active ? 'responding' : r.status === 'resolved' ? 'resolved' : 'pending',
+                  status: active ? 'responding' : r.status === 'resolved' ? 'resolved' : r.status === 'declined' ? 'declined' : 'pending',
                   source: r.source && r.source.toUpperCase() || 'BRGY',
                   lat: r.lat, lng: r.lng,
                   timeline: mapDbTimeline(tlByReport[r.id]),
@@ -5066,6 +5232,8 @@
       refreshCommunityStats();
       renderProfileHeader();
       syncFromSupabase();
+      fetchHomeAlerts();
+      ensureUserLoc();
     });
 
     // Poll so the resident's tracker + feed stay in sync with admin/responder
