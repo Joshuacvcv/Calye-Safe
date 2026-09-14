@@ -85,13 +85,16 @@ begin
       and a.responder_id is not null
     group by a.responder_id
   ),
+  -- Sourced from responder PROFILES so every registered responder appears,
+  -- even with no unit row or no jobs yet. Orphan unit rows (no profile)
+  -- are appended too, so nothing ever goes missing.
   performer_data as (
     select
-      r.id as responder_id,
-      r.unit_id,
-      r.name,
-      r.vehicle,
-      r.agency,
+      coalesce(u.rid, u.pid) as responder_id,
+      coalesce(nullif(u.unit_id, ''), 'Unassigned') as unit_id,
+      coalesce(nullif(u.pname, ''), nullif(u.rname, ''), 'Responder') as name,
+      coalesce(u.vehicle, '') as vehicle,
+      coalesce(u.agency, 'Barangay Calye QRT') as agency,
       coalesce(s.total_assigned, 0) as total_assigned,
       coalesce(s.accepted, 0) as accepted,
       coalesce(s.resolved, 0) as resolved,
@@ -102,8 +105,25 @@ begin
            then round((coalesce(s.resolved, 0)::numeric / s.total_assigned) * 100) else 0 end as resolution_rate,
       round(coalesce(s.avg_response_min, 0)) as avg_response_min,
       round(coalesce(s.avg_resolution_min, 0)) as avg_resolution_min
-    from responders r
-    left join assignment_stats s on s.responder_id = r.id
+    from (
+      select p.id as pid, p.full_name as pname, p.unit_id as unit_id,
+             r.id as rid, r.name as rname, r.vehicle as vehicle, r.agency as agency
+      from profiles p
+      left join responders r
+        on r.unit_id = p.unit_id and p.unit_id is not null and p.unit_id <> ''
+      where p.role = 'responder'
+      union
+      select null as pid, null as pname, r.unit_id as unit_id,
+             r.id as rid, r.name as rname, r.vehicle as vehicle, r.agency as agency
+      from responders r
+      where not exists (
+        select 1 from profiles p
+        where p.role = 'responder'
+          and p.unit_id is not null and p.unit_id <> ''
+          and p.unit_id = r.unit_id
+      )
+    ) u
+    left join assignment_stats s on s.responder_id = u.rid
   )
   select jsonb_build_object(
     'report_month', to_char(v_from, 'YYYY-MM'),

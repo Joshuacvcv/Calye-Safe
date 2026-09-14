@@ -3950,7 +3950,7 @@
                 <div class="panel-header">
                   <div>
                     <div class="sec-title">All Responders</div>
-                    <div class="sec-sub">5 units · sorted by avg. response time</div>
+                    <div class="sec-sub" id="perf-unit-count">— units · sorted by avg. response time</div>
                   </div>
                   <div class="ftab-row" id="perf-duty-tabs">
                     <button class="ftab active" onclick="setPerfDutyFilter('all',this)">All</button>
@@ -5733,10 +5733,46 @@ const pageTitles = {
     let perfSelectedResponder = null;
     let perfDutyFilter = 'all';
 
+    // Shared finish: duty flags + merge of profile-only responders, then paint.
+    function finalizePerfData(perfData, dutyProfiles) {
+      const dutyByUnit = {};
+      (dutyProfiles || []).forEach(pr => { if (pr.unit_id) dutyByUnit[pr.unit_id] = pr.on_duty === true; });
+      perfData.forEach(p => { p.on_duty = dutyByUnit[p.unit_id] === true; });
+      const haveUnits = {};
+      perfData.forEach(p => { if (p.unit_id) haveUnits[p.unit_id] = true; });
+      (dutyProfiles || []).forEach(pr => {
+        const unit = (pr.unit_id && pr.unit_id !== '') ? pr.unit_id : 'Unassigned';
+        if (!haveUnits[unit]) {
+          haveUnits[unit] = true;
+          perfData.push({
+            responder_id: 'profile:' + pr.id, unit_id: unit,
+            name: pr.full_name || 'Responder', vehicle: '', agency: '',
+            total_assigned: 0, accepted: 0, resolved: 0, escalated: 0,
+            avg_response_min: 0, avg_resolution_min: 0,
+            acceptance_rate: 0, resolution_rate: 0,
+            on_duty: pr.on_duty === true
+          });
+        }
+      });
+      perfPageData = perfData;
+      renderPerfStatCards(perfData);
+      renderPerfLeaderboard(perfData);
+      showPerfDetailEmpty();
+    }
+
     function loadResponderPerformancePage() {
       const body = document.getElementById('perf-leaderbody');
       if (!body) return;
       body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3);font-size:12px;font-weight:600;">Loading responder performance…</td></tr>';
+
+      // The period dropdown is live: previous-month uses the RPC, every other
+      // range is aggregated client-side over the matching assignments.
+      const periodSel = document.getElementById('perf-period');
+      const period = periodSel ? periodSel.value : '';
+      if (period === 'Last 7 days' || period === 'Last 30 days' || period === 'This quarter' || period === 'All time') {
+        loadResponderPerformanceRange(period);
+        return;
+      }
 
       // Fetch from RPC for previous month (default 30 days)
       const now = new Date();
@@ -5768,14 +5804,10 @@ const pageTitles = {
 
         // Real duty status from responder profiles (unit_id ↔ responders
         // link). Non-fatal: if profiles are unreadable, duty stays off.
+        // Also appends any registered responder missing from the RPC/fallback
+        // rows so EVERY role='responder' profile is always listed.
         const applyDutyAndRender = function (dutyProfiles) {
-          const dutyByUnit = {};
-          (dutyProfiles || []).forEach(pr => { if (pr.unit_id) dutyByUnit[pr.unit_id] = pr.on_duty === true; });
-          perfData.forEach(p => { p.on_duty = dutyByUnit[p.unit_id] === true; });
-          perfPageData = perfData;
-          renderPerfStatCards(perfData);
-          renderPerfLeaderboard(perfData);
-          showPerfDetailEmpty();
+          finalizePerfData(perfData, dutyProfiles);
         };
         if (CalyeDB.isOnline()) {
           CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 }).then(
@@ -5787,6 +5819,56 @@ const pageTitles = {
         }
       }).catch(function (err) {
         body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);font-weight:600;">Failed to load: ' + (err.message || err) + '</td></tr>';
+      });
+    }
+
+    // Range mode for the period/category dropdowns: aggregate client-side
+    // over assignments in the chosen window (the RPC only serves full months).
+    function loadResponderPerformanceRange(period) {
+      const body = document.getElementById('perf-leaderbody');
+      const now = new Date();
+      let from = null;
+      if (period === 'Last 7 days') from = new Date(now.getTime() - 7 * 864e5);
+      else if (period === 'Last 30 days') from = new Date(now.getTime() - 30 * 864e5);
+      else if (period === 'This quarter') from = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+      responderPerfLabel = period;
+      const filters = from ? [['created_at', 'gte', from.toISOString()]] : [];
+      const catSel = document.getElementById('perf-category');
+      const cat = catSel ? catSel.value : '';
+      const wantSev = cat === 'Major incidents' ? 'major' : cat === 'Minor incidents' ? 'minor' : '';
+
+      Promise.all([
+        CalyeDB.fetch('assignments', { filters: filters, order: 'created_at', asc: false, limit: 500 }),
+        CalyeDB.fetch('responders', { limit: 100 }),
+        CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 })
+      ]).then(function (results) {
+        let assignments = results[0] || [];
+        const responders = results[1] || [];
+        const dutyProfiles = results[2] || [];
+        const responderMap = {};
+        responders.forEach(r => { responderMap[r.id] = r; });
+        const finish = function (sevByReport) {
+          if (wantSev) {
+            assignments = assignments.filter(a => (sevByReport[a.report_id] || 'minor') === wantSev);
+          }
+          finalizePerfData(computeResponderPerformancePage(assignments, responderMap), dutyProfiles);
+        };
+        if (wantSev && assignments.length && CalyeDB.isOnline()) {
+          const repIds = [...new Set(assignments.map(a => a.report_id).filter(Boolean))];
+          if (!repIds.length) { finish({}); return; }
+          CalyeDB.fetch('reports', { filters: [['id', 'in', repIds]], limit: 200 }).then(
+            function (reps) {
+              const sevByReport = {};
+              (reps || []).forEach(r => { sevByReport[r.id] = r.severity || 'minor'; });
+              finish(sevByReport);
+            },
+            function () { finish({}); }
+          );
+        } else {
+          finish({});
+        }
+      }).catch(function (err) {
+        if (body) body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);font-weight:600;">Failed to load: ' + (err.message || err) + '</td></tr>';
       });
     }
 
@@ -5940,6 +6022,8 @@ const pageTitles = {
     function renderPerfLeaderboard(performers) {
       const body = document.getElementById('perf-leaderbody');
       if (!body) return;
+      const countEl = document.getElementById('perf-unit-count');
+      if (countEl) countEl.textContent = performers.length + ' unit' + (performers.length === 1 ? '' : 's') + ' · sorted by avg. response time';
 
       const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
 
@@ -6133,6 +6217,12 @@ const pageTitles = {
           loadResponderPerformancePage();
         });
       }
+      const catSelect = document.getElementById('perf-category');
+      if (catSelect) {
+        catSelect.addEventListener('change', function () {
+          loadResponderPerformancePage();
+        });
+      }
     });
 
     let monthlyRows = [];
@@ -6294,8 +6384,35 @@ const pageTitles = {
           perfData = computeResponderPerformance(assignments, responderMap);
         }
 
-        responderPerfRows = perfData;
-        renderResponderPerformance(perfData);
+        // Append any registered responder missing from the rows so EVERY
+        // role='responder' profile is always listed (non-fatal).
+        const finishModalRender = function (profList) {
+          const haveUnits = {};
+          perfData.forEach(p => { if (p.unit_id) haveUnits[p.unit_id] = true; });
+          (profList || []).forEach(pr => {
+            const unit = (pr.unit_id && pr.unit_id !== '') ? pr.unit_id : 'Unassigned';
+            if (!haveUnits[unit]) {
+              haveUnits[unit] = true;
+              perfData.push({
+                responder_id: 'profile:' + pr.id, unit_id: unit,
+                name: pr.full_name || 'Responder', vehicle: '', agency: '',
+                total_assigned: 0, accepted: 0, resolved: 0, escalated: 0,
+                avg_response_min: 0, avg_resolution_min: 0,
+                acceptance_rate: 0, resolution_rate: 0
+              });
+            }
+          });
+          responderPerfRows = perfData;
+          renderResponderPerformance(perfData);
+        };
+        if (CalyeDB.isOnline()) {
+          CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 }).then(
+            function (profList) { finishModalRender(profList); },
+            function () { finishModalRender([]); }
+          );
+        } else {
+          finishModalRender([]);
+        }
       }).catch(function (err) {
         body.innerHTML = '<div style="padding:20px;color:var(--danger);font-weight:600;">Failed to load performance data: ' + (err.message || err) + '</div>';
       });
