@@ -2106,11 +2106,11 @@
                 <div class="profile-id">ID: RES-014</div>
                 <div style="display:flex;gap:28px;margin-top:10px;">
                     <div style="text-align:center;">
-                        <div style="font-size:19px;font-weight:700;color:#fff;">31</div>
+                        <div style="font-size:19px;font-weight:700;color:#fff;" id="prof-stat-resolved">0</div>
                         <div style="font-size:10px;color:rgba(255,255,255,0.6);">Resolved</div>
                     </div>
                     <div style="text-align:center;">
-                        <div style="font-size:19px;font-weight:700;color:#fff;">36m</div>
+                        <div style="font-size:19px;font-weight:700;color:#fff;" id="prof-stat-avg">—</div>
                         <div style="font-size:10px;color:rgba(255,255,255,0.6);">Avg. Response</div>
                     </div>
                 </div>
@@ -3237,11 +3237,21 @@
             if (!j) return;
             const now = nowStr();
             ensureTimeline(j);
+            const asnPatch = { status: j.status };
             if (j.status === 'assigned') {
+                // Claiming: the first unit to start an unassigned job owns it —
+                // it vanishes from every other unit's queue on their next sync.
+                asnPatch.status = 'en_route';
+                if (!j.responderId && myResponderId) {
+                    j.responderId = myResponderId;
+                    asnPatch.responder_id = myResponderId;
+                    showToast('Assignment claimed — En Route');
+                } else {
+                    showToast('Status updated: En Route');
+                }
                 j.status = 'en_route';
                 j.timeline[2] = { label: 'En Route', ts: now, state: 'done' };
                 j.timeline[3].state = 'active';
-                showToast('Status updated: En Route');
                 markAsnStep(j.asnId, 3, 'done', now);
                 markReportStep(j.reportId, 3, 'done', now);
             } else if (j.status === 'en_route') {
@@ -3256,7 +3266,8 @@
             renderJob();
             updateJobNavIndicator();
             if (CalyeDB.isOnline() && j.asnId) {
-                CalyeDB.update('assignments', { id: j.asnId }, { status: j.status });
+                asnPatch.status = j.status;
+                CalyeDB.update('assignments', { id: j.asnId }, asnPatch);
                 if (j.reportId) CalyeDB.update('reports', { id: j.reportId }, { status: j.status === 'en_route' ? 'responding' : 'on_site' });
             }
         }
@@ -3650,6 +3661,24 @@
           </div>
         `;
             }).join('');
+            renderProfileStats();
+        }
+
+        // Profile header stats are computed live from History (never hardcoded).
+        function renderProfileStats() {
+            const elR = document.getElementById('prof-stat-resolved');
+            const elA = document.getElementById('prof-stat-avg');
+            const mins = history.map(h => {
+                const m = /(\d+)h\s*(\d+)?m?/.exec(h.duration || '');
+                const m2 = /^(\d+)m$/.exec(h.duration || '');
+                if (m) return (+m[1]) * 60 + (+(m[2] || 0));
+                if (m2) return +m2[1];
+                return 0;
+            }).filter(n => n > 0);
+            if (elR) elR.textContent = history.length;
+            if (elA) elA.textContent = mins.length
+                ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) + 'm'
+                : '—';
         }
 
         // ══════════════════════════ DISPATCH SIMULATION ══════════════════════════
@@ -3758,6 +3787,11 @@
         // ══════════════════════════ SUPABASE SYNC ══════════════════════════
         CALYE_SUPABASE.init();
 
+        // Latest auth profile, shared between the getStatus chain and the
+        // jobs sync below (they run as parallel promise chains).
+        let authProfile = null;
+        let myResponderId = null; // responders.id of this unit — set on each sync, used when claiming jobs
+
         function fmtTime(iso) {
             if (!iso) return '—';
             const d = new Date(iso);
@@ -3776,6 +3810,7 @@
             CalyeAuth.getStatus().then(function (g) {
                 if (!g.session || !g.profile) return;
                 const p = g.profile;
+                authProfile = p;
                 const changed = {};
                 if (p.full_name && rProfile.name !== p.full_name) { rProfile.name = p.full_name; changed.name = p.full_name; }
                 if (p.unit_id && rProfile.unit !== p.unit_id) { rProfile.unit = p.unit_id; changed.unit = p.unit_id; }
@@ -3790,21 +3825,25 @@
                 CalyeDB.fetch('assignments', { limit: 100 }).then(dbAssignments => {
                     if (!dbReports || !dbReports.length || !dbAssignments || !dbAssignments.length) return;
                     const reportById = dbReports.reduce((m, r) => { m[r.id] = r; return m; }, {});
-                    // Match assignments to this responder via the responders table.
+                    // Visibility: unclaimed jobs form a shared pool every unit
+                    // sees; once a job has an owner, only that unit sees it.
+                    // The match below also keeps the local profile's unit in sync.
                     let myAsn = dbAssignments;
                     CalyeDB.fetch('responders', { limit: 100 }).then(responders => {
                         if (responders && responders.length) {
-                            // Match responder by auth user's email or name from profile
-                            const p = g.profile;
-                            const match = responders.find(x => 
-                                x.name === p.full_name || x.unit_id === rProfile.unit
+                            // Match responder by auth user's name, else by unit.
+                            // (authProfile is set by the getStatus chain above;
+                            // the 10s re-sync heals first-paint ordering.)
+                            const match = responders.find(x =>
+                                (authProfile && x.name === authProfile.full_name) || x.unit_id === rProfile.unit
                             ) || responders[0];
+                            myResponderId = (match && match.id) || null;
+                            // Update local profile with the matched responder's unit
+                            if (match && match.unit_id && rProfile.unit !== match.unit_id) {
+                                rProfile.unit = match.unit_id;
+                                saveResponderProfileData(rProfile);
+                            }
                             if (match) {
-                                // Update local profile with the matched responder's unit
-                                if (match.unit_id && rProfile.unit !== match.unit_id) {
-                                    rProfile.unit = match.unit_id;
-                                    saveResponderProfileData(rProfile);
-                                }
                                 myAsn = dbAssignments.filter(a => !a.responder_id || a.responder_id === match.id);
                             }
                         }
@@ -3852,6 +3891,7 @@
                                 return {
                                     asnId: a.id,
                                     reportId: r.id || null,
+                                    responderId: a.responder_id || null,
                                     id: r.report_no || '#BRGY',
                                     type: r.type || 'Incident',
                                     subtype: r.subtype || '',

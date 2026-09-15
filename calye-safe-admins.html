@@ -4963,6 +4963,12 @@ const pageTitles = {
 
     function openResponseModal(rid, dbId) {
       dispatchDone = false;
+      // Reset the footer: a previous dispatch rewrites these buttons to a
+      // "Done" close action, which would otherwise leak into this fresh open.
+      const dispatchConfirmBtn = document.querySelector('#modal-dispatch .modal-btn.confirm');
+      if (dispatchConfirmBtn) { dispatchConfirmBtn.textContent = 'Assign Responder'; dispatchConfirmBtn.onclick = () => confirmDispatch(); }
+      const dispatchCancelBtn = document.querySelector('#modal-dispatch .modal-btn.cancel');
+      if (dispatchCancelBtn) dispatchCancelBtn.style.display = '';
       currentDispatchId = rid || currentDispatchId || '#BRGY-2026-0047';
       currentDispatchDbId = dbId || null;
       const target = reports.find(r => r.id === currentDispatchId);
@@ -5075,6 +5081,20 @@ const pageTitles = {
         if (!consented) document.getElementById('ann-dispatch-fields').style.display = 'none';
       }
       document.getElementById('modal-dispatch').classList.add('open');
+      // Upfront single-dispatch check: if an active assignment already
+      // exists, swap the action button to a close-only state immediately.
+      if (CalyeDB.isOnline() && currentDispatchDbId) {
+        const checkDbId = currentDispatchDbId;
+        CalyeDB.fetch('assignments', { filters: [['report_id', 'eq', checkDbId]], limit: 10 }).then(function (ex) {
+          if (checkDbId !== currentDispatchDbId) return;
+          if (!document.getElementById('modal-dispatch').classList.contains('open')) return;
+          if ((ex || []).some(a => a.status && a.status !== 'resolved')) {
+            const cBtn = document.querySelector('#modal-dispatch .modal-btn.confirm');
+            if (cBtn) { cBtn.textContent = 'Already dispatched'; cBtn.onclick = () => closeModal('modal-dispatch'); }
+            showToastMsg('This report already has an active assignment.', 'info');
+          }
+        });
+      }
     }
 
     function toggleDispatchAnnFields() {
@@ -5174,7 +5194,10 @@ const pageTitles = {
       const notes = document.getElementById('dispatch-notes');
       const notesVal = notes ? notes.value.trim() : '';
 
-      // Optimistically reflect the dispatch locally, then re-render the live
+      // Single-dispatch guard: one active assignment per report. Re-checks
+      // live data so double-clicks / repeated opens can't create duplicates.
+      const doConfirmDispatch = function () {
+        // Optimistically reflect the dispatch locally, then re-render the live
       // timeline (DB rows arrive via persistDispatch → syncFromSupabase).
       const local = reports.find(r => r.id === reportId);
       if (local) {
@@ -5207,6 +5230,23 @@ const pageTitles = {
       document.querySelector('#modal-dispatch .modal-btn.cancel').style.display = 'none';
 
       showToastMsg('Responder assigned to ' + reportId, 'success');
+      }; // end doConfirmDispatch
+
+      if (CalyeDB.isOnline() && reportDbId) {
+        CalyeDB.fetch('assignments', { filters: [['report_id', 'eq', reportDbId]], limit: 10 }).then(
+          function (ex) {
+            if ((ex || []).some(a => a.status && a.status !== 'resolved')) {
+              showToastMsg('Already dispatched — this report has an active assignment.', 'error');
+              closeModal('modal-dispatch');
+              return;
+            }
+            doConfirmDispatch();
+          },
+          function () { doConfirmDispatch(); }
+        );
+      } else {
+        doConfirmDispatch();
+      }
     }
 
     let declineTargetId = null;
@@ -5256,39 +5296,36 @@ const pageTitles = {
 
     function persistDispatch(reportId, reportDbId, notes) {
       if (!CalyeDB.isOnline()) return;
-      // Pick the responder matching the responder app's unit (RES-014) so the
-      // dispatched job is visible on its queue; fall back to the first row.
-      CalyeDB.fetch('responders', { limit: 5 }).then(respRows => {
-        const responder = (respRows && respRows.length)
-          ? (respRows.find(x => x.unit_id === 'RES-014') || respRows[0])
-          : null;
-        const asn = {
-          report_id: reportDbId || null,
-          responder_id: responder ? responder.id : null,
-          status: 'assigned',
-          distance_km: responder ? 1.0 : null,
-          eta_min: null, // ETA is provided by the responder when they start (Start → En Route)
-          resolution_notes: notes || null,
-          assigned_at: new Date().toISOString()
-        };
-        CalyeDB.insert('assignments', [asn]).then(rows => {
-          const asnId = rows && rows.length ? rows[0].id : null;
-          if (reportDbId) {
-            CalyeDB.update('reports', { id: reportDbId }, { status: 'responding', priority: 'responding' });
-          }
-          // assignment_timeline rows (Reported/Verified/En Route/On-Site/Resolved)
-          // are created by the trg_create_assignment_timeline trigger so step 1
-          // "Reported" reflects the resident's real filing time, not dispatch.
-          // Advance the resident's tracker: mark "Verified by Operator" (2) done
-          // now. Step 3 "Responder Dispatched" is only marked done when the
-          // responder actually starts (Start → En Route), so the resident
-          // doesn't see progress before the unit moves.
-          if (reportDbId) {
-            markReportStep(reportDbId, 2, 'done', fmtDateTime(new Date().toISOString()));
-          }
-          // Refresh local list so the report shows as Responding.
-          syncFromSupabase();
-        });
+      // Release to the shared pool UNASSIGNED (responder_id null) so every
+      // unit sees it. The first unit to Start claims it exclusively —
+      // ownership (and performance credit) is decided at claim time,
+      // not dispatch time.
+      const asn = {
+        report_id: reportDbId || null,
+        responder_id: null,
+        status: 'assigned',
+        distance_km: null,
+        eta_min: null, // ETA is provided by the responder when they start (Start → En Route)
+        resolution_notes: notes || null,
+        assigned_at: new Date().toISOString()
+      };
+      CalyeDB.insert('assignments', [asn]).then(rows => {
+        const asnId = rows && rows.length ? rows[0].id : null;
+        if (reportDbId) {
+          CalyeDB.update('reports', { id: reportDbId }, { status: 'responding', priority: 'responding' });
+        }
+        // assignment_timeline rows (Reported/Verified/En Route/On-Site/Resolved)
+        // are created by the trg_create_assignment_timeline trigger so step 1
+        // "Reported" reflects the resident's real filing time, not dispatch.
+        // Advance the resident's tracker: mark "Verified by Operator" (2) done
+        // now. Step 3 "Responder Dispatched" is only marked done when the
+        // responder actually starts (Start → En Route), so the resident
+        // doesn't see progress before the unit moves.
+        if (reportDbId) {
+          markReportStep(reportDbId, 2, 'done', fmtDateTime(new Date().toISOString()));
+        }
+        // Refresh local list so the report shows as Responding.
+        syncFromSupabase();
       });
     }
 
