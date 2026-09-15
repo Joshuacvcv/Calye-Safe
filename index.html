@@ -329,6 +329,54 @@
       100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
     }
 
+    /* ── Role picker (Resident ↔ Responder) ── */
+    .role-switch-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .role-switch {
+      display: flex;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .role-switch button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-switch button.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .role-switch button:not(.active):active {
+      transform: scale(0.97);
+    }
+
     /* ── Sign-in / register tabs ── */
     .auth-tabs {
       display: flex;
@@ -558,6 +606,12 @@
           Resident account
         </div>
 
+        <div class="role-switch-label">Log in as</div>
+        <div class="role-switch" role="tablist" aria-label="Choose your role">
+          <button type="button" class="active" aria-selected="true">Resident</button>
+          <button type="button" onclick="location.href='responder-login.html'" aria-label="Go to responder sign in">Responder</button>
+        </div>
+
         <div class="auth-tabs">
           <button class="auth-tab active" id="tab-signin" onclick="showPanel('signin')">Sign In</button>
           <button class="auth-tab" id="tab-register" onclick="showPanel('register')">Create Account</button>
@@ -644,7 +698,8 @@
       <div class="login-card" id="status-card" style="display:none;"></div>
 
       <div class="foot-note">
-        Barangay staff and responder dashboards are accessed<br>through their own authorized devices only.
+        Are you a responder?
+        <b onclick="location.href='responder-login.html'" style="cursor:pointer;text-decoration:underline;color:var(--primary);">Go to Responder Sign In →</b>
       </div>
     </div>
   </div>

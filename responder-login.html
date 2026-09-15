@@ -33,9 +33,9 @@
       --info: #1565C0;
       --bg: #F4F6FA;
       --card: #FFFFFF;
-      --text: #1A2332;
-      --text2: #5A6780;
-      --text3: #9CA8BB;
+      --text: #000000;
+      --text2: #1A1A1A;
+      --text3: #333333;
       --border: #E2E8F4;
       --radius: 14px;
       --radius-sm: 10px;
@@ -331,6 +331,54 @@
     }
 
     /* ── Sign-in / register tabs ── */
+    /* ── Role picker (Responder ↔ Resident) ── */
+    .role-switch-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+
+    .role-switch {
+      display: flex;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .role-switch button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 11px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .role-switch button.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .role-switch button:not(.active):active {
+      transform: scale(0.97);
+    }
+
     .auth-tabs {
       display: flex;
       background: var(--bg);
@@ -559,6 +607,12 @@
           Responder account
         </div>
 
+        <div class="role-switch-label">Log in as</div>
+        <div class="role-switch" role="tablist" aria-label="Choose your role">
+          <button type="button" onclick="location.href='index.html'" aria-label="Go to resident sign in">Resident</button>
+          <button type="button" class="active" aria-selected="true">Responder</button>
+        </div>
+
         <div class="auth-tabs">
           <button class="auth-tab active" id="tab-signin" onclick="showPanel('signin')">Sign In</button>
           <button class="auth-tab" id="tab-register" onclick="showPanel('register')">Create Account</button>
@@ -650,7 +704,8 @@
       <div class="login-card" id="status-card" style="display:none;"></div>
 
       <div class="foot-note">
-        Authorized responder devices only. Verify your identity<br>before accessing dispatch and response tools.
+        Are you a resident?
+        <b onclick="location.href='index.html'" style="cursor:pointer;text-decoration:underline;color:var(--primary);">Go to Resident Sign In →</b>
       </div>
     </div>
   </div>
