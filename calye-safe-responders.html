@@ -264,6 +264,12 @@
             flex-shrink: 0;
         }
 
+        /* Home header needs extra bottom room so the overlapping
+           duty card never covers the bell button. */
+        #screen-home .screen-header {
+            padding-bottom: 46px;
+        }
+
         .screen-header .head-row {
             display: flex;
             align-items: flex-start;
@@ -381,7 +387,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-top: -34px;
+            margin: -28px 16px 0;
             position: relative;
             z-index: 2;
             border: 1px solid var(--border);
@@ -710,17 +716,48 @@
             color: var(--text3);
         }
 
-        /* ── FILTER TABS ── */
+        /* ── FILTER TABS (horizontally scrollable chip rows) ── */
         .filter-tabs {
             display: flex;
+            flex-wrap: nowrap;
             gap: 8px;
             padding: 14px 20px 4px;
+            margin: 0;
             flex-shrink: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            position: relative;
         }
 
         .filter-tabs::-webkit-scrollbar {
             display: none;
+        }
+
+        /* Preserves right gutter when scrolled to the end (flex padding bug). */
+        .filter-tabs::after {
+            content: '';
+            flex: 0 0 8px;
+        }
+
+        /* Soft right-edge hint that more chips are off-screen. Hidden via
+           JS once the row is scrolled to the end. */
+        .filter-tabs.has-more::before {
+            content: '';
+            position: sticky;
+            right: -20px;
+            flex: 0 0 28px;
+            margin-left: -28px;
+            margin-right: -8px;
+            pointer-events: none;
+            background: linear-gradient(to right, transparent, var(--bg) 70%);
+            z-index: 1;
         }
 
         .filter-tab {
@@ -734,6 +771,7 @@
             cursor: pointer;
             transition: background 0.2s, color 0.2s, border-color 0.2s;
             white-space: nowrap;
+            flex: 0 0 auto;
             flex-shrink: 0;
         }
 
@@ -1973,6 +2011,73 @@
             flex: 1;
         }
 
+        /* ── NOTIFICATION CENTER (real incidents) ── */
+        .notif-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .notif-item:active {
+            background: var(--bg);
+        }
+
+        .notif-item.unread {
+            border-color: rgba(245, 166, 35, 0.45);
+            background: #FFFBF2;
+        }
+
+        .notif-item .ni-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notif-item .ni-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .notif-item .ni-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-item .ni-body h5 {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.35;
+        }
+
+        .notif-item .ni-body p {
+            font-size: 11.5px;
+            color: var(--text2);
+            margin-top: 2px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .notif-item .ni-time {
+            font-size: 10.5px;
+            color: var(--text3);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
         @media (prefers-reduced-motion:reduce) {
             *,
             *::before,
@@ -2015,12 +2120,12 @@
                         <h2 id="home-greeting">Good morning, Mark</h2>
                         <p>Santa Rosa, Laguna · Quick Response Team</p>
                     </div>
-                    <button class="head-icon-btn" onclick="manualDispatch()" title="Simulate incoming dispatch">
+                    <button class="head-icon-btn" onclick="openNotifCenter()" title="Notifications">
                         <svg viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                             <path d="M13.73 21a2 2 0 01-3.46 0" />
                         </svg>
-                        <span class="dot"></span>
+                        <span class="dot" id="notif-dot" style="display:none;"></span>
                     </button>
                 </div>
             </div>
@@ -2092,9 +2197,25 @@
         <div class="screen" id="screen-history">
             <div class="screen-header">
                 <h2>Resolved History</h2>
-                <p>Your completed assignments</p>
+                <p id="history-sub">Your completed assignments</p>
             </div>
-            <div class="scroll-content" id="history-list"></div>
+            <div class="filter-tabs" id="history-time-tabs">
+                <div class="filter-tab active" onclick="filterHistoryTime(this,'all')">All time</div>
+                <div class="filter-tab" onclick="filterHistoryTime(this,'today')">Today</div>
+                <div class="filter-tab" onclick="filterHistoryTime(this,'week')">Past 7 days</div>
+                <div class="filter-tab" onclick="filterHistoryTime(this,'month')">Past 30 days</div>
+            </div>
+            <div class="filter-tabs" id="history-cat-tabs" style="padding-top:4px;padding-bottom:10px;">
+                <div class="filter-tab active" onclick="filterHistoryCat(this,'all')">All types</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'flood')">Flood</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'fire')">Fire</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'crime')">Crime</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'accident')">Accident</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'hazard')">Hazards</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'garbage')">Garbage</div>
+                <div class="filter-tab" onclick="filterHistoryCat(this,'other')">Others</div>
+            </div>
+            <div class="scroll-content" id="history-list" style="padding-top:6px;"></div>
         </div>
 
         <!-- ===== PROFILE ===== -->
@@ -2474,6 +2595,19 @@
             </div>
         </div>
 
+        <!-- ===== NOTIFICATION CENTER (real incidents) ===== -->
+        <div class="sheet-overlay" id="notif-center-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Notifications</h3>
+                <p class="sheet-sub" id="notif-center-sub">Real updates from your assignments.</p>
+                <div id="responder-notif-list" style="margin-bottom:14px;"></div>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('notif-center-overlay')">Close</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== RESPONDER STATIC INFO SHEET ===== -->
         <div class="sheet-overlay" id="rinfo-overlay">
             <div class="sheet">
@@ -2482,6 +2616,19 @@
                 <p class="sheet-sub" id="rinfo-body"></p>
                 <div class="sheet-actions">
                     <button class="btn btn-secondary" onclick="closeSheet('rinfo-overlay')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== LOGOUT CONFIRMATION ===== -->
+        <div class="sheet-overlay" id="logout-overlay">
+            <div class="sheet">
+                <div class="sheet-handle"></div>
+                <h3>Log out?</h3>
+                <p class="sheet-sub">Are you sure you want to log out? You'll stop receiving new assignments until you sign back in.</p>
+                <div class="sheet-actions">
+                    <button class="btn btn-secondary" onclick="closeSheet('logout-overlay')">Stay</button>
+                    <button class="btn btn-danger" onclick="confirmLogOut()">Log Out</button>
                 </div>
             </div>
         </div>
@@ -2693,13 +2840,19 @@
 
         function loadStoredData(key, fallback) {
             try {
-                if (FORCE_EMPTY_RECORDS) return [];
+                // Saved data always wins — even with FORCE_EMPTY_RECORDS.
+                // The flag only suppresses the seed fallback so first-run
+                // starts blank; jobs/history already saved reload after
+                // refresh, logout, and login again.
                 const raw = localStorage.getItem(key);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
+                }
+                if (FORCE_EMPTY_RECORDS) return [];
                 if (!raw) return fallback;
-                const parsed = JSON.parse(raw);
-                if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
                 return fallback;
-            } catch (e) { return fallback; }
+            } catch (e) { return FORCE_EMPTY_RECORDS ? [] : fallback; }
         }
 
         function saveStoredData(key, data) {
@@ -2823,6 +2976,7 @@
             if (name === 'home') renderHome();
             if (name === 'queue') renderQueue();
             if (name === 'history') renderHistory();
+            try { if (typeof initChipsScroll === 'function') requestAnimationFrame(() => initChipsScroll()); } catch (e) { /* ignore */ }
         }
 
         // Active tab: open the incident the responder is currently resolving.
@@ -2848,6 +3002,7 @@
             const hasLive = jobs.some(j => j.status === 'en_route' || j.status === 'on_site');
             document.getElementById('nav-job').classList.toggle('live', hasLive);
             document.getElementById('queue-badge').textContent = jobs.filter(j => j.status !== 'resolved').length;
+            try { if (typeof updateNotifDot === 'function') updateNotifDot(); } catch (e) { /* ignore */ }
         }
 
         // ══════════════════════════ HOME ══════════════════════════
@@ -2904,6 +3059,7 @@
                 }).filter(n => n > 0);
                 elAvg.textContent = durMin.length ? Math.round(durMin.reduce((a, b) => a + b, 0) / durMin.length) + 'm' : '0m';
             }
+            try { if (typeof updateNotifDot === 'function') updateNotifDot(); } catch (e) { /* ignore */ }
         }
 
         // ══════════════════════════ DUTY TOGGLE ══════════════════════════
@@ -2960,6 +3116,7 @@
             list.innerHTML = filtered.length
                 ? filtered.map(j => queueCardHtml(j)).join('')
                 : `<div class="empty-state"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg></div><h4>All clear</h4><p>No assignments match this filter right now.</p></div>`;
+            try { if (typeof updateNotifDot === 'function') updateNotifDot(); } catch (e) { /* ignore */ }
         }
 
         function filterQueue(btn, val) {
@@ -3473,7 +3630,7 @@
             j.timeline[4] = { label: 'Resolved', ts: now, state: 'done' };
             j.timeline[3].state = 'done';
 
-            history.unshift({ id: j.id, type: j.type, cat: j.cat, loc: j.loc, resolvedDate: now, duration: '—' });
+            history.unshift({ id: j.id, type: j.type, subtype: j.subtype || '', cat: j.cat, loc: j.loc, resolvedDate: now, resolvedAt: new Date().toISOString(), duration: '—', responderId: j.responderId || (typeof myResponderId !== 'undefined' ? myResponderId : null), asnId: j.asnId || null });
             saveStoredData(LS_KEY_JOBS, jobs);
             saveStoredData(LS_KEY_HISTORY, history);
 
@@ -3532,6 +3689,10 @@
         }
 
         function logOut() {
+            openSheet('logout-overlay');
+        }
+
+        function confirmLogOut() {
             try { sessionStorage.removeItem('calye_safe_role'); } catch (e) { /* ignore */ }
             CalyeAuth.signOut().then(() => { location.href = 'responder-login.html'; });
         }
@@ -3642,11 +3803,128 @@
         }
 
         // ══════════════════════════ HISTORY ══════════════════════════
+        let histTimeFilter = 'all';
+        let histCatFilter = 'all';
+
+        // Best-effort timestamp for a history row. Prefers the stored ISO
+        // (resolvedAt), falls back to parsing the display string so old
+        // cached rows still sort/filter instead of vanishing.
+        function historyTimestamp(h) {
+            if (!h) return 0;
+            if (h.resolvedAt) {
+                const t = new Date(h.resolvedAt).getTime();
+                if (!isNaN(t)) return t;
+            }
+            const s = String(h.resolvedDate || '');
+            // "Sep 15 · 03:07 PM" or "May 18 · 2:40 PM" → assume current year.
+            // "3:07 PM" alone → today.
+            try {
+                const timeOnly = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(s.trim());
+                if (timeOnly) {
+                    const n = new Date();
+                    let hh = parseInt(timeOnly[1], 10) % 12;
+                    if (/pm/i.test(timeOnly[3])) hh += 12;
+                    n.setHours(hh, parseInt(timeOnly[2], 10), 0, 0);
+                    return n.getTime();
+                }
+                const m = /([A-Za-z]{3,9})\s+(\d{1,2})[^0-9]*(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(s);
+                if (m) {
+                    const yr = new Date().getFullYear();
+                    const d = new Date(`${m[1]} ${m[2]}, ${yr} ${m[3]}:${m[4]} ${m[5].toUpperCase()}`);
+                    const t = d.getTime();
+                    if (!isNaN(t)) return t;
+                }
+                const fallback = new Date(s).getTime();
+                if (!isNaN(fallback)) return fallback;
+            } catch (e) { /* ignore */ }
+            return 0;
+        }
+
+        function historyMatchesFilters(h) {
+            if (histCatFilter !== 'all' && (h.cat || 'other') !== histCatFilter) return false;
+            if (histTimeFilter === 'all') return true;
+            const ts = historyTimestamp(h);
+            if (!ts) return false;
+            const now = Date.now();
+            const day = 864e5;
+            if (histTimeFilter === 'today') {
+                const d = new Date();
+                d.setHours(0, 0, 0, 0);
+                return ts >= d.getTime();
+            }
+            if (histTimeFilter === 'week') return (now - ts) <= 7 * day;
+            if (histTimeFilter === 'month') return (now - ts) <= 30 * day;
+            return true;
+        }
+
+        function filterHistoryTime(btn, val) {
+            document.querySelectorAll('#history-time-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            histTimeFilter = val;
+            renderHistory();
+        }
+
+        function filterHistoryCat(btn, val) {
+            document.querySelectorAll('#history-cat-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            histCatFilter = val;
+            renderHistory();
+            try { if (btn && btn.scrollIntoView) btn.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }); } catch (e) { /* ignore */ }
+        }
+
+        // Makes every chip row visibly scrollable: edge fade while more
+        // content is off-screen + desktop wheel/drag support. Touch swipe
+        // works natively via overflow-x:auto.
+        function initChipsScroll() {
+            document.querySelectorAll('.filter-tabs').forEach(row => {
+                const update = () => {
+                    try {
+                        const more = row.scrollWidth - row.clientWidth - row.scrollLeft > 12;
+                        row.classList.toggle('has-more', more);
+                    } catch (e) { /* ignore */ }
+                };
+                if (!row.__chipsInit) {
+                    row.__chipsInit = true;
+                    row.addEventListener('scroll', update, { passive: true });
+                    // Desktop: vertical wheel over the row scrolls it horizontally.
+                    row.addEventListener('wheel', e => {
+                        try {
+                            if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && row.scrollWidth > row.clientWidth) {
+                                row.scrollLeft += e.deltaY;
+                                e.preventDefault();
+                            }
+                        } catch (err) { /* ignore */ }
+                    }, { passive: false });
+                    // Desktop: drag-to-scroll.
+                    let down = false, sx = 0, sl = 0;
+                    row.addEventListener('pointerdown', e => { down = true; sx = e.clientX; sl = row.scrollLeft; });
+                    window.addEventListener('pointerup', () => { down = false; });
+                    row.addEventListener('pointermove', e => { if (down) row.scrollLeft = sl - (e.clientX - sx); });
+                }
+                update();
+            });
+        }
+        window.addEventListener('resize', () => { try { initChipsScroll(); } catch (e) { /* ignore */ } });
+
         function renderHistory() {
             const list = document.getElementById('history-list');
-            list.innerHTML = history.map(h => {
-                const c = CAT[h.cat] || CAT.other;
-                return `
+            const sub = document.getElementById('history-sub');
+            const filtered = (history || [])
+                .slice()
+                .sort((a, b) => historyTimestamp(b) - historyTimestamp(a))
+                .filter(h => historyMatchesFilters(h));
+            if (sub) {
+                const total = (history || []).length;
+                sub.textContent = total
+                    ? `Your completed assignments · showing ${filtered.length} of ${total}`
+                    : 'Your completed assignments';
+            }
+            if (!filtered.length) {
+                list.innerHTML = `<div class="empty-state"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg></div><h4>No matches</h4><p>No resolved reports match this time / category filter.</p></div>`;
+            } else {
+                list.innerHTML = filtered.map(h => {
+                    const c = CAT[h.cat] || CAT.other;
+                    return `
           <div class="history-card">
             <div class="hc-icon"><svg viewBox="0 0 24 24" stroke="var(--success)">${c.icon}</svg></div>
             <div class="hc-body">
@@ -3660,8 +3938,10 @@
             </div>
           </div>
         `;
-            }).join('');
+                }).join('');
+            }
             renderProfileStats();
+            try { if (typeof updateNotifDot === 'function') updateNotifDot(); } catch (e) { /* ignore */ }
         }
 
         // Profile header stats are computed live from History (never hardcoded).
@@ -3681,7 +3961,179 @@
                 : '—';
         }
 
-        // ══════════════════════════ DISPATCH SIMULATION ══════════════════════════
+        // ══════════════════════════ NOTIFICATION CENTER (real incidents) ══════════════════════════
+        // The bell opens a list built ONLY from this responder's actual jobs +
+        // own resolved history. Jobs owned by other units are never listed.
+        const LS_KEY_RNOTIF_READ = 'calye_safe_responder_notif_read_v2';
+
+        function notifReadKey() {
+            try {
+                const scope = (typeof myResponderId !== 'undefined' && myResponderId)
+                    || (typeof rProfile !== 'undefined' && rProfile && rProfile.unit)
+                    || 'local';
+                return LS_KEY_RNOTIF_READ + '_' + scope;
+            } catch (e) { return LS_KEY_RNOTIF_READ + '_local'; }
+        }
+
+        function getReadNotifKeys() {
+            try {
+                const raw = localStorage.getItem(notifReadKey());
+                if (!raw) return {};
+                const arr = JSON.parse(raw);
+                const map = {};
+                (Array.isArray(arr) ? arr : []).forEach(k => { map[k] = true; });
+                return map;
+            } catch (e) { return {}; }
+        }
+
+        function saveReadNotifKeys(map) {
+            try {
+                localStorage.setItem(notifReadKey(), JSON.stringify(Object.keys(map)));
+            } catch (e) { /* ignore */ }
+        }
+
+        function escHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        // Ownership guard: a job/history row belongs to someone else when both
+        // sides have an id and they differ. Unclaimed rows (null responderId)
+        // are a shared pool — visible to all on-duty units. Legacy local rows
+        // without an owner are treated as this device's own.
+        function isOtherUnit(itemResponderId) {
+            try {
+                const mine = (typeof myResponderId !== 'undefined' && myResponderId) || null;
+                if (!mine) return false;
+                if (!itemResponderId) return false;
+                return String(itemResponderId) !== String(mine);
+            } catch (e) { return false; }
+        }
+
+        function buildResponderNotifs() {
+            const readMap = getReadNotifKeys();
+            const list = [];
+            const showDispatch = !rProfile || !rProfile.notif || rProfile.notif.dispatch !== false;
+            const showReminders = !rProfile || !rProfile.notif || rProfile.notif.reminders !== false;
+
+            (jobs || []).forEach(j => {
+                if (!j || !j.id) return;
+                if (j.status === 'resolved') return;
+                if (isOtherUnit(j.responderId)) return;
+                if (j.status === 'assigned' && !showDispatch) return;
+                if ((j.status === 'en_route' || j.status === 'on_site') && !showReminders && !showDispatch) return;
+                const unclaimed = !j.responderId;
+                const statusLabel = j.status === 'assigned'
+                    ? (unclaimed ? 'Available assignment' : 'Assigned to you')
+                    : j.status === 'en_route' ? 'En Route — heading to site'
+                    : j.status === 'on_site' ? 'On-Site — work in progress'
+                    : j.status;
+                const key = j.id + ':' + j.status;
+                list.push({
+                    key: key,
+                    jobId: j.id,
+                    kind: 'active',
+                    cat: j.cat || 'other',
+                    severity: j.severity || 'minor',
+                    title: statusLabel + ': ' + (j.type || 'Incident'),
+                    body: (j.loc || 'Barangay Calye') + ' · ' + j.id,
+                    time: j.reportedTime || '',
+                    read: !!readMap[key]
+                });
+            });
+
+            (history || []).slice(0, 20).forEach(h => {
+                if (!h || !h.id) return;
+                if (isOtherUnit(h.responderId)) return;
+                const key = h.id + ':resolved';
+                list.push({
+                    key: key,
+                    jobId: h.id,
+                    kind: 'resolved',
+                    cat: h.cat || 'other',
+                    severity: '',
+                    title: 'Resolved: ' + (h.type || 'Incident'),
+                    body: (h.loc || '') + ' · ' + h.id,
+                    time: h.resolvedDate || '',
+                    read: !!readMap[key]
+                });
+            });
+
+            return list;
+        }
+
+        function updateNotifDot() {
+            const dot = document.getElementById('notif-dot');
+            if (!dot) return;
+            try {
+                const notifs = buildResponderNotifs();
+                const unread = notifs.filter(n => !n.read).length;
+                dot.style.display = unread ? 'block' : 'none';
+                const sub = document.getElementById('notif-center-sub');
+                if (sub) sub.textContent = notifs.length
+                    ? (unread ? unread + ' new update' + (unread > 1 ? 's' : '') + ' from your assignments.' : 'You are all caught up.')
+                    : 'Real updates from your assignments.';
+            } catch (e) { /* ignore */ }
+        }
+
+        function renderNotifCenterList() {
+            const wrap = document.getElementById('responder-notif-list');
+            if (!wrap) return;
+            const notifs = buildResponderNotifs();
+            if (!notifs.length) {
+                wrap.innerHTML = `<div style="text-align:center;padding:26px 12px;">
+                    <div style="width:56px;height:56px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;border:1px solid var(--border);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    </div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text2);">No notifications yet</div>
+                    <div style="font-size:11.5px;color:var(--text3);margin-top:4px;line-height:1.5;">New assignments and status updates<br>will appear here.</div>
+                </div>`;
+                return;
+            }
+            const unread = notifs.filter(n => !n.read);
+            const read = notifs.filter(n => n.read);
+            const itemHtml = n => {
+                const c = CAT[n.cat] || CAT.other;
+                return `
+                <div class="notif-item${n.read ? '' : ' unread'}" onclick="openNotifJob('${escHtml(n.jobId)}','${n.kind}')">
+                    <div class="ni-icon" style="background:${c.bg};">
+                        <svg viewBox="0 0 24 24" stroke="${c.color}">${c.icon}</svg>
+                    </div>
+                    <div class="ni-body">
+                        <h5>${escHtml(n.title)}</h5>
+                        <p>${escHtml(n.body)}</p>
+                        <div class="ni-time">${escHtml(n.time)}</div>
+                    </div>
+                </div>`;
+            };
+            wrap.innerHTML =
+                (unread.length ? `<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin:2px 0 8px;">New · ${unread.length} unread</div>` + unread.map(itemHtml).join('') : '') +
+                (read.length ? `<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin:14px 0 8px;">Earlier</div>` + read.map(itemHtml).join('') : '');
+        }
+
+        function openNotifCenter() {
+            renderNotifCenterList();
+            openSheet('notif-center-overlay');
+            // Mark as seen so the dot clears, but keep this view's
+            // unread highlight until the next open.
+            try {
+                const notifs = buildResponderNotifs();
+                const readMap = getReadNotifKeys();
+                notifs.forEach(n => { readMap[n.key] = true; });
+                saveReadNotifKeys(readMap);
+                setTimeout(updateNotifDot, 50);
+            } catch (e) { /* ignore */ }
+        }
+
+        function openNotifJob(jobId, kind) {
+            closeSheet('notif-center-overlay');
+            if (kind === 'resolved') { switchScreen('history'); return; }
+            const found = (jobs || []).find(j => j.id === jobId);
+            if (found && !isOtherUnit(found.responderId)) openJob(jobId);
+            else if (found) { showToast('That assignment belongs to another unit'); switchScreen('queue'); }
+            else switchScreen('queue');
+        }
+
+        // ══════════════════════════ DISPATCH SIMULATION (dev only, not bound to UI) ══════════════════════════
         function manualDispatch() {
             if (!onDuty) { showToast('Go On Duty to receive assignments'); return; }
             triggerDispatch({
@@ -3870,7 +4322,11 @@
                                     cat: r.category || 'other',
                                     loc: r.location || 'Barangay Calye',
                                     resolvedDate: fmtTime(resolvedAt),
-                                    duration: duration
+                                    resolvedAt: resolvedAt || null,
+                                    duration: duration,
+                                    responderId: a.responder_id || null,
+                                    asnId: a.id || null,
+                                    reportId: a.report_id || null
                                 };
                             });
                             const seen = {};
@@ -3944,6 +4400,9 @@
         renderHistory();
         renderResponderProfile();
         updateJobNavIndicator();
+        try { if (typeof updateNotifDot === 'function') updateNotifDot(); } catch (e) { /* ignore */ }
+        try { if (typeof initChipsScroll === 'function') initChipsScroll(); } catch (e) { /* ignore */ }
+        setTimeout(() => { try { if (typeof initChipsScroll === 'function') initChipsScroll(); } catch (e) { /* ignore */ } }, 500);
         syncFromSupabase();
         setInterval(syncFromSupabase, 10000);
 

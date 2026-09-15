@@ -217,12 +217,18 @@
     }
 
     .section-label {
-      font-size: 12px;
-      font-weight: 600;
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
       color: var(--text3);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      margin: 16px 0 8px;
+      margin: 20px 0 10px;
+      line-height: 1.2;
+    }
+
+    .section-label:first-child {
+      margin-top: 0;
     }
 
     .alert-banner {
@@ -258,9 +264,9 @@
 
     .nearby-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
-      padding: 11px 0;
+      padding: 13px 0;
       border-bottom: 1px solid var(--border);
       cursor: pointer;
     }
@@ -270,13 +276,14 @@
     }
 
     .nearby-dot {
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      margin-top: 1px;
     }
 
     .nearby-dot svg {
@@ -382,40 +389,58 @@
 
     .nearby-item .info {
       flex: 1;
+      min-width: 0;
     }
 
     .nearby-item .info h4 {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text);
+      line-height: 1.35;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .nearby-item .info p {
       font-size: 11px;
       color: var(--text2);
-      margin-top: 2px;
+      margin-top: 3px;
+      line-height: 1.45;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .nearby-item .time {
-      font-size: 11px;
+      font-size: 10.5px;
       color: var(--text3);
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+      margin-left: 4px;
     }
 
     .services-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      gap: 4px;
+      align-items: stretch;
     }
 
     .service-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 0;
       cursor: pointer;
-      padding: 10px 4px;
+      padding: 12px 4px 10px;
       border-radius: var(--radius-sm);
       transition: background 0.2s;
+      min-width: 0;
     }
 
     .service-item:active {
@@ -429,6 +454,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-bottom: 8px;
+      flex-shrink: 0;
     }
 
     .service-icon svg {
@@ -442,7 +469,11 @@
       font-weight: 600;
       color: var(--text2);
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.35;
+      min-height: 27px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
     }
 
     .badge {
@@ -846,27 +877,6 @@
       font-size: 12px;
       color: var(--text3);
       margin-top: 2px;
-    }
-
-    .call-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--success);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .call-btn svg {
-      width: 18px;
-      height: 18px;
-      stroke: #fff;
-      stroke-width: 2;
-      fill: none;
     }
 
     .profile-header {
@@ -1435,9 +1445,11 @@
 
     .see-all {
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--primary);
       cursor: pointer;
+      padding: 4px 0 4px 12px;
+      white-space: nowrap;
     }
 
     .char-count {
@@ -1983,16 +1995,6 @@
       background: var(--bg);
     }
 
-    /* Hotline call button pop */
-    .call-btn {
-      transition: transform 0.18s var(--ease-spring), box-shadow 0.18s;
-    }
-
-    .call-btn:active {
-      transform: scale(0.95);
-      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
-    }
-
     /* Filter tab transition */
     .filter-tab {
       transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out);
@@ -2081,12 +2083,12 @@
 
     <!-- ===== DASHBOARD ===== -->
     <div class="screen active" id="screen-home">
-      <div class="screen-header" style="padding-bottom:24px;">
-        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-              <h2 style="font-size:21px;">Good morning, Juan</h2>
-            <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:2px;">Barangay Calye</p>
+      <div class="screen-header" style="padding-bottom:22px;">
+        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <div style="min-width:0;">
+              <h2 style="font-size:21px;line-height:1.2;">Good morning, Juan</h2>
+            <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:3px;">Barangay Calye</p>
           </div>
           <div style="position:relative;cursor:pointer;" onclick="openNotifPanel()">
             <div
@@ -2110,9 +2112,9 @@
         </div>
       </div>
 
-      <div class="scroll-content" style="padding-top:16px;">
+      <div class="scroll-content" style="padding-top:18px;">
         <!-- Alert Banner (live — newest active major incident, hidden if none) -->
-        <div class="alert-banner" id="home-alert-banner" style="display:none;">
+        <div class="alert-banner" id="home-alert-banner" style="display:none;margin-bottom:4px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
@@ -2125,34 +2127,34 @@
         </div>
 
         <!-- Nearby Alerts -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;">
           <span class="section-label" style="margin:0;">Nearby Alerts</span>
           <span class="see-all" onclick="openAllAlertsModal()">See all</span>
         </div>
-        <div class="card" style="margin-top:8px;padding:4px 16px;" id="home-nearby-list">
-          <div style="padding:18px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading nearby alerts…</div>
+        <div class="card" style="margin-top:0;padding:2px 16px;" id="home-nearby-list">
+          <div style="padding:20px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Loading nearby alerts…</div>
         </div>
 
         <!-- Community Stats -->
         <span class="section-label">Community This Week</span>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-          <div class="card" style="padding:14px 12px;text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--primary);" id="stat-filed">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;">Reports Filed</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px;">
+          <div class="card" style="padding:16px 8px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--primary);line-height:1;" id="stat-filed">0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;font-weight:600;line-height:1.4;">Reports Filed</div>
           </div>
-          <div class="card" style="padding:14px 12px;text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--success);" id="stat-resolved">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;">Resolved</div>
+          <div class="card" style="padding:16px 8px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--success);line-height:1;" id="stat-resolved">0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;font-weight:600;line-height:1.4;">Resolved</div>
           </div>
-          <div class="card" style="padding:14px 12px;text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:var(--danger);" id="stat-ongoing">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;">Ongoing</div>
+          <div class="card" style="padding:16px 8px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--danger);line-height:1;" id="stat-ongoing">0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;font-weight:600;line-height:1.4;">Ongoing</div>
           </div>
         </div>
 
         <!-- Quick Services -->
         <span class="section-label">Quick Services</span>
-        <div class="card" style="padding:8px 8px;">
+        <div class="card" style="padding:6px 10px 10px;">
           <div class="services-grid">
             <div class="service-item" onclick="switchScreen('hotlines')">
               <div class="service-icon" style="background:#FFEBEE;">
@@ -2180,7 +2182,7 @@
                   <path d="M13.73 21a2 2 0 01-3.46 0" />
                 </svg>
               </div>
-              <span style="font-size:9px;">Announcements</span>
+              <span>Announcements</span>
             </div>
             <div class="service-item" onclick="switchScreen('myreports')">
               <div class="service-icon" style="background:#E8F5E9;">
@@ -2196,7 +2198,7 @@
             </div>
           </div>
         </div>
-        <div style="height:16px;"></div>
+        <div style="height:20px;"></div>
       </div>
     </div>
 
@@ -2343,7 +2345,23 @@
       <!-- STEP 1 -->
       <div id="report-step-1" class="scroll-content">
         <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">What type?</h3>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Select the type of incident</p>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Select the type of incident</p>
+        <div id="hotline-suggest-banner"
+          style="background:#E3F2FD;border:1px solid rgba(21,101,192,0.25);border-radius:var(--radius-sm);padding:12px;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"
+            style="flex-shrink:0;margin-top:1px;">
+            <path
+              d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+          </svg>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:var(--text);" id="hsb-title">Not sure who to call?</div>
+            <div style="font-size:11.5px;color:var(--text2);margin-top:2px;line-height:1.5;" id="hsb-body">For
+              life-threatening emergencies call <strong>911</strong>. Tap a type below to see the right office for
+              that report.</div>
+            <div style="font-size:11px;color:var(--primary);font-weight:700;margin-top:6px;cursor:pointer;"
+              onclick="switchScreen('hotlines')">View all Emergency Hotlines →</div>
+          </div>
+        </div>
         <div class="incident-category">
           <div class="incident-category-head">
             <span class="dot major"></span>
@@ -2719,10 +2737,6 @@
             <p>Globe 0995-650-1943</p>
             <p>Smart 0999-873-5431</p>
           </div>
-          <button class="call-btn" onclick="window.location.href='tel:09956501943'"><svg viewBox="0 0 24 24">
-              <path
-                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg></button>
         </div>
         <div class="hotline-item">
           <div class="hotline-icon" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none" stroke="#F57C00"
@@ -2735,10 +2749,6 @@
             <p>(049) 534-1291 / 502-5410</p>
             <p>0922-780-7570</p>
           </div>
-          <button class="call-btn" onclick="window.location.href='tel:0495341291'"><svg viewBox="0 0 24 24">
-              <path
-                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg></button>
         </div>
         <div class="hotline-item">
           <div class="hotline-icon" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none" stroke="#1565C0"
@@ -2751,10 +2761,6 @@
             <p>0905-550-5288</p>
             <p>0998-598-5629</p>
           </div>
-          <button class="call-btn" onclick="window.location.href='tel:09055505288'"><svg viewBox="0 0 24 24">
-              <path
-                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg></button>
         </div>
         <div class="hotline-item">
           <div class="hotline-icon" style="background:#E8F5E9;"><svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32"
@@ -2765,10 +2771,6 @@
             <h4>Public Order and Safety Office</h4>
             <p>0961-722-1414</p>
           </div>
-          <button class="call-btn" onclick="window.location.href='tel:09617221414'"><svg viewBox="0 0 24 24">
-              <path
-                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg></button>
         </div>
         <div class="hotline-item">
           <div class="hotline-icon" style="background:#F3E5F5;"><svg viewBox="0 0 24 24" fill="none" stroke="#7B1FA2"
@@ -2780,10 +2782,6 @@
             <h4>National Emergency</h4>
             <p>911</p>
           </div>
-          <button class="call-btn" onclick="window.location.href='tel:911'"><svg viewBox="0 0 24 24">
-              <path
-                d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
-            </svg></button>
         </div>
         <div style="height:16px;"></div>
       </div>
@@ -3128,6 +3126,19 @@
       </div>
     </div>
 
+    <!-- LOGOUT CONFIRMATION -->
+    <div class="modal-overlay" id="logout-modal" onclick="closeModal('logout-modal')">
+      <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:28px;">
+        <div class="modal-handle"></div>
+        <h3>Log out?</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;">Are you sure you want to log out? You'll need to sign back in to file and track reports.</p>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('logout-modal')">Stay</button>
+          <button class="btn btn-danger" style="flex:1;" onclick="confirmLogOut()">Log Out</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MEDIA: capture-only (camera modal below), no gallery/file upload -->
 
   </div>
@@ -3146,13 +3157,19 @@
 
     function loadStoredData(key, fallback) {
       try {
-        if (FORCE_EMPTY_RECORDS) return [];
+        // Saved user data always wins — even with FORCE_EMPTY_RECORDS.
+        // The flag only suppresses the built-in seed fallback so first-run
+        // starts blank, but anything the user already filed/saved reloads
+        // after refresh, logout, and login again (per-uid keys).
         const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
+        }
+        if (FORCE_EMPTY_RECORDS) return [];
         if (!raw) return fallback;
-        const parsed = JSON.parse(raw);
-        if (parsed && parsed.v === LS_VERSION && Array.isArray(parsed.data)) return parsed.data;
         return fallback;
-      } catch (e) { return fallback; }
+      } catch (e) { return FORCE_EMPTY_RECORDS ? [] : fallback; }
     }
 
     function saveStoredData(key, data) {
@@ -3357,6 +3374,41 @@
       ] }
     ];
     function groupOf() { return INCIDENT_GROUPS.find(g => g.key === selectedGroupKey) || null; }
+    // Hotline suggestion per report category — mirrors the Emergency
+    // Hotlines screen (numbers are reference-only; the app has no calling).
+    const HOTLINE_BY_GROUP = {
+      'flood-disaster': { office: 'Santa Rosa CDRRMO', numbers: 'Globe 0995-650-1943 · Smart 0999-873-5431', extra: 'Life-threatening? Also call 911.' },
+      fire: { office: 'Bureau of Fire Protection', numbers: '(049) 534-1291 / 502-5410 · 0922-780-7570', extra: 'Life-threatening? Also call 911.' },
+      crime: { office: 'Philippine National Police', numbers: '0905-550-5288 · 0998-598-5629', extra: 'Life-threatening? Also call 911.' },
+      medical: { office: 'Santa Rosa CDRRMO', numbers: 'Globe 0995-650-1943 · Smart 0999-873-5431', extra: 'Life-threatening? Also call 911.' },
+      structural: { office: 'Santa Rosa CDRRMO + Public Order and Safety Office', numbers: '0995-650-1943 · 0961-722-1414', extra: '' },
+      road: { office: 'Public Order and Safety Office', numbers: '0961-722-1414', extra: '' },
+      garbage: { office: 'Public Order and Safety Office', numbers: '0961-722-1414', extra: '' },
+      disturbance: { office: 'PNP + Public Order and Safety Office', numbers: '0905-550-5288 · 0961-722-1414', extra: '' },
+      utility: { office: 'Public Order and Safety Office', numbers: '0961-722-1414', extra: '' },
+      health: { office: 'Santa Rosa CDRRMO', numbers: 'Globe 0995-650-1943 · Smart 0999-873-5431', extra: '' }
+    };
+    function updateHotlineBanner() {
+      const title = document.getElementById('hsb-title');
+      const body = document.getElementById('hsb-body');
+      const banner = document.getElementById('hotline-suggest-banner');
+      if (!title || !body || !banner) return;
+      const g = (typeof groupOf === 'function') ? groupOf() : null;
+      if (!g) {
+        banner.style.background = '#E3F2FD';
+        banner.style.borderColor = 'rgba(21,101,192,0.25)';
+        title.textContent = 'Not sure who to call?';
+        body.innerHTML = 'For life-threatening emergencies call <strong>911</strong>. Tap a type below to see the right office for that report.';
+        return;
+      }
+      const h = HOTLINE_BY_GROUP[g.key];
+      const isMajor = g.severity === 'major';
+      banner.style.background = isMajor ? '#FFEBEE' : '#E8F5E9';
+      banner.style.borderColor = isMajor ? 'rgba(229,57,53,0.3)' : 'rgba(46,125,50,0.3)';
+      title.textContent = 'For ' + g.name + ', contact: ' + (h ? h.office : 'see Hotlines');
+      body.innerHTML = (h ? '<strong>' + h.numbers + '</strong>' + (h.extra ? '<br>' + h.extra : '') : 'See the Emergency Hotlines screen for numbers.')
+        + (isMajor ? '<br>Major incident — responders are prioritized.' : '');
+    }
     let selectedGroupKey = null;
     let selectedSubtype = null;
     let mapSearchQuery = '';
@@ -3741,6 +3793,7 @@
       document.querySelectorAll('.radio-opt').forEach(el => el.classList.remove('selected'));
       selectedType = null; selectedDangerVal = null;
       selectedGroupKey = null; selectedSubtype = null;
+      try { updateHotlineBanner(); } catch (e) { /* ignore */ }
       renderSubtypeOptions();
       const subSelReset = document.getElementById('report-subtype');
       if (subSelReset) subSelReset.classList.remove('field-error');
@@ -3865,6 +3918,7 @@
       const g = groupOf();
       selectedType = g ? g.name : key;
       selectedSubtype = null;
+      try { updateHotlineBanner(); } catch (e) { /* ignore */ }
       renderSubtypeOptions();
       const subSel = document.getElementById('report-subtype');
       if (subSel) subSel.classList.remove('field-error');
@@ -5054,6 +5108,10 @@
     };
 
     function logOut() {
+      showModal('logout-modal');
+    }
+
+    function confirmLogOut() {
       try { sessionStorage.removeItem('calye_safe_role'); } catch (e) { /* ignore */ }
       CalyeAuth.signOut().then(() => { location.href = 'index.html'; });
     }
@@ -5209,7 +5267,14 @@
                 };
               });
               if (mapped.length) {
-                reports = mapped;
+                // Merge — DB wins on conflict, but local-only reports
+                // (filed offline / not yet synced) are kept so a sync can
+                // never wipe what the user sees after logout/login.
+                const byId = {};
+                mapped.forEach(r => { byId[r.id] = r; });
+                (reports || []).forEach(r => { if (r && r.id && !byId[r.id]) byId[r.id] = r; });
+                reports = Object.values(byId);
+                saveStoredData(reportsKey(), reports);
                 renderReports();
                 refreshCommunityStats();
               }
