@@ -112,6 +112,7 @@
 
     .screen.active {
       display: flex;
+      animation: screenIn 0.55s var(--ease-out) both;
     }
 
     .screen::-webkit-scrollbar {
@@ -126,6 +127,9 @@
       align-items: stretch;
       flex-shrink: 0;
       box-shadow: 0 -4px 16px rgba(30, 58, 95, 0.08);
+      overflow: visible;
+      position: relative;
+      z-index: 10;
     }
 
     .nav-item {
@@ -165,18 +169,27 @@
 
     .nav-item.report-btn {
       color: #fff;
-      margin: -18px 0 0;
+      margin: 0;
+      overflow: visible;
+      justify-content: flex-start;
+      padding-top: 0;
+      background: none;
     }
 
     .nav-item.report-btn .report-circle {
-      width: 52px;
-      height: 52px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px rgba(245, 166, 35, 0.4);
+      box-shadow: 0 6px 20px rgba(245, 166, 35, 0.5);
+      margin-top: -26px;
+      border: 4px solid var(--card);
+      position: relative;
+      z-index: 11;
+      flex-shrink: 0;
     }
 
     .nav-item.report-btn svg {
@@ -186,7 +199,7 @@
     }
 
     .nav-item.report-btn span {
-      margin-top: 4px;
+      margin-top: 5px;
       color: var(--accent-dark);
       font-weight: 600;
     }
@@ -546,7 +559,7 @@
     #report-step-1,
     #report-step-2,
     #report-step-3 {
-      animation: fadeUp 0.24s var(--ease-out) both;
+      animation: fadeUp 0.5s var(--ease-out) both;
     }
 
     .step-dot.done {
@@ -782,6 +795,18 @@
       border-color: var(--border);
     }
 
+    .incident-type.minor.selected {
+      border-color: var(--primary);
+      background: rgba(30, 58, 95, 0.06);
+      box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.25);
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+
+    .incident-type.minor.selected span {
+      color: var(--primary);
+    }
+
     .btn {
       width: 100%;
       padding: 14px;
@@ -881,7 +906,7 @@
 
     .profile-header {
       background: var(--primary);
-      padding: 32px 20px 24px;
+      padding: 32px 20px 42px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1410,6 +1435,53 @@
       flex: 1;
     }
 
+    /* ── CURVED SHEETS over blue headers (all resident screens) ──
+       Light content curves up over the blue header at the sides. */
+    #screen-home .screen-header,
+    #screen-myreports .screen-header,
+    #screen-announcements .screen-header {
+      padding-bottom: 36px;
+    }
+
+    #screen-home .scroll-content,
+    #screen-hotlines .scroll-content,
+    #screen-profile .scroll-content {
+      background: var(--bg);
+      border-radius: 22px 22px 0 0;
+      margin-top: -18px;
+      position: relative;
+      z-index: 2;
+      padding-top: 20px;
+    }
+
+    /* Tab rows curve up on list screens */
+    #screen-myreports .filter-tabs,
+    #screen-announcements .filter-tabs {
+      background: var(--bg);
+      border-radius: 22px 22px 0 0;
+      margin-top: -18px;
+      position: relative;
+      z-index: 2;
+      padding-top: 20px;
+    }
+
+    /* Map content curves up */
+    #screen-map .map-wrapper {
+      background: var(--bg);
+      border-radius: 22px 22px 0 0;
+      margin-top: -18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Report step indicator curves up over the blue bar */
+    #screen-report .step-indicator {
+      border-radius: 22px 22px 0 0;
+      margin-top: -18px;
+      position: relative;
+      z-index: 2;
+    }
+
     .toast {
       position: absolute;
       bottom: calc(var(--nav-h) + 16px);
@@ -1561,7 +1633,7 @@
     }
 
     .success-icon {
-      animation: pop-in 0.4s var(--ease-spring) forwards;
+      animation: pop-in 0.65s var(--ease-spring) forwards;
     }
 
     .empty-state {
@@ -1848,6 +1920,9 @@
       width: 100%;
       flex: 1;
       min-height: 360px;
+      background: linear-gradient(100deg, var(--surface2) 40%, #FFFFFF 50%, var(--surface2) 60%);
+      background-size: 200% 100%;
+      animation: skelShimmer 2.4s linear infinite;
     }
 
     #report-map {
@@ -1916,6 +1991,88 @@
       }
     }
 
+    /* Section transition — plays every time a screen becomes active */
+    @keyframes screenIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* List cards ease in with a slight stagger on every render */
+    #reports-list .report-card,
+    #announcements-list .announcement-card {
+      animation: fadeUp 0.55s var(--ease-out) both;
+    }
+
+    #reports-list .report-card:nth-child(2),
+    #announcements-list .announcement-card:nth-child(2) {
+      animation-delay: 0.08s;
+    }
+
+    #reports-list .report-card:nth-child(3),
+    #announcements-list .announcement-card:nth-child(3) {
+      animation-delay: 0.16s;
+    }
+
+    #reports-list .report-card:nth-child(n+4),
+    #announcements-list .announcement-card:nth-child(n+4) {
+      animation-delay: 0.24s;
+    }
+
+    /* ── SKELETAL LOADING ──
+       Shimmer placeholders shown while async content is loading. */
+    @keyframes skelShimmer {
+      from {
+        background-position: 200% 0;
+      }
+
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    .skel {
+      background-color: var(--surface2);
+      background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.9) 50%, transparent 80%);
+      background-size: 200% 100%;
+      animation: skelShimmer 2.4s linear infinite;
+    }
+
+    .skel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skel-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .skel-line {
+      height: 12px;
+      border-radius: 6px;
+    }
+
+    .skel-card:nth-child(2) .skel {
+      animation-delay: 0.15s;
+    }
+
+    .skel-card:nth-child(3) .skel {
+      animation-delay: 0.3s;
+    }
+
     /* Nav item tap bounce */
     .nav-item {
       transition: color 0.2s, transform 0.15s var(--ease-spring);
@@ -1948,7 +2105,7 @@
     }
 
     .alert-banner {
-      animation: alertPulse 2.8s ease-in-out;
+      animation: alertPulse 4.2s ease-in-out;
     }
 
     /* Service item hover lift */
@@ -2037,6 +2194,17 @@
       transform: scale(0.97) translateY(0);
     }
 
+    /* ── GLOBAL 1s TIMING (user request) ──
+       Every app animation/transition runs at 1s. Leaflet map internals
+       are excluded so panning/zooming stays usable. */
+    @media (prefers-reduced-motion: no-preference) {
+      #app-shell,
+      #app-shell *:not(.leaflet-container):not(.leaflet-container *) {
+        animation-duration: 1s !important;
+        transition-duration: 1s !important;
+      }
+    }
+
     @media (prefers-reduced-motion:reduce) {
       *,
       *::before,
@@ -2083,7 +2251,7 @@
 
     <!-- ===== DASHBOARD ===== -->
     <div class="screen active" id="screen-home">
-      <div class="screen-header" style="padding-bottom:22px;">
+      <div class="screen-header" style="padding-bottom:36px;">
         <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
             <div style="min-width:0;">
@@ -2112,7 +2280,7 @@
         </div>
       </div>
 
-      <div class="scroll-content" style="padding-top:18px;">
+      <div class="scroll-content" style="padding-top:20px;">
         <!-- Alert Banner (live — newest active major incident, hidden if none) -->
         <div class="alert-banner" id="home-alert-banner" style="display:none;margin-bottom:4px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20">
@@ -2204,7 +2372,7 @@
 
     <!-- ===== MAP (Interactive) ===== -->
     <div class="screen" id="screen-map">
-      <div class="screen-header" style="padding:14px 20px 16px;">
+      <div class="screen-header" style="padding:14px 20px 34px;">
         <h2>Incident Map</h2>
         <p>Live community incidents near you</p>
       </div>
@@ -2323,7 +2491,7 @@
 
     <!-- ===== REPORT INCIDENT ===== -->
     <div class="screen" id="screen-report">
-      <div style="background:var(--primary);padding:16px 20px;flex-shrink:0;display:flex;align-items:center;gap:10px;">
+      <div style="background:var(--primary);padding:16px 20px 34px;flex-shrink:0;display:flex;align-items:center;gap:10px;">
         <button onclick="handleReportBack()"
           style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
@@ -2394,8 +2562,8 @@
           </div>
         </div>
         <div class="form-group" style="margin-top:16px;">
-          <label>Incident Title *</label>
-          <input id="report-title" type="text" placeholder="Brief title of the incident…"
+          <label>Incident Title</label>
+          <input id="report-title" type="text" placeholder="Auto-filled from your chosen incident…"
             oninput="this.classList.remove('field-error');document.getElementById('title-error-msg').classList.remove('show')">
           <div class="field-error-msg" id="title-error-msg">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -2429,18 +2597,38 @@
           </svg>
           <span style="font-size:12px;color:#7B4A00;font-weight:500;">You must pin a location before proceeding.</span>
         </div>
+        <!-- Search for a location (on top of the map) -->
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>Search for a location or address</label>
+          <div
+            style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;transition:border 0.2s;"
+            onfocusin="this.style.borderColor='var(--primary)'" onfocusout="this.style.borderColor='var(--border)'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input id="loc-search-input" type="text" placeholder="Search street, landmark, or barangay…"
+              style="border:none;background:none;font-family:inherit;font-size:13px;color:var(--text);outline:none;flex:1;min-width:0;"
+              oninput="handleLocSearch(this.value)" onkeydown="if(event.key==='Enter')geocodeReportSearch(this.value)">
+            <button onclick="geocodeReportSearch(document.getElementById('loc-search-input').value)"
+              style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Go</button>
+          </div>
+          <div id="loc-search-results"
+            style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-top:4px;overflow:hidden;box-shadow:var(--shadow);">
+          </div>
+        </div>
         <!-- Google Maps Report Map -->
         <div
           style="position:relative;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--border);height:220px;">
           <div id="report-map" style="width:100%;height:100%;"></div>
           <!-- Overlay hint label -->
           <div id="report-map-pin-label"
-            style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.95);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;pointer-events:none;">
+            style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.95);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;pointer-events:none;z-index:800;">
             📍 Tap to drop a pin
           </div>
-          <!-- GPS auto-locate button -->
+          <!-- GPS auto-locate button (kept on the top layer of the map) -->
           <button onclick="autoLocateReport()"
-            style="position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:10;"
+            style="position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;background:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25);z-index:1000;pointer-events:auto;"
             title="Use my location">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1E3A5F" stroke-width="2">
               <circle cx="12" cy="12" r="3" />
@@ -2469,27 +2657,8 @@
           <input id="report-address" type="text" placeholder="e.g. 123 Calye Street, Barangay Calye">
         </div>
         <div class="form-group">
-          <label>Landmark (optional)</label>
+          <label>Landmark</label>
           <input type="text" placeholder="e.g. Near Calye Elementary School">
-        </div>
-        <div class="form-group">
-          <label>Search for a location or address</label>
-          <div
-            style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;transition:border 0.2s;"
-            onfocusin="this.style.borderColor='var(--primary)'" onfocusout="this.style.borderColor='var(--border)'">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input id="loc-search-input" type="text" placeholder="Search street, landmark, or barangay…"
-              style="border:none;background:none;font-family:inherit;font-size:13px;color:var(--text);outline:none;flex:1;min-width:0;"
-              oninput="handleLocSearch(this.value)" onkeydown="if(event.key==='Enter')geocodeReportSearch(this.value)">
-            <button onclick="geocodeReportSearch(document.getElementById('loc-search-input').value)"
-              style="background:var(--primary);border:none;border-radius:6px;padding:4px 10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Go</button>
-          </div>
-          <div id="loc-search-results"
-            style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-top:4px;overflow:hidden;box-shadow:var(--shadow);">
-          </div>
         </div>
         <button class="btn btn-primary" onclick="tryGoStep3()">
           Next
@@ -2506,7 +2675,7 @@
         <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Add more information</h3>
         <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Help responders with more context</p>
         <div class="form-group">
-          <label>Specific incident *<span id="subtype-group-hint" style="font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;"></span></label>
+          <label>Specific incident<span id="subtype-group-hint" style="font-weight:600;color:var(--text3);text-transform:none;letter-spacing:0;"></span></label>
           <select id="report-subtype"
             onchange="this.classList.remove('field-error');document.getElementById('subtype-error-msg').classList.remove('show')">
             <option value="">Select an incident type first…</option>
@@ -2520,12 +2689,12 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Incident Description (optional)</label>
+          <label>Incident Description</label>
           <textarea id="report-description" rows="3"
             placeholder="Describe what happened, what you saw, or any important details…"></textarea>
         </div>
         <div class="form-group">
-          <label>Take Photo of the Incident (optional)</label>
+          <label>Take Photo of the Incident</label>
           <!-- Default camera button -->
           <div class="upload-area" id="upload-area" onclick="chooseCamera()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -2551,16 +2720,6 @@
               <span onclick="clearMedia()"
                 style="font-size:11px;color:var(--danger);font-weight:600;cursor:pointer;">Remove</span>
             </div>
-          </div>
-        </div>
-        <div class="datetime-row">
-          <div class="form-group">
-            <label>Date *</label>
-            <input type="date" id="report-date">
-          </div>
-          <div class="form-group">
-            <label>Time *</label>
-            <input type="time" id="report-time">
           </div>
         </div>
         <div class="form-group">
@@ -2604,7 +2763,25 @@
         <div class="filter-tab" onclick="filterReports(this,'responding')">Active</div>
         <div class="filter-tab" onclick="filterReports(this,'resolved')">Resolved</div>
       </div>
-      <div class="scroll-content" id="reports-list"></div>
+      <div class="scroll-content" id="reports-list">
+        <div class="skel-list" aria-hidden="true">
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:55%;height:14px;"></div>
+            <div class="skel skel-line" style="width:90%;"></div>
+            <div class="skel skel-line" style="width:75%;"></div>
+          </div>
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:45%;height:14px;"></div>
+            <div class="skel skel-line" style="width:85%;"></div>
+            <div class="skel skel-line" style="width:65%;"></div>
+          </div>
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:60%;height:14px;"></div>
+            <div class="skel skel-line" style="width:80%;"></div>
+            <div class="skel skel-line" style="width:70%;"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== PROFILE ===== -->
@@ -2712,7 +2889,7 @@
 
     <!-- ===== HOTLINES ===== -->
     <div class="screen" id="screen-hotlines">
-      <div class="screen-header" style="display:flex;align-items:center;gap:12px;padding:16px 20px;">
+      <div class="screen-header" style="display:flex;align-items:center;gap:12px;padding:16px 20px 34px;">
         <button onclick="switchScreen('home')"
           style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
@@ -2799,7 +2976,24 @@
         <div class="filter-tab" onclick="filterAnn(this,'alerts')">Alerts</div>
       </div>
       <div class="scroll-content" id="announcements-list">
-        <div class="empty-state"><p>Loading announcements…</p></div><div style="height:16px;"></div>
+        <div class="skel-list" aria-hidden="true">
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:50%;height:14px;"></div>
+            <div class="skel skel-line" style="width:92%;"></div>
+            <div class="skel skel-line" style="width:78%;"></div>
+          </div>
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:58%;height:14px;"></div>
+            <div class="skel skel-line" style="width:88%;"></div>
+            <div class="skel skel-line" style="width:70%;"></div>
+          </div>
+          <div class="skel-card">
+            <div class="skel skel-line" style="width:42%;height:14px;"></div>
+            <div class="skel skel-line" style="width:95%;"></div>
+            <div class="skel skel-line" style="width:72%;"></div>
+          </div>
+        </div>
+        <div style="height:16px;"></div>
       </div>
     </div>
 
@@ -3471,6 +3665,9 @@
       if (incidentMap) { incidentMap.invalidateSize(); return; }
       const container = document.getElementById('incident-mapbox');
       if (!container) return;
+      // Map is ready — stop the skeletal shimmer behind the tiles.
+      container.style.background = 'var(--surface2)';
+      container.style.animation = 'none';
       incidentMap = L.map(container, {
         center: BRGY_CENTER,
         zoom: 15,
@@ -3799,6 +3996,10 @@
       if (subSelReset) subSelReset.classList.remove('field-error');
       const subErrReset = document.getElementById('subtype-error-msg');
       if (subErrReset) subErrReset.classList.remove('show');
+      const titleReset = document.getElementById('report-title');
+      if (titleReset) { titleReset.value = ''; titleReset.classList.remove('field-error'); }
+      const titleErrReset = document.getElementById('title-error-msg');
+      if (titleErrReset) titleErrReset.classList.remove('show');
       selectedMediaDataURL = null;
       reportLocationPinned = false;
       if (reportMarker) { reportMarker.remove(); reportMarker = null; }
@@ -3816,11 +4017,6 @@
       if (outsideMsg) outsideMsg.style.display = 'none';
       const pinLabel = document.getElementById('report-map-pin-label');
       if (pinLabel) pinLabel.textContent = '📍 Tap to drop a pin';
-      const d = new Date();
-      const dateEl = document.getElementById('report-date');
-      const timeEl = document.getElementById('report-time');
-      if (dateEl) dateEl.value = d.toISOString().split('T')[0];
-      if (timeEl) timeEl.value = d.toTimeString().slice(0, 5);
       submittingReport = false;
       const submitBtn = document.getElementById('submit-report-btn');
       const submitLabel = document.getElementById('submit-report-label');
@@ -3852,22 +4048,21 @@
     }
 
     function tryGoStep2() {
-      let valid = true;
-      const titleInput = document.getElementById('report-title');
-      const titleErrorMsg = document.getElementById('title-error-msg');
-
+      // Incident type tile is required; title is optional and auto-filled
+      // from the chosen incident so users can proceed freely.
       if (!selectedType) {
         document.querySelectorAll('.incident-category').forEach(c => c.classList.add('field-error'));
         setTimeout(() => document.querySelectorAll('.incident-category').forEach(c => c.classList.remove('field-error')), 1600);
         document.querySelector('.incident-category').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        valid = false;
+        return;
       }
-      if (!titleInput.value.trim()) {
-        titleInput.classList.add('field-error');
-        titleErrorMsg.classList.add('show');
-        valid = false;
+      const titleInput = document.getElementById('report-title');
+      const titleErrorMsg = document.getElementById('title-error-msg');
+      if (titleInput && !titleInput.value.trim()) {
+        titleInput.value = selectedType;
       }
-      if (!valid) return;
+      if (titleInput) titleInput.classList.remove('field-error');
+      if (titleErrorMsg) titleErrorMsg.classList.remove('show');
       goStep(2);
     }
 
@@ -3918,6 +4113,15 @@
       const g = groupOf();
       selectedType = g ? g.name : key;
       selectedSubtype = null;
+      // Auto-fill the incident title from the chosen incident so the
+      // title field is optional and users can proceed freely.
+      const titleInput = document.getElementById('report-title');
+      if (titleInput) {
+        titleInput.value = selectedType;
+        titleInput.classList.remove('field-error');
+        const titleErr = document.getElementById('title-error-msg');
+        if (titleErr) titleErr.classList.remove('show');
+      }
       try { updateHotlineBanner(); } catch (e) { /* ignore */ }
       renderSubtypeOptions();
       const subSel = document.getElementById('report-subtype');
@@ -3949,20 +4153,14 @@
         showToast('Your report is already being submitted.');
         return;
       }
-      // Specific incident (step 3 dropdown) is required.
+      // Specific incident (step 3 dropdown) is optional — users can submit
+      // freely without picking one.
       const subtypeSel = document.getElementById('report-subtype');
       const subtypeVal = subtypeSel ? subtypeSel.value : '';
-      if (!subtypeVal) {
-        if (subtypeSel) {
-          subtypeSel.classList.add('field-error');
-          subtypeSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        const subErr = document.getElementById('subtype-error-msg');
-        if (subErr) subErr.classList.add('show');
-        showToast('Please select the specific incident.');
-        return;
-      }
-      selectedSubtype = subtypeVal === '__other' ? 'Others — see description' : subtypeVal;
+      if (subtypeSel) subtypeSel.classList.remove('field-error');
+      const subErr = document.getElementById('subtype-error-msg');
+      if (subErr) subErr.classList.remove('show');
+      selectedSubtype = !subtypeVal ? '' : (subtypeVal === '__other' ? 'Others — see description' : subtypeVal);
       submittingReport = true;
       const submitBtn = document.getElementById('submit-report-btn');
       const submitLabel = document.getElementById('submit-report-label');

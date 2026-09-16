@@ -113,10 +113,7 @@
 
         .screen.active {
             display: flex;
-        }
-
-        .screen.once.active {
-            animation: screenIn 0.2s var(--ease-out) both;
+            animation: screenIn 0.28s var(--ease-out) both;
         }
 
         @keyframes screenIn {
@@ -150,7 +147,8 @@
             flex-shrink: 0;
             box-shadow: 0 -4px 16px rgba(30, 58, 95, 0.08);
             position: relative;
-            z-index: 5;
+            z-index: 10;
+            overflow: visible;
         }
 
         .nav-item {
@@ -208,12 +206,16 @@
 
         .nav-item.job-btn {
             color: #fff;
-            margin: -18px 0 0;
+            margin: 0;
+            overflow: visible;
+            justify-content: flex-start;
+            padding-top: 0;
+            background: none;
         }
 
         .nav-item.job-btn .job-circle {
-            width: 52px;
-            height: 52px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--text3), #7A8699);
             display: flex;
@@ -221,6 +223,11 @@
             justify-content: center;
             box-shadow: 0 4px 16px rgba(90, 103, 128, 0.35);
             transition: background 0.3s, box-shadow 0.3s;
+            margin-top: -26px;
+            border: 4px solid var(--card);
+            position: relative;
+            z-index: 11;
+            flex-shrink: 0;
         }
 
         .nav-item.job-btn.live .job-circle {
@@ -289,10 +296,10 @@
         }
 
         .head-icon-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.12);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -303,8 +310,8 @@
         }
 
         .head-icon-btn svg {
-            width: 17px;
-            height: 17px;
+            width: 20px;
+            height: 20px;
             stroke: #fff;
             fill: none;
             stroke-width: 1.9;
@@ -357,12 +364,12 @@
         }
 
         .section-label {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11.5px;
+            font-weight: 700;
             color: var(--text3);
-            letter-spacing: 0.06em;
+            letter-spacing: 0.07em;
             text-transform: uppercase;
-            margin: 16px 0 8px;
+            margin: 18px 0 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -377,20 +384,21 @@
             letter-spacing: 0;
         }
 
-        /* ── DUTY CARD ── */
+        /* ── DUTY CARD (top of the home sheet — curves upward) ── */
         .duty-card {
             background: var(--card);
-            border-radius: var(--radius);
-            padding: 16px;
+            border-radius: 22px 22px 0 0;
+            padding: 18px 20px;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin: -28px 16px 0;
+            margin: -24px 0 0;
             position: relative;
             z-index: 2;
-            border: 1px solid var(--border);
+            border: none;
+            border-bottom: 1px solid var(--border);
         }
 
         .duty-left {
@@ -473,37 +481,37 @@
         .stat-mini-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            gap: 10px;
         }
 
         .stat-mini {
             background: var(--card);
             border-radius: var(--radius-sm);
-            padding: 12px 8px;
+            padding: 14px 10px;
             text-align: center;
             box-shadow: var(--shadow);
         }
 
         .stat-mini .val {
-            font-size: 19px;
+            font-size: 20px;
             font-weight: 800;
             color: var(--text);
             letter-spacing: -0.02em;
         }
 
         .stat-mini .lbl {
-            font-size: 9.5px;
+            font-size: 10px;
             color: var(--text3);
             font-weight: 600;
-            margin-top: 2px;
-            line-height: 1.3;
+            margin-top: 3px;
+            line-height: 1.35;
         }
 
-        /* ── ACTIVE ASSIGNMENT BANNER ── */
+        /* ── ACTIVE ASSIGNMENT BANNER (responder essence — navy gradient) ── */
         .active-banner {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             border-radius: var(--radius);
-            padding: 14px 16px;
+            padding: 16px 18px;
             box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
             cursor: pointer;
             position: relative;
@@ -544,14 +552,15 @@
 
         .active-banner h4 {
             color: #fff;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
+            line-height: 1.35;
         }
 
         .active-banner p {
             color: rgba(255, 255, 255, 0.72);
             font-size: 12px;
-            margin-top: 2px;
+            margin-top: 3px;
         }
 
         .active-banner .arrow {
@@ -779,6 +788,102 @@
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
+        }
+
+        /* ── CURVED SHEETS over blue headers (resident-style) ──
+           Light content curves up over the blue header at the sides. */
+        #screen-queue .screen-header,
+        #screen-history .screen-header {
+            padding-bottom: 36px;
+        }
+
+        #screen-profile .scroll-content,
+        #screen-job .scroll-content {
+            background: var(--bg);
+            border-radius: 22px 22px 0 0;
+            margin-top: -18px;
+            position: relative;
+            z-index: 2;
+            padding-top: 20px;
+        }
+
+        /* Tab rows curve up on list screens */
+        #screen-queue .filter-tabs,
+        #screen-history #history-time-tabs {
+            background: var(--bg);
+            border-radius: 22px 22px 0 0;
+            margin-top: -18px;
+            position: relative;
+            z-index: 2;
+            padding-top: 20px;
+        }
+
+        /* ── SKELETAL LOADING (resident-style shimmer) ── */
+        @keyframes skelShimmer {
+            from {
+                background-position: 200% 0;
+            }
+
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        .skel {
+            background-color: var(--surface2, #EDF1F7);
+            background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.9) 50%, transparent 80%);
+            background-size: 200% 100%;
+            animation: skelShimmer 2.4s linear infinite;
+        }
+
+        .skel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .skel-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .skel-line {
+            height: 12px;
+            border-radius: 6px;
+        }
+
+        /* List cards ease in with a slight stagger on every render */
+        #queue-list .queue-card,
+        #history-list .history-card,
+        #home-queue-preview .queue-card {
+            animation: fadeUp 0.32s var(--ease-out) both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── GLOBAL 1s TIMING (matches resident app) ── */
+        @media (prefers-reduced-motion: no-preference) {
+
+            #app-shell,
+            #app-shell *:not(.leaflet-container):not(.leaflet-container *) {
+                animation-duration: 1s !important;
+                transition-duration: 1s !important;
+            }
         }
 
         /* ── EMPTY STATE ── */
@@ -1508,7 +1613,7 @@
         /* ── PROFILE ── */
         .profile-header {
             background: var(--primary);
-            padding: 30px 20px 22px;
+            padding: 30px 20px 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2112,7 +2217,7 @@
         </div>
 
         <!-- ===== HOME ===== -->
-        <div class="screen active once" id="screen-home">
+        <div class="screen active" id="screen-home">
             <div class="screen-header">
                 <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
                 <div class="head-row">
@@ -2144,7 +2249,7 @@
                 </label>
             </div>
 
-            <div class="scroll-content" style="padding-top:14px;">
+            <div class="scroll-content" style="padding-top:16px;">
 
                 <div id="home-active-slot"></div>
 
@@ -2185,7 +2290,25 @@
                 <div class="filter-tab" onclick="filterQueue(this,'en_route')">En Route</div>
                 <div class="filter-tab" onclick="filterQueue(this,'on_site')">On-Site</div>
             </div>
-            <div class="scroll-content" id="queue-list"></div>
+            <div class="scroll-content" id="queue-list">
+                <div class="skel-list" aria-hidden="true">
+                    <div class="skel-card">
+                        <div class="skel skel-line" style="width:55%;height:14px;"></div>
+                        <div class="skel skel-line" style="width:90%;"></div>
+                        <div class="skel skel-line" style="width:75%;"></div>
+                    </div>
+                    <div class="skel-card">
+                        <div class="skel skel-line" style="width:45%;height:14px;"></div>
+                        <div class="skel skel-line" style="width:85%;"></div>
+                        <div class="skel skel-line" style="width:65%;"></div>
+                    </div>
+                    <div class="skel-card">
+                        <div class="skel skel-line" style="width:60%;height:14px;"></div>
+                        <div class="skel skel-line" style="width:80%;"></div>
+                        <div class="skel skel-line" style="width:70%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ===== JOB DETAIL ===== -->
@@ -2215,7 +2338,20 @@
                 <div class="filter-tab" onclick="filterHistoryCat(this,'garbage')">Garbage</div>
                 <div class="filter-tab" onclick="filterHistoryCat(this,'other')">Others</div>
             </div>
-            <div class="scroll-content" id="history-list" style="padding-top:6px;"></div>
+            <div class="scroll-content" id="history-list" style="padding-top:6px;">
+                <div class="skel-list" aria-hidden="true">
+                    <div class="skel-card">
+                        <div class="skel skel-line" style="width:50%;height:14px;"></div>
+                        <div class="skel skel-line" style="width:88%;"></div>
+                        <div class="skel skel-line" style="width:70%;"></div>
+                    </div>
+                    <div class="skel-card">
+                        <div class="skel skel-line" style="width:58%;height:14px;"></div>
+                        <div class="skel skel-line" style="width:82%;"></div>
+                        <div class="skel skel-line" style="width:66%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ===== PROFILE ===== -->
