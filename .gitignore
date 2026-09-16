@@ -4,3 +4,9 @@ supabase-config.env.js
 # Live-database backups contain personal data (profiles, ID URLs). Never track
 # these in git. If you need to keep one locally, store it outside the repo.
 calye-safe_database/backup-*.json
+
+# Next.js
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
