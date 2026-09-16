@@ -218,9 +218,13 @@ Copy the APK to a phone, enable "Install from unknown sources", and test.
 ```powershell
 cd C:\xampp\htdocs\Calye-Safe-main\Calye-Safe-main
 npm.cmd install          # installs Next + Capacitor deps
-npm.cmd run build:www    # copies the 10 allowlisted web files into www/
+npm.cmd run build:www    # copies the 9 allowlisted web files into www/
 npx cap add android      # one-time: generates the android/ platform folder
 npx cap sync
 ```
+
+> Resident + responder apps only — `calye-safe-admins.html` is intentionally
+> excluded from `www/` and the `/app` routes because the admin console
+> stays web-only.
 
 Then continue at Step 6 (permissions) and Step 9 (build APK) above. `www/` is gitignored and rebuilt every time via `npm.cmd run cap:sync`.

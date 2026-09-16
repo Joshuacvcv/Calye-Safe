@@ -1,5 +1,6 @@
 // Copies the static Calye Safe web files into www/ for Capacitor.
 // Run: npm run build:www
+// Resident + responder apps only — the admin console stays web-only.
 // Keep this list in sync with app/app/[...path]/route.ts (same allowlist).
 const fs = require("node:fs");
 const path = require("node:path");
@@ -7,7 +8,6 @@ const path = require("node:path");
 const FILES = [
   "index.html",
   "calye-safe-community.html",
-  "calye-safe-admins.html",
   "calye-safe-responders.html",
   "responder-login.html",
   "supabase-config.js",

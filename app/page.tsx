@@ -19,11 +19,6 @@ const LINKS: { href: string; title: string; desc: string }[] = [
     title: "Responder App",
     desc: "Duty board, queue, and live job tracking",
   },
-  {
-    href: "/app/calye-safe-admins.html",
-    title: "Admin Console",
-    desc: "Reports, dispatch, analytics, and verification",
-  },
 ];
 
 export default function Home() {
