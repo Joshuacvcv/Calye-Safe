@@ -208,3 +208,19 @@ Copy the APK to a phone, enable "Install from unknown sources", and test.
 - Steps 3–6 (scaffold + copy + permissions): ~30 min
 - Step 9 first build: ~10–20 min (Gradle download)
 - **Total to a working APK: about 1–2 hours**, assuming your Supabase project is reachable.
+
+---
+
+## Option B — In-repo Capacitor (wired, no separate folder)
+
+`capacitor.config.ts`, `scripts/build-www.js`, and the npm scripts are already in the repo root, so you can skip the separate `calye-safe-android` folder (Steps 3–4 above):
+
+```powershell
+cd C:\xampp\htdocs\Calye-Safe-main\Calye-Safe-main
+npm.cmd install          # installs Next + Capacitor deps
+npm.cmd run build:www    # copies the 10 allowlisted web files into www/
+npx cap add android      # one-time: generates the android/ platform folder
+npx cap sync
+```
+
+Then continue at Step 6 (permissions) and Step 9 (build APK) above. `www/` is gitignored and rebuilt every time via `npm.cmd run cap:sync`.

@@ -10,3 +10,7 @@ node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+
+# Capacitor (generated — rebuilt via `npm run build:www` / `npx cap add android`)
+www/
+android/app/build/
