@@ -25,11 +25,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses and install platform
+      # NOTE: android-actions/setup-android is intentionally NOT used — v3 is
+      # broken (it tries to install the long-removed `tools` SDK package).
+      # GitHub's ubuntu runners already ship an Android SDK; we just add the
+      # platform / build-tools our Capacitor version targets.
+      - name: Install Android platform (runner's preinstalled SDK)
         run: |
+          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses > /dev/null
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
