@@ -44,6 +44,10 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Generate app icons (skipped until assets/icon.png exists)
+        run: |
+          if [ -f assets/icon.png ]; then npm run app:icons; else echo "No assets/icon.png yet — using default Capacitor icon"; fi
+
       - name: Add app permissions
         run: |
           python3 - <<'EOF'
