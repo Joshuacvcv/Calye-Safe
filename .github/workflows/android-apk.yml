@@ -19,11 +19,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21 (required by Capacitor 7)
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       # NOTE: android-actions/setup-android is intentionally NOT used — v3 is
       # broken (it tries to install the long-removed `tools` SDK package).

@@ -25,9 +25,9 @@ npm -v   # should print a version
 
 ---
 
-## Step 2 — Install Java JDK 17 (Temurin)
+## Step 2 — Install Java JDK 21 (Temurin)
 
-1. Download: https://adoptium.net/temurin/releases/ → **Temurin 17 (LTS), Windows x64, .msi**
+1. Download: https://adoptium.net/temurin/releases/ → **Temurin 21 (LTS), Windows x64, .msi**
 2. Install with default options (it sets `JAVA_HOME` automatically).
 3. Verify in a **new** terminal:
 
@@ -36,7 +36,7 @@ java -version
 echo $env:JAVA_HOME
 ```
 
-> Capacitor/Gradle currently work best with JDK 17. If you already have a newer JDK and Gradle complains, JDK 17 is the safe target.
+> Capacitor 7 requires JDK 21. If Gradle complains about the Java version (`invalid source release: 21`), you are on an older JDK — install Temurin 21 and point `JAVA_HOME` at it.
 
 ---
 
