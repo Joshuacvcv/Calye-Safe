@@ -1,0 +1,80 @@
+name: Build Android APK (debug)
+
+# Builds a test-ready debug APK in the cloud — no Android Studio needed.
+# Run it from the repo's Actions tab ("Run workflow"), then download the
+# `calye-safe-debug-apk` artifact when the run finishes (~10–20 min).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses and install platform
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Assemble www/
+        run: npm run build:www
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Add app permissions
+        run: |
+          python3 - <<'EOF'
+          import re
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          for perm in [
+              'android.permission.INTERNET',
+              'android.permission.ACCESS_FINE_LOCATION',
+              'android.permission.ACCESS_COARSE_LOCATION',
+              'android.permission.CAMERA',
+          ]:
+              if perm not in s:
+                  s = re.sub(
+                      r'(<manifest[^>]*>)',
+                      r'\1\n    <uses-permission android:name="%s" />' % perm,
+                      s,
+                      count=1,
+                  )
+          open(p, 'w').write(s)
+          EOF
+
+      - name: Sync Capacitor
+        run: npx cap sync
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: calye-safe-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
