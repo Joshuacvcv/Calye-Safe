@@ -8,7 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "build:www": "node scripts/build-www.js",
-    "app:icons": "capacitor-assets generate --iconBackgroundColor #1E3A5F --splashBackgroundColor #1E3A5F",
+    "app:icons": "capacitor-assets generate --iconBackgroundColor '#1E3A5F' --splashBackgroundColor '#1E3A5F'",
     "cap:sync": "npm run build:www && npx cap sync",
     "android:open": "npx cap open android"
   },
