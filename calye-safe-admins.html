@@ -2279,6 +2279,19 @@
       height: 1000%;
     }
 
+    /* ── INCIDENT MAP PAGE: larger zoom controls + readable popups ── */
+    #page-map-leaflet .leaflet-bar a {
+      width: 36px;
+      height: 36px;
+      line-height: 36px;
+      font-size: 19px;
+    }
+
+    #page-map-leaflet .leaflet-popup-content {
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+
     .page-coming {
       flex: 1;
       display: flex;
@@ -2311,9 +2324,9 @@
     }
 
     .ftab {
-      padding: 5px 12px;
+      padding: 7px 14px;
       border-radius: 20px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       border: 1px solid var(--border);
       background: none;
@@ -3526,7 +3539,7 @@
           <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
             <div style="display:flex;gap:8px;flex:1;">
               <input class="map-input" id="page-map-search"
-                placeholder="Search location… (e.g. Mercado Village, Division Road)" style="flex:1;font-size:13px;"
+                placeholder="Search location… (e.g. Mercado Village, Division Road)" style="flex:1;font-size:14px;"
                 onkeydown="if(event.key==='Enter')pageMapSearch()">
               <button class="map-btn" onclick="pageMapSearch()">
                 <svg viewBox="0 0 24 24">
@@ -3566,28 +3579,28 @@
               <div id="page-map-loading"
                 style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--surface3);z-index:5;">
                 <div class="map-spinner"></div>
-                <p style="font-size:12px;color:var(--text3);font-weight:600;" id="page-map-loading-txt">Loading incident
+                <p style="font-size:13px;color:var(--text3);font-weight:600;" id="page-map-loading-txt">Loading incident
                   map…</p>
               </div>
               <div id="page-map-leaflet"
                 style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"></div>
               <div id="page-map-badge"
-                style="position:absolute;top:12px;left:12px;background:var(--primary);color:#fff;font-size:11px;font-weight:800;padding:5px 11px;border-radius:20px;font-family:'Nunito',sans-serif;z-index:4;box-shadow:0 2px 8px rgba(30,58,95,0.25);display:none;">
+                style="position:absolute;top:12px;right:12px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:20px;font-family:'Nunito',sans-serif;z-index:4;box-shadow:0 2px 8px rgba(30,58,95,0.25);display:none;">
                 📍 <span id="page-map-badge-txt">8 incidents</span>
               </div>
               <div
-                style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,0.9);backdrop-filter:blur(4px);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:10px;color:var(--text2);font-weight:600;z-index:4;">
+                style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,0.9);backdrop-filter:blur(4px);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:11.5px;color:var(--text2);font-weight:600;z-index:4;">
                 📌 Santa Rosa, Laguna, Philippines
               </div>
             </div>
 
             <!-- Incident list sidebar -->
             <div
-              style="width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;min-height:0;">
+              style="width:300px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;">
               <div
-                style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;flex-shrink:0;">
+                style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;flex-shrink:0;">
                 Active Incidents</div>
-              <div id="page-map-incident-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+              <div id="page-map-incident-list" style="display:flex;flex-direction:column;gap:10px;"></div>
             </div>
 
           </div>
@@ -3596,40 +3609,40 @@
           <div
             style="display:flex;align-items:center;gap:14px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;row-gap:6px;">
             <span
-              style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
+              style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
             <span
-              style="font-size:9.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;background:var(--danger-light);padding:2px 8px;border-radius:20px;">Major</span>
+              style="font-size:10.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;background:var(--danger-light);padding:3px 9px;border-radius:20px;">Major</span>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--danger);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Flooding</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Flooding</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--crime);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Crime</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Crime</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--fire);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Fire</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Fire</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--accident);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Accident</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Accident</span>
             </div>
             <span
-              style="font-size:9.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:2px 8px;border-radius:20px;">Minor</span>
+              style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--warning);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Road Hazard</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazard</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--success);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Garbage</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Garbage</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:var(--text3);"></div><span
-                style="font-size:11px;color:var(--text2);font-weight:600;">Other</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Other</span>
             </div>
-            <div style="margin-left:auto;font-size:11px;color:var(--text3);font-weight:600;">📍 <span
+            <div style="margin-left:auto;font-size:12px;color:var(--text3);font-weight:600;">📍 <span
                 id="page-map-loc-label">Santa Rosa, Laguna, Philippines</span></div>
           </div>
 
@@ -6770,23 +6783,23 @@ const pageTitles = {
 
       list.innerHTML = pins.map(p => `
     <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye');showToastMsg('Zoomed to ${p.loc}','info')"
-      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
+      style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
       onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-        <span style="font-size:11px;font-weight:700;color:var(--text);">${p.type}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${statusBg[p.status]};color:${statusColor[p.status]};">${statusLabels[p.status]}</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <span style="font-size:13px;font-weight:700;color:var(--text);">${p.type}</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${statusBg[p.status]};color:${statusColor[p.status]};">${statusLabels[p.status]}</span>
       </div>
-      <div style="font-size:11px;color:var(--text2);font-weight:600;">📍 ${p.loc}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;">
-        <span style="font-size:10px;color:var(--text3);font-weight:600;">${p.id}</span>
-        <span style="font-size:10px;color:var(--text3);font-weight:600;">${p.filed}</span>
+      <div style="font-size:12.5px;color:var(--text2);font-weight:600;">📍 ${p.loc}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+        <span style="font-size:11px;color:var(--text3);font-weight:600;">${p.id}</span>
+        <span style="font-size:11px;color:var(--text3);font-weight:600;">${p.filed}</span>
       </div>
     </div>
   `).join('');
 
       if (pins.length === 0) {
-        list.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text3);font-size:12px;font-weight:600;">No incidents for this filter.</div>`;
+        list.innerHTML = `<div style="text-align:center;padding:24px 12px;color:var(--text3);font-size:13px;font-weight:600;">No incidents for this filter.</div>`;
       }
     }
 
