@@ -4774,7 +4774,9 @@
 
     function timeAgo(iso) {
       if (!iso) return '';
-      const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+      const t = parseDbTime(iso);
+      if (!t || isNaN(t.getTime())) return '';
+      const mins = Math.max(0, Math.floor((Date.now() - t.getTime()) / 60000));
       if (mins < 1) return 'Just now';
       if (mins < 60) return mins + (mins === 1 ? ' min ago' : ' mins ago');
       const hrs = Math.floor(mins / 60);
@@ -4863,8 +4865,8 @@
         .map(r => ({ r, d: haversineMeters(origin, [Number(r.lat), Number(r.lng)]) }))
         .sort((a, b) => a.d - b.d);
       const past = rows
-        .filter(r => r.status === 'resolved' && r.created_at && (Date.now() - new Date(r.created_at).getTime()) < 7 * 864e5)
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .filter(r => r.status === 'resolved' && r.created_at && (Date.now() - (parseDbTime(r.created_at) || new Date(0)).getTime()) < 7 * 864e5)
+        .sort((a, b) => (parseDbTime(b.created_at) || new Date(0)) - (parseDbTime(a.created_at) || new Date(0)))
         .slice(0, 10);
       const emptyNote = '<div style="padding:18px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No active alerts nearby. All clear.</div>';
       if (list) {
@@ -5278,21 +5280,39 @@
     // ========== SUPABASE SYNC (best-effort; localStorage remains the fallback) ==========
     CALYE_SUPABASE.init();
 
+    // Parse DB timestamps defensively: the server stores UTC, but some values
+    // can arrive without a timezone designator (e.g. `timestamp without
+    // time zone` columns / text fields). Those must be read as UTC — parsing
+    // them as device-local time would shift every display by whole hours.
+    function parseDbTime(iso) {
+      if (!iso) return null;
+      const s = String(iso).trim();
+      if (/([zZ]|[+-]\d{2}:?\d{2})$/.test(s)) return new Date(s);
+      return new Date(s.replace(' ', 'T') + 'Z');
+    }
+
     function fmtDate(iso) {
       if (!iso) return '—';
-      const d = new Date(iso);
+      const d = parseDbTime(iso);
+      if (!d || isNaN(d.getTime())) return '—';
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
         ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 
-    function mapDbTimeline(rows) {
+    function mapDbTimeline(rows, submittedFallback) {
       return (rows || [])
         .slice()
         .sort((a, b) => a.step - b.step)
         .map(t => ({
           label: t.label,
           desc: t.note || '',
-          time: (t.state === 'pending' || !t.happened_at || t.happened_at === '—') ? '—' : t.happened_at,
+          // Step 1 is the filing moment: always derive it from the report's
+          // own created_at (converted above) instead of trusting the raw
+          // happened_at text, whose timezone depends on whichever DB trigger
+          // version wrote it (UTC text would show ~8h early in Manila).
+          time: (Number(t.step) === 1 && submittedFallback)
+            ? submittedFallback
+            : ((t.state === 'pending' || !t.happened_at || t.happened_at === '—') ? '—' : t.happened_at),
           state: t.state || 'pending'
         }));
     }
@@ -5384,7 +5404,7 @@
                   status: active ? 'responding' : r.status === 'resolved' ? 'resolved' : r.status === 'declined' ? 'declined' : 'pending',
                   source: r.source && r.source.toUpperCase() || 'BRGY',
                   lat: r.lat, lng: r.lng,
-                  timeline: mapDbTimeline(tlByReport[r.id]),
+                  timeline: mapDbTimeline(tlByReport[r.id], fmtDate(r.created_at)),
                   photo: mediaByReport[r.id] || '',
                   resolutionNotes: asn.resolution_notes || '',
                   proofUrl: asn.proof_url || '',
