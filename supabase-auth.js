@@ -145,36 +145,44 @@ window.CalyeAuth = (function () {
       c.auth.getSession().then(function (sres) {
         var user = sres.data && sres.data.session ? sres.data.session.user : null;
         if (!user) { resolve({ error: 'You must be signed in' }); return; }
-        var row = {
-          user_id: user.id,
-          role: opts.role || 'resident',
-          full_name: opts.full_name || '',
-          email: opts.email || '',
-          address: opts.address || '',
-          employment_info: opts.employment_info || null,
-          id_doc_url: opts.id_doc_url || '',
-          id_type: opts.id_type || '',
-          status: 'pending',
-          submitted_at: new Date().toISOString(),
-          reviewed_at: null,
-          review_note: ''
-        };
-        CalyeDB.insert('verification_requests', [row]).then(function (rows) {
-          if (!rows || !rows.length) { resolve({ error: 'Could not save your verification request' }); return; }
-          // Persist the submitted details on the profile BEFORE resolving, so
-          // a follow-up getStatus() (and the gate) sees the ID on file and
-          // shows "under review" instead of asking for another upload.
-          CalyeDB.update('profiles', [['id', user.id]], {
-            full_name: row.full_name,
-            email: row.email,
-            address: row.address,
-            barangay: opts.barangay || '',
-            id_doc_url: row.id_doc_url,
-            id_type: row.id_type,
-            employment_info: row.employment_info,
-            verification_status: 'pending'
-          }).then(function () {
-            resolve({ error: null, row: rows[0] });
+        // One pending request per user: an earlier submission that is still
+        // under review blocks a new one (rejected users may resubmit, since
+        // only 'pending' rows count). The partial unique index
+        // uq_verification_one_pending enforces the same rule server-side,
+        // which also covers double-click races this check could miss.
+        CalyeDB.fetch('verification_requests', { filters: [['user_id', 'eq', user.id], ['status', 'eq', 'pending']], limit: 1 }).then(function (existing) {
+          if (existing && existing.length) { resolve({ error: 'You already have a verification request under review.' }); return; }
+          var row = {
+            user_id: user.id,
+            role: opts.role || 'resident',
+            full_name: opts.full_name || '',
+            email: opts.email || '',
+            address: opts.address || '',
+            employment_info: opts.employment_info || null,
+            id_doc_url: opts.id_doc_url || '',
+            id_type: opts.id_type || '',
+            status: 'pending',
+            submitted_at: new Date().toISOString(),
+            reviewed_at: null,
+            review_note: ''
+          };
+          CalyeDB.insert('verification_requests', [row]).then(function (rows) {
+            if (!rows || !rows.length) { resolve({ error: 'Could not save your verification request' }); return; }
+            // Persist the submitted details on the profile BEFORE resolving, so
+            // a follow-up getStatus() (and the gate) sees the ID on file and
+            // shows "under review" instead of asking for another upload.
+            CalyeDB.update('profiles', [['id', user.id]], {
+              full_name: row.full_name,
+              email: row.email,
+              address: row.address,
+              barangay: opts.barangay || '',
+              id_doc_url: row.id_doc_url,
+              id_type: row.id_type,
+              employment_info: row.employment_info,
+              verification_status: 'pending'
+            }).then(function () {
+              resolve({ error: null, row: rows[0] });
+            });
           });
         });
       });

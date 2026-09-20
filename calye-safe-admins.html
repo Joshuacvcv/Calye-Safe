@@ -3537,6 +3537,14 @@
 
           <!-- Toolbar row -->
           <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+            <label style="display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;user-select:none;"
+              title="Overlay the Geospatial Hotspot heat layer">
+              <span style="font-size:12.5px;font-weight:700;color:var(--text2);white-space:nowrap;">Heatmap</span>
+              <span class="toggle-switch">
+                <input type="checkbox" id="page-map-heat-toggle" onchange="togglePageMapHeat(this)">
+                <span class="toggle-slider"></span>
+              </span>
+            </label>
             <div style="display:flex;gap:8px;flex:1;">
               <input class="map-input" id="page-map-search"
                 placeholder="Search location… (e.g. Mercado Village, Division Road)" style="flex:1;font-size:14px;"
@@ -3865,7 +3873,7 @@
                 <div class="panel-header">
                   <div class="sec-title">Geospatial Hotspot Map</div>
                   <div class="sec-action"
-                    onclick="document.querySelector('.nav-item[onclick*=\'map\']').click()">View Full Map</div>
+                    onclick="viewFullMapWithHeat()">View Full Map</div>
                 </div>
                 <div class="panel-body"
                   style="display:flex;flex-direction:column;position:relative;padding:14px;">
@@ -6742,6 +6750,54 @@ const pageTitles = {
       showToastMsg('Map reset to Santa Rosa, Laguna', 'info');
     }
 
+    // ── HOTSPOT HEAT LAYER (same Geospatial Hotspot rendering as Analytics) ──
+    let pageMapHeatLayer = null;
+    let pageMapHeatOn = false;
+
+    function pageMapHeatPoints(pins) {
+      const pts = [];
+      (pins || []).forEach(p => {
+        if (typeof p.lat === 'number' && typeof p.lon === 'number') {
+          pts.push([p.lat, p.lon, p.severity === 'major' ? 1 : 0.55]);
+        }
+      });
+      return pts;
+    }
+
+    function pageMapFilteredPins() {
+      return pageMapFilter_active === 'all' ? incidentPins
+        : pageMapFilter_active === 'major' ? incidentPins.filter(p => p.severity === 'major')
+          : incidentPins.filter(p => p.cat === pageMapFilter_active);
+    }
+
+    function refreshPageMapHeat() {
+      if (!pageMap) return;
+      if (pageMapHeatLayer) { pageMap.removeLayer(pageMapHeatLayer); pageMapHeatLayer = null; }
+      if (!pageMapHeatOn) return;
+      const pts = pageMapHeatPoints(pageMapFilteredPins());
+      if (pts.length && typeof L.heatLayer === 'function') {
+        pageMapHeatLayer = L.heatLayer(pts, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(pageMap);
+      }
+    }
+
+    function togglePageMapHeat(cb) {
+      pageMapHeatOn = !!(cb && cb.checked);
+      refreshPageMapHeat();
+      showToastMsg(pageMapHeatOn ? 'Hotspot heat layer on' : 'Hotspot heat layer off', 'info');
+    }
+
+    // Analytics "View Full Map" lands here WITH the heat layer on, so the
+    // hotspot context carries over instead of disappearing.
+    function viewFullMapWithHeat() {
+      document.querySelector('.nav-item[onclick*=\'map\']').click();
+      window.setTimeout(() => {
+        const t = document.getElementById('page-map-heat-toggle');
+        if (t) t.checked = true;
+        pageMapHeatOn = true;
+        refreshPageMapHeat();
+      }, 350);
+    }
+
     function pageMapFilter(cat, btn) {
       document.querySelectorAll('[id^="mf-"]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -6775,6 +6831,7 @@ const pageTitles = {
             .bindPopup('<b>' + p.type + '</b><br>📍 ' + p.loc + '<br>' + p.id + ' · ' + p.status + ' · ' + p.filed);
         });
       }
+      refreshPageMapHeat();
 
       const catColors = { flood: 'var(--danger)', hazard: 'var(--warning)', garbage: 'var(--success)', other: 'var(--text3)', crime: 'var(--crime)', fire: 'var(--fire)', accident: 'var(--accident)' };
       const statusLabels = { pending: 'Pending', responding: 'Responding', resolved: 'Resolved' };
