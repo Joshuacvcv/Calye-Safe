@@ -286,9 +286,10 @@
     }
 
     .sidebar-logo {
-      padding: 26px 20px 22px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      height: 89px;
       min-height: 89px;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
       display: flex;
       align-items: center;
     }
@@ -329,18 +330,20 @@
     .sidebar-logo .brand {
       font-family: 'Nunito', sans-serif;
       font-weight: 900;
-      font-size: 19px;
+      font-size: 20px;
+      line-height: 1.25;
       color: #FFFFFF;
       letter-spacing: -0.03em;
     }
 
     .sidebar-logo .sub {
-      font-size: 11px;
+      font-size: 12px;
+      line-height: 1.4;
       color: rgba(255, 255, 255, 0.7);
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
     .nav-section {
@@ -513,12 +516,14 @@
       font-family: 'Nunito', sans-serif;
       font-weight: 800;
       font-size: 20px;
+      line-height: 1.25;
       color: var(--text);
       letter-spacing: -0.02em;
     }
 
     .topbar-left .breadcrumb {
-      font-size: 12.5px;
+      font-size: 12px;
+      line-height: 1.4;
       color: var(--text3);
       margin-top: 2px;
       font-weight: 600;
@@ -3794,7 +3799,7 @@
                     <span id="verify-count-label">0 pending</span>
                   </div>
                 </div>
-                <div style="display:flex;gap:8px;padding:0 18px 12px;">
+                <div style="display:flex;gap:8px;padding:14px 18px 12px;">
                   <div class="verify-filter active" data-f="pending" onclick="verifyFilter('pending',this)">Pending</div>
                   <div class="verify-filter" data-f="approved" onclick="verifyFilter('approved',this)">Approved</div>
                   <div class="verify-filter" data-f="rejected" onclick="verifyFilter('rejected',this)">Rejected</div>
@@ -3837,7 +3842,7 @@
                   <span id="users-count-label"></span>
                 </div>
               </div>
-              <div style="display:flex;gap:8px;padding:0 18px 12px;">
+              <div style="display:flex;gap:8px;padding:14px 18px 12px;">
                 <div class="verify-filter active" data-f="all" onclick="usersFilter('all',this)">All</div>
                 <div class="verify-filter" data-f="resident" onclick="usersFilter('resident',this)">Residents</div>
                 <div class="verify-filter" data-f="responder" onclick="usersFilter('responder',this)">Responders</div>
@@ -4243,20 +4248,20 @@
                 <div class="settings-form-grid">
                   <div>
                     <label class="settings-field-label">Language</label>
-                    <select class="modal-select" id="set-language">
+                    <select class="modal-select" id="set-language" onchange="saveAdminPrefs()">
                       <option value="en">English</option>
                       <option value="fil">Filipino</option>
                     </select>
                   </div>
                   <div>
                     <label class="settings-field-label">Time Zone</label>
-                    <select class="modal-select" id="set-timezone">
+                    <select class="modal-select" id="set-timezone" onchange="saveAdminPrefs()">
                       <option value="ph">(GMT+8) Philippine Standard Time</option>
                     </select>
                   </div>
                   <div>
                     <label class="settings-field-label">Default Landing Page</label>
-                    <select class="modal-select" id="set-landing">
+                    <select class="modal-select" id="set-landing" onchange="saveAdminPrefs()">
                       <option value="dashboard">Dashboard Overview</option>
                       <option value="reports">All Reports</option>
                       <option value="map">Incident Map</option>
@@ -4264,15 +4269,12 @@
                   </div>
                   <div>
                     <label class="settings-field-label">Auto-refresh Interval</label>
-                    <select class="modal-select" id="set-refresh">
+                    <select class="modal-select" id="set-refresh" onchange="saveAdminPrefs()">
                       <option value="30">30 seconds</option>
                       <option value="60" selected>1 minute</option>
                       <option value="300">5 minutes</option>
                     </select>
                   </div>
-                </div>
-                <div class="settings-save-row">
-                  <button class="settings-save-btn" onclick="saveGeneralSettings()">Save Preferences</button>
                 </div>
               </div>
             </div>
@@ -4909,9 +4911,31 @@
       showToastMsg('Account settings saved', 'success');
     }
 
-    function saveGeneralSettings() {
-      showToastMsg('Preferences saved', 'success');
+    // General preferences save instantly on change (no save button).
+    function saveAdminPrefs(silent) {
+      try {
+        var prefs = {
+          language: document.getElementById('set-language').value,
+          timezone: document.getElementById('set-timezone').value,
+          landing: document.getElementById('set-landing').value,
+          refresh: document.getElementById('set-refresh').value
+        };
+        localStorage.setItem('calye_admin_prefs', JSON.stringify(prefs));
+      } catch (e) { }
+      if (!silent) showToastMsg('Preference saved', 'success');
     }
+
+    function applyAdminPrefs() {
+      try {
+        var prefs = JSON.parse(localStorage.getItem('calye_admin_prefs') || '{}');
+        ['language', 'timezone', 'landing', 'refresh'].forEach(function (k) {
+          var el = document.getElementById('set-' + k);
+          if (el && prefs[k]) el.value = prefs[k];
+        });
+      } catch (e) { }
+    }
+
+    applyAdminPrefs();
 
     function toggleSetting(el, label) {
       showToastMsg(label + (el.checked ? ' enabled' : ' disabled'), 'info');
