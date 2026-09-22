@@ -73,8 +73,24 @@
             --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.50);
         }
 
-        :root[data-theme="dark"] .leaflet-tile-pane {
-            filter: brightness(0.82) saturate(0.9);
+        /* Maps keep light-mode tiles in dark mode; popups and zoom buttons stay
+           light surfaces with dark text so they stay readable. */
+        :root[data-theme="dark"] .leaflet-popup-content-wrapper {
+            background: #FFFFFF;
+            color: #1A2332;
+        }
+
+        :root[data-theme="dark"] .leaflet-popup-content {
+            color: #1A2332;
+        }
+
+        :root[data-theme="dark"] .leaflet-popup-tip {
+            background: #FFFFFF;
+        }
+
+        :root[data-theme="dark"] .leaflet-bar a {
+            background: #FFFFFF;
+            color: #1A2332;
         }
 
         :root[data-theme="dark"] .section-label {
