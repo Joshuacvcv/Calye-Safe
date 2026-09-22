@@ -5885,17 +5885,24 @@ const pageTitles = {
     let perfDutyFilter = 'all';
 
     // Shared finish: duty flags + merge of profile-only responders, then paint.
-    function finalizePerfData(perfData, dutyProfiles) {
-      const dutyByUnit = {};
-      (dutyProfiles || []).forEach(pr => { if (pr.unit_id) dutyByUnit[pr.unit_id] = pr.on_duty === true; });
-      perfData.forEach(p => { p.on_duty = dutyByUnit[p.unit_id] === true; });
-      const haveUnits = {};
-      perfData.forEach(p => { if (p.unit_id) haveUnits[p.unit_id] = true; });
-      (dutyProfiles || []).forEach(pr => {
+    // profiles.unit_id is NOT unique — two accounts can share RES-001. The old
+    // haveUnits set dropped the 2nd+ account for that unit. Claim existing rows
+    // first-come; append an extra zero-stat row whenever profiles outnumber
+    // perf rows for the same unit (or the unit has no row at all).
+    function appendMissingProfilePerfRows(perfData, profiles) {
+      const unitRowCount = {};
+      perfData.forEach(p => {
+        const u = p.unit_id || 'Unassigned';
+        unitRowCount[u] = (unitRowCount[u] || 0) + 1;
+      });
+      const unitSeen = {};
+      const extras = [];
+      (profiles || []).forEach(pr => {
         const unit = (pr.unit_id && pr.unit_id !== '') ? pr.unit_id : 'Unassigned';
-        if (!haveUnits[unit]) {
-          haveUnits[unit] = true;
-          perfData.push({
+        const seen = unitSeen[unit] || 0;
+        unitSeen[unit] = seen + 1;
+        if (seen >= (unitRowCount[unit] || 0)) {
+          extras.push({
             responder_id: 'profile:' + pr.id, unit_id: unit,
             name: pr.full_name || 'Responder', vehicle: '', agency: '',
             total_assigned: 0, accepted: 0, resolved: 0, escalated: 0,
@@ -5905,6 +5912,14 @@ const pageTitles = {
           });
         }
       });
+      extras.forEach(row => perfData.push(row));
+    }
+
+    function finalizePerfData(perfData, dutyProfiles) {
+      const dutyByUnit = {};
+      (dutyProfiles || []).forEach(pr => { if (pr.unit_id) dutyByUnit[pr.unit_id] = pr.on_duty === true; });
+      perfData.forEach(p => { p.on_duty = dutyByUnit[p.unit_id] === true; });
+      appendMissingProfilePerfRows(perfData, dutyProfiles);
       perfPageData = perfData;
       renderPerfStatCards(perfData);
       renderPerfLeaderboard(perfData);
@@ -6536,23 +6551,10 @@ const pageTitles = {
         }
 
         // Append any registered responder missing from the rows so EVERY
-        // role='responder' profile is always listed (non-fatal).
+        // role='responder' profile is always listed — including extra accounts
+        // that share a unit_id (non-fatal).
         const finishModalRender = function (profList) {
-          const haveUnits = {};
-          perfData.forEach(p => { if (p.unit_id) haveUnits[p.unit_id] = true; });
-          (profList || []).forEach(pr => {
-            const unit = (pr.unit_id && pr.unit_id !== '') ? pr.unit_id : 'Unassigned';
-            if (!haveUnits[unit]) {
-              haveUnits[unit] = true;
-              perfData.push({
-                responder_id: 'profile:' + pr.id, unit_id: unit,
-                name: pr.full_name || 'Responder', vehicle: '', agency: '',
-                total_assigned: 0, accepted: 0, resolved: 0, escalated: 0,
-                avg_response_min: 0, avg_resolution_min: 0,
-                acceptance_rate: 0, resolution_rate: 0
-              });
-            }
-          });
+          appendMissingProfilePerfRows(perfData, profList);
           responderPerfRows = perfData;
           renderResponderPerformance(perfData);
         };
