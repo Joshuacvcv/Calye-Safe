@@ -252,17 +252,6 @@
       #content { padding: 12px; }
     }
 
-    /* ── GLOBAL 0.5s TIMING (matches the mobile apps) ──
-       Every console animation/transition runs at 0.5s. Leaflet map
-       internals are excluded so panning/zooming stays usable. */
-    @media (prefers-reduced-motion: no-preference) {
-      #shell,
-      #shell *:not(.leaflet-container):not(.leaflet-container *) {
-        animation-duration: 0.5s !important;
-        transition-duration: 0.5s !important;
-      }
-    }
-
     /* ── LAYOUT ── */
     #shell {
       display: flex;
