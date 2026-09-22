@@ -3171,7 +3171,7 @@
         <h2>Notifications</h2>
         <div style="width:34px;"></div>
       </div>
-      <div class="scroll-content" style="padding-top:12px;">
+      <div class="scroll-content" id="notif-scroll" style="padding-top:12px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;">
         <div id="notif-list"></div>
       </div>
     </div>
@@ -4756,6 +4756,7 @@
             const note = (step2 && step2.note && step2.note !== '—') ? step2.note : null;
             notifs.unshift({
               key: dkey,
+              reportId: r.id || '',
               reportNo: r.report_no || '#BRGY',
               type: r.type || 'Incident',
               step: 0,
@@ -4779,6 +4780,7 @@
           const meta = NOTIF_STEP_META[step];
           notifs.unshift({
             key: key,
+            reportId: r.id || '',
             reportNo: r.report_no || '#BRGY',
             type: r.type || 'Incident',
             step: step,
@@ -4804,7 +4806,7 @@
         list.innerHTML = `<div style="padding:26px 8px;text-align:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><p style="font-size:12.5px;color:var(--text3);margin-top:8px;font-weight:600;">No updates yet. Status changes on your reports will appear here.</p></div><div style="height:16px;"></div>`;
       } else {
         const itemHtml = n => `
-          <div class="notif-item${n.read ? '' : ' unread'} update">
+          <div class="notif-item${n.read ? '' : ' unread'} update" style="cursor:pointer;" onclick="openNotifReport('${n.reportId || ''}','${n.reportNo || ''}')">
             <div class="notif-icon" style="background:${NOTIF_STEP_META[n.step].bg};">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${NOTIF_STEP_META[n.step].color}" stroke-width="2">${NOTIF_STEP_META[n.step].icon}</svg>
             </div>
@@ -4834,6 +4836,20 @@
     }
     function closeNotifPanel() {
       document.getElementById('notif-panel').classList.remove('open');
+    }
+
+    // Deep-link: notification → that exact report, timeline expanded.
+    function openNotifReport(reportId, reportNo) {
+      closeNotifPanel();
+      switchScreen('myreports'); // re-renders the resident's report list
+      if (!reportNo) return;
+      setTimeout(() => {
+        const el = document.getElementById('tl-' + String(reportNo).replace('#', ''));
+        if (!el) { showToast('Report no longer in your list.'); return; }
+        el.style.display = 'block';
+        const card = el.closest('.report-card');
+        (card || el).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 120);
     }
 
     // ========== SEARCH (live index — screens + announcements + alerts + my reports) ==========
@@ -4963,9 +4979,43 @@
       return `<span class="badge pending" style="font-size:9px;padding:2px 6px;">${label}</span>`;
     }
 
+    // Rows currently painted (home top-3 / modal full lists) so taps can
+    // deep-link to the map without stuffing text into onclick attributes.
+    let paintedHome = [], paintedModal = [], paintedPast = [];
+    let mapFocusRing = null;
+
+    // Map deep-link: jump to the Map tab and spotlight the tapped report.
+    function focusMapIncident(lat, lng, label) {
+      const la = Number(lat), ln = Number(lng);
+      if (!isFinite(la) || !isFinite(ln)) { showToast('No map location for this report.'); return; }
+      closeModal('all-alerts-modal');
+      switchScreen('map'); // re-inits the map after 100ms
+      setTimeout(() => {
+        if (!incidentMap) initIncidentMap();
+        if (!incidentMap) return;
+        incidentMap.flyTo([la, ln], 16, { duration: 0.8 });
+        setTimeout(() => {
+          L.popup({ closeButton: true })
+            .setLatLng([la, ln])
+            .setContent('<div class="popup-title">📍 ' + esc(label || 'Incident') + '</div>')
+            .openOn(incidentMap);
+          if (mapFocusRing) { incidentMap.removeLayer(mapFocusRing); mapFocusRing = null; }
+          mapFocusRing = L.circle([la, ln], { radius: 60, color: '#F5A623', weight: 3, fillOpacity: 0.12 }).addTo(incidentMap);
+          setTimeout(() => { if (mapFocusRing && incidentMap) { incidentMap.removeLayer(mapFocusRing); mapFocusRing = null; } }, 5000);
+        }, 850);
+      }, 220);
+    }
+
+    function focusPaintedAlert(which, i) {
+      const arr = which === 'home' ? paintedHome : which === 'modal' ? paintedModal : paintedPast;
+      const e = arr && arr[i];
+      if (!e) return;
+      focusMapIncident(e.r.lat, e.r.lng, (e.r.type || 'Incident') + ' — ' + (e.r.location || 'Barangay Calye'));
+    }
+
     function fetchHomeAlerts() {
       if (!CalyeDB.isOnline()) { paintHomeAlerts(); return; }
-      CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 30 }).then(
+      CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 100 }).then(
         rows => { homeAlertsCache = rows || []; paintHomeAlerts(); },
         () => paintHomeAlerts()
       );
@@ -4999,10 +5049,13 @@
         .sort((a, b) => (parseDbTime(b.created_at) || new Date(0)) - (parseDbTime(a.created_at) || new Date(0)))
         .slice(0, 10);
       const emptyNote = '<div style="padding:18px 4px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No active alerts nearby. All clear.</div>';
+      paintedHome = active.slice(0, 3);
+      paintedModal = active;
+      paintedPast = past;
       if (list) {
-        list.innerHTML = active.length ? active.slice(0, 3).map(({ r, d }) => {
+        list.innerHTML = active.length ? active.slice(0, 3).map(({ r, d }, i) => {
           const dot = alertDotFor(r);
-          return `<div class="nearby-item">
+          return `<div class="nearby-item" style="cursor:pointer;" onclick="focusPaintedAlert('home',${i})">
             <div class="nearby-dot ${dot}"><svg viewBox="0 0 24 24" fill="none" stroke-width="2">${ALERT_ICONS[dot] || ALERT_ICONS.other}</svg></div>
             <div class="info"><h4>${r.type || 'Incident'}</h4><p>${r.location || 'Barangay Calye'}${hasFix ? ' • ' + fmtDist(d) : ''}</p></div>
             <div class="time">${timeAgo(r.created_at)}</div>
@@ -5010,10 +5063,10 @@
         }).join('') : emptyNote;
       }
       if (activeBox) {
-        activeBox.innerHTML = active.length ? active.map(({ r, d }) => {
+        activeBox.innerHTML = active.length ? active.map(({ r, d }, i) => {
           const dot = alertDotFor(r);
           const tone = ALERT_TONES[dot] || ALERT_TONES.other;
-          return `<div class="alert-list-item active-alert">
+          return `<div class="alert-list-item active-alert" style="cursor:pointer;" onclick="focusPaintedAlert('modal',${i})">
             <div class="al-dot" style="background:${tone[0]};"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${tone[1]}" stroke-width="2">${ALERT_ICONS[dot] || ALERT_ICONS.other}</svg></div>
             <div class="al-info">
               <h5>${r.type || 'Incident'} — ${r.location || 'Barangay Calye'}</h5>
@@ -5024,8 +5077,8 @@
         }).join('') : emptyNote;
       }
       if (pastBox) {
-        pastBox.innerHTML = past.length ? past.map(r => `
-          <div class="alert-list-item past-alert">
+        pastBox.innerHTML = past.length ? past.map((r, i) => `
+          <div class="alert-list-item past-alert" style="cursor:pointer;" onclick="focusPaintedAlert('past',${i})">
             <div class="al-dot" style="background:#E8F5E9;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
             <div class="al-info">
               <h5>${r.type || 'Incident'} — ${r.location || 'Barangay Calye'}</h5>
@@ -5468,6 +5521,11 @@
       }
       CalyeAuth.getStatus().then(g => {
         if (!g.session || !g.profile) {
+          // Never degrade to all-users data: if this device previously had
+          // a signed-in user, keep showing only their cached reports (the
+          // scoped fetch below simply preserves cache when offline). True
+          // logged-out demo still uses shared demo content.
+          if (currentUid) { syncMyReports(currentUid); return; }
           syncMyReports(null); // demo mode — fall back to all reports
           return;
         }
