@@ -28,6 +28,7 @@
 
     :root {
       --primary: #1E3A5F;
+      --primary-text: #1E3A5F;
       --primary-light: #2A5298;
       --accent: #F5A623;
       --accent-dark: #D4841A;
@@ -59,6 +60,11 @@
 
     /* ── DARK MODE ── */
     :root[data-theme="dark"] {
+      --primary-text: #8FBDF5;
+      --danger: #FF6B66;
+      --success: #66BB6A;
+      --warning: #FFB74D;
+      --info: #64A6F5;
       --bg: #0E1622;
       --card: #182234;
       --text: #F1F5F9;
@@ -164,7 +170,7 @@
     }
 
     .nav-item.active {
-      color: var(--primary);
+      color: var(--primary-text);
     }
 
     .nav-item.active svg {
@@ -625,7 +631,7 @@
     .form-group textarea:focus,
     .form-group select:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: var(--primary-text);
     }
 
     .form-group input.field-error,
@@ -800,7 +806,7 @@
     }
 
     .incident-type.minor.selected {
-      border-color: var(--primary);
+      border-color: var(--primary-text);
       background: rgba(30, 58, 95, 0.06);
       box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.25);
       outline: 2px solid var(--primary);
@@ -808,7 +814,7 @@
     }
 
     .incident-type.minor.selected span {
-      color: var(--primary);
+      color: var(--primary-text);
     }
 
     .btn {
@@ -962,7 +968,7 @@
     .profile-menu-item svg {
       width: 20px;
       height: 20px;
-      stroke: var(--primary);
+      stroke: var(--primary-text);
       stroke-width: 1.8;
       fill: none;
       flex-shrink: 0;
@@ -1024,7 +1030,7 @@
     .announcement-card .read-more {
       font-size: 12px;
       font-weight: 600;
-      color: var(--primary);
+      color: var(--primary-text);
       margin-top: 8px;
       display: inline-block;
     }
@@ -1051,7 +1057,7 @@
     .filter-tab.active {
       background: var(--primary);
       color: #fff;
-      border-color: var(--primary);
+      border-color: var(--primary-text);
     }
 
     .filter-tab.major {
@@ -1275,7 +1281,7 @@
     }
 
     .upload-area:hover {
-      border-color: var(--primary);
+      border-color: var(--primary-text);
       background: #EEF3FB;
     }
 
@@ -1429,7 +1435,7 @@
       padding: 5px 14px;
       font-size: 11px;
       font-weight: 600;
-      color: var(--primary);
+      color: var(--primary-text);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       white-space: nowrap;
     }
@@ -1522,7 +1528,7 @@
     .see-all {
       font-size: 12px;
       font-weight: 700;
-      color: var(--primary);
+      color: var(--primary-text);
       cursor: pointer;
       padding: 4px 0 4px 12px;
       white-space: nowrap;
@@ -2283,7 +2289,7 @@
         <span class="section-label">Community This Week</span>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px;">
           <div class="card" style="padding:16px 8px;text-align:center;">
-            <div style="font-size:22px;font-weight:800;color:var(--primary);line-height:1;" id="stat-filed">0</div>
+            <div style="font-size:22px;font-weight:800;color:var(--primary-text);line-height:1;" id="stat-filed">0</div>
             <div style="font-size:10px;color:var(--text3);margin-top:6px;font-weight:600;line-height:1.4;">Reports Filed</div>
           </div>
           <div class="card" style="padding:16px 8px;text-align:center;">
@@ -2508,7 +2514,7 @@
             <div style="font-size:11.5px;color:var(--text2);margin-top:2px;line-height:1.5;" id="hsb-body">For
               life-threatening emergencies call <strong>911</strong>. Tap a type below to see the right office for
               that report.</div>
-            <div style="font-size:11px;color:var(--primary);font-weight:700;margin-top:6px;cursor:pointer;"
+            <div style="font-size:11px;color:var(--primary-text);font-weight:700;margin-top:6px;cursor:pointer;"
               onclick="switchScreen('hotlines')">View all Emergency Hotlines →</div>
           </div>
         </div>
@@ -2605,7 +2611,7 @@
           <div id="report-map" style="width:100%;height:100%;"></div>
           <!-- Overlay hint label -->
           <div id="report-map-pin-label"
-            style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.95);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;pointer-events:none;z-index:800;">
+            style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.95);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--primary-text);box-shadow:0 2px 8px rgba(0,0,0,0.15);white-space:nowrap;pointer-events:none;z-index:800;">
             📍 Tap to drop a pin
           </div>
           <!-- GPS auto-locate button (kept on the top layer of the map) -->
@@ -3045,7 +3051,7 @@
         <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:16px;text-align:left;">
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
             <span style="font-size:12px;color:var(--text3);">Report ID</span>
-            <span style="font-size:12px;font-weight:700;color:var(--primary);" id="report-id">#BRGY-2026-0042</span>
+            <span style="font-size:12px;font-weight:700;color:var(--primary-text);" id="report-id">#BRGY-2026-0042</span>
           </div>
           <div style="display:flex;justify-content:space-between;">
             <span style="font-size:12px;color:var(--text3);">Status</span>
@@ -4363,7 +4369,7 @@
       </div>` : ''}
       <div class="report-footer">
         <span class="report-date">${r.date}</span>
-        <span style="font-size:11px;color:var(--primary);font-weight:600;">${r.id}</span>
+        <span style="font-size:11px;color:var(--primary-text);font-weight:600;">${r.id}</span>
       </div>
       ${r.status === 'responding' ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;"><span style="font-size:11px;color:var(--info);font-weight:600;cursor:pointer;">Tap to expand timeline</span></div>` : ''}
       <div id="tl-${r.id.replace('#', '')}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">

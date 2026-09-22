@@ -22,6 +22,7 @@
 
         :root {
             --primary: #1E3A5F;
+            --primary-text: #1E3A5F;
             --primary-light: #2A5298;
             --accent: #F5A623;
             --accent-dark: #D4841A;
@@ -51,6 +52,11 @@
 
         /* ── DARK MODE ── */
         :root[data-theme="dark"] {
+            --primary-text: #8FBDF5;
+            --danger: #FF6B66;
+            --success: #66BB6A;
+            --warning: #FFB74D;
+            --info: #64A6F5;
             --bg: #0E1622;
             --card: #182234;
             --text: #F1F5F9;
@@ -175,7 +181,7 @@
         }
 
         .nav-item.active {
-            color: var(--primary);
+            color: var(--primary-text);
         }
 
         .nav-item.active svg {
@@ -374,7 +380,7 @@
         .see-all {
             font-size: 11.5px;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--primary-text);
             cursor: pointer;
             text-transform: none;
             letter-spacing: 0;
@@ -783,7 +789,7 @@
         .filter-tab.active {
             background: var(--primary);
             color: #fff;
-            border-color: var(--primary);
+            border-color: var(--primary-text);
         }
 
         /* ── CURVED SHEETS over blue headers (resident-style) ──
@@ -954,7 +960,7 @@
             padding: 5px 14px;
             font-size: 11px;
             font-weight: 600;
-            color: var(--primary);
+            color: var(--primary-text);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             white-space: nowrap;
         }
@@ -979,7 +985,7 @@
         .map-meta-item svg {
             width: 15px;
             height: 15px;
-            stroke: var(--primary);
+            stroke: var(--primary-text);
             fill: none;
             stroke-width: 2;
             flex-shrink: 0;
@@ -1073,7 +1079,7 @@
             width: 26px;
             height: 26px;
             border: 3px solid var(--border);
-            border-top-color: var(--primary);
+            border-top-color: var(--primary-text);
             border-radius: 50%;
             animation: navspin 0.7s linear infinite;
         }
@@ -1287,7 +1293,7 @@
         .evidence-thumb svg {
             width: 22px;
             height: 22px;
-            stroke: var(--primary);
+            stroke: var(--primary-text);
             fill: none;
             stroke-width: 1.6;
         }
@@ -1322,14 +1328,14 @@
             background: var(--card);
             font-size: 12.5px;
             font-weight: 700;
-            color: var(--primary);
+            color: var(--primary-text);
             cursor: pointer;
         }
 
         .contact-btn svg {
             width: 15px;
             height: 15px;
-            stroke: var(--primary);
+            stroke: var(--primary-text);
             fill: none;
             stroke-width: 2;
         }
@@ -1671,7 +1677,7 @@
         .profile-menu-item svg {
             width: 19px;
             height: 19px;
-            stroke: var(--primary);
+            stroke: var(--primary-text);
             stroke-width: 1.8;
             fill: none;
             flex-shrink: 0;
@@ -2007,7 +2013,7 @@
 
         .form-group textarea:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--primary-text);
         }
 
         .form-group input,
@@ -2026,7 +2032,7 @@
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--primary-text);
         }
 
         .upload-area {
