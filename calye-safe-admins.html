@@ -2647,9 +2647,9 @@
 
     /* ── VERIFY USERS ── */
     .verify-filter {
-      font-size: 11.5px;
+      font-size: 12.5px;
       font-weight: 700;
-      padding: 6px 13px;
+      padding: 8px 15px;
       border-radius: 20px;
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -2662,9 +2662,9 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
-      padding: 5px 11px;
+      padding: 6px 12px;
       border-radius: 8px;
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -2689,6 +2689,13 @@
 
     .verify-filter:active {
       transform: scale(0.97);
+    }
+
+    #users-count-label,
+    #verify-count-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary-text);
     }
 
     .verify-card {
@@ -2859,6 +2866,13 @@
 
     .verify-btn.delete:active {
       transform: scale(0.97);
+    }
+
+    /* Users list: keep the delete action compact instead of stretching. */
+    #users-list .verify-btn.delete {
+      flex: 0 0 auto;
+      padding: 10px 20px;
+      font-size: 13.5px;
     }
 
     .verify-btn:active {
@@ -7634,18 +7648,18 @@ const pageTitles = {
       const statusLabel = status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Pending';
       const statusColor = status === 'approved' ? '#178a5a' : status === 'rejected' ? '#e5484d' : '#f59e0b';
       const roleLabel = u.role === 'responder' ? 'Responder' : 'Resident';
-      return `<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:9px;background:var(--bg-card);">
-        <div style="width:38px;height:38px;border-radius:50%;background:#eef2f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#64748b;flex-shrink:0;">${((u.full_name || '?')[0] || '?').toUpperCase()}</div>
+      return `<div style="display:flex;align-items:center;gap:14px;padding:15px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:11px;background:var(--bg-card);">
+        <div style="width:42px;height:42px;border-radius:50%;background:#eef2f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#64748b;flex-shrink:0;">${((u.full_name || '?')[0] || '?').toUpperCase()}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13.5px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.full_name || 'Unnamed'}</div>
-          <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.email || ''}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.full_name || 'Unnamed'}</div>
+          <div style="font-size:12.5px;color:var(--text3);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.email || ''}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;">${roleLabel}</div>
-          <div style="font-size:11px;color:${statusColor};font-weight:800;">${statusLabel}</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;">${roleLabel}</div>
+          <div style="font-size:12px;color:${statusColor};font-weight:800;margin-top:2px;">${statusLabel}</div>
         </div>
         ${status !== 'approved' ? '' : `<button class="verify-btn delete" onclick="openDeleteUser('${u.id}')" title="Permanently delete account">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>`}
       </div>`;
     }
