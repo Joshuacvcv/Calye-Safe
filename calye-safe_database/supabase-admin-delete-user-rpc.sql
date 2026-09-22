@@ -16,6 +16,22 @@
 -- RUN IN THE SUPABASE SQL EDITOR. Safe to re-run.
 -- ============================================================
 
+-- Harden the shared BEFORE-UPDATE geom trigger first: admin_delete_user runs
+-- with set search_path='', and update_geom_from_latlng used to inherit that
+-- empty path — ST_MakePoint then fails with 42883 on the reporter_id NULL-out.
+-- Giving the trigger its own search_path fixes this class of bug for every
+-- caller, not just this RPC. CREATE OR REPLACE keeps the OID, so existing
+-- triggers (trg_reports_geom / trg_responders_geom / trg_map_incidents_geom)
+-- keep pointing at it.
+create or replace function public.update_geom_from_latlng()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.lat is not null and new.lng is not null then
+    new.geom = ST_SetSRID(ST_MakePoint(new.lng, new.lat), 4326);
+  end if;
+  return new;
+end $$;
+
 create or replace function public.admin_delete_user(p_target uuid)
 returns table (ok boolean, message text)
 language plpgsql security definer set search_path = ''
@@ -57,14 +73,17 @@ begin
     return query select false, 'Staff/admin accounts cannot be deleted.'; return;
   end if;
 
-  -- Deleting a profile sets reports.reporter_id = NULL (ON DELETE), which
-  -- fires trg_sync_map_incidents (AFTER UPDATE on reports). That trigger calls
-  -- ST_MakePoint to recompute geom — but this RPC runs with set search_path='',
-  -- so the PostGIS function can't be resolved and the whole delete fails with
-  -- 42883 ("function st_makepoint does not exist"). Disable the map-sync
-  -- triggers for the duration of the delete; the incident points are preserved
-  -- and simply become anonymous. Triggers are re-enabled even on error.
-  alter table public.reports      disable trigger trg_sync_map_incidents;
+  -- The explicit reporter_id NULL-out (and the ON DELETE SET NULL from
+  -- profiles) fires BOTH report triggers:
+  --   * trg_reports_geom       (BEFORE UPDATE) — was the 42883 culprit; also
+  --     hardened above via update_geom_from_latlng's own search_path, but we
+  --     still skip it here: lat/lng don't change, so geom needs no recompute.
+  --   * trg_sync_map_incidents (AFTER UPDATE)  — map mirror, safe to pause;
+  --     map_incidents rows are anonymized via the profile cascade instead.
+  -- trg_map_incidents_geom is disabled for the auth.users cascade as well.
+  -- Triggers are re-enabled even when the delete errors.
+  alter table public.reports       disable trigger trg_reports_geom;
+  alter table public.reports       disable trigger trg_sync_map_incidents;
   alter table public.map_incidents disable trigger trg_map_incidents_geom;
 
   begin
@@ -73,12 +92,14 @@ begin
     -- Permanently remove the account and everything cascading from it.
     delete from auth.users where id = p_target;
   exception when others then
-    alter table public.reports      enable trigger trg_sync_map_incidents;
+    alter table public.reports       enable trigger trg_reports_geom;
+    alter table public.reports       enable trigger trg_sync_map_incidents;
     alter table public.map_incidents enable trigger trg_map_incidents_geom;
     raise;
   end;
 
-  alter table public.reports      enable trigger trg_sync_map_incidents;
+  alter table public.reports       enable trigger trg_reports_geom;
+  alter table public.reports       enable trigger trg_sync_map_incidents;
   alter table public.map_incidents enable trigger trg_map_incidents_geom;
 
   return query select true, 'Account deleted permanently.';

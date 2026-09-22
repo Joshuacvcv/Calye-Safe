@@ -24,9 +24,12 @@ create index if not exists idx_reports_geom on reports using gist (geom);
 create index if not exists idx_responders_geom on responders using gist (geom);
 create index if not exists idx_map_incidents_geom on map_incidents using gist (geom);
 
--- Trigger to keep geom in sync
+-- Trigger to keep geom in sync.
+-- set search_path = public is required: SECURITY DEFINER callers (e.g.
+-- admin_delete_user with search_path='') otherwise inherit an empty path and
+-- ST_MakePoint fails with 42883.
 create or replace function update_geom_from_latlng()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   if new.lat is not null and new.lng is not null then
     new.geom = ST_SetSRID(ST_MakePoint(new.lng, new.lat), 4326);
