@@ -2170,26 +2170,11 @@
       }
     }
 
+    /* Pages switch instantly — no entrance animation on page change. */
     .panel,
     .stat-card,
     .priority-card {
-      animation: fadeUp 0.35s var(--ease-out) both;
-    }
-
-    .stat-card:nth-child(1) {
-      animation-delay: 0.05s;
-    }
-
-    .stat-card:nth-child(2) {
-      animation-delay: 0.10s;
-    }
-
-    .stat-card:nth-child(3) {
-      animation-delay: 0.15s;
-    }
-
-    .stat-card:nth-child(4) {
-      animation-delay: 0.20s;
+      animation: none;
     }
 
     /* ── NOTIFICATIONS PANEL ── */
