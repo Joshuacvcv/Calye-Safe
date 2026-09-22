@@ -230,6 +230,12 @@
       display: block;
     }
 
+    .err-msg.ok {
+      color: var(--success, #2E7D32);
+      background: #E8F5E9;
+      border-color: rgba(46, 125, 50, 0.25);
+    }
+
     /* Inline field errors — shown instantly where the problem is */
     .field-error {
       display: none;
@@ -412,6 +418,30 @@
 
     .auth-panel.active {
       display: block;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .link-btn:hover {
+      color: var(--primary-dark, var(--primary));
+    }
+
+    .auth-note {
+      font-size: 12.5px;
+      color: var(--text3);
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 14px;
     }
 
     /* ── ID upload box ── */
@@ -623,6 +653,10 @@
             <div class="field-error" id="login-pass-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
+          <div style="text-align:right;margin:-4px 0 12px;">
+            <button type="button" class="link-btn" onclick="showPanel('forgot')">Forgot password?</button>
+          </div>
+
           <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
             Sign In
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
@@ -630,6 +664,56 @@
 
           <div class="demo-hint">
             <span class="pulse"></span> New here? Switch to <b onclick="showPanel('register')" style="cursor:pointer;text-decoration:underline;">Create Account</b>
+          </div>
+        </div>
+
+        <!-- ── FORGOT PASSWORD ── -->
+        <div class="auth-panel" id="panel-forgot">
+          <div class="err-msg" id="forgot-error">Enter your email to receive a reset link.</div>
+
+          <p class="auth-note">Enter the email you signed up with. We'll send you a link to choose a new password.</p>
+
+          <div class="form-group">
+            <label>Email</label>
+            <input id="forgot-email" type="email" placeholder="responder@email.com" oninput="clearFieldError('forgot-email','forgot-email-err')" onkeydown="if(event.key==='Enter')doForgotPassword()">
+            <div class="field-error" id="forgot-email-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
+          </div>
+
+          <button class="btn btn-primary" id="forgot-btn" onclick="doForgotPassword()">
+            Send reset link
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <div class="demo-hint" style="text-align:center;">
+            <button type="button" class="link-btn" onclick="showPanel('signin')">← Back to Sign In</button>
+          </div>
+        </div>
+
+        <!-- ── SET NEW PASSWORD (after email link) ── -->
+        <div class="auth-panel" id="panel-reset">
+          <div class="err-msg" id="reset-error">Choose a new password for your account.</div>
+
+          <p class="auth-note">Set a new password for your account. It must follow the same rules as signup.</p>
+
+          <div class="form-group">
+            <label>New password</label>
+            <input id="reset-pass" type="password" placeholder="At least 8 characters" oninput="clearFieldError('reset-pass','reset-pass-err')">
+            <div class="field-error" id="reset-pass-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
+          </div>
+
+          <div class="form-group">
+            <label>Confirm new password</label>
+            <input id="reset-pass2" type="password" placeholder="Re-enter your new password" oninput="clearFieldError('reset-pass2','reset-pass2-err')" onkeydown="if(event.key==='Enter')doResetPassword()">
+            <div class="field-error" id="reset-pass2-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
+          </div>
+
+          <button class="btn btn-primary" id="reset-btn" onclick="doResetPassword()">
+            Set new password
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+          </button>
+
+          <div class="demo-hint" style="text-align:center;">
+            <button type="button" class="link-btn" onclick="showPanel('signin')">← Back to Sign In</button>
           </div>
         </div>
 
@@ -651,8 +735,14 @@
 
           <div class="form-group">
             <label>Password</label>
-            <input id="reg-pass" type="password" placeholder="At least 6 characters" oninput="clearFieldError('reg-pass','reg-pass-err')">
+            <input id="reg-pass" type="password" placeholder="At least 8 characters" oninput="clearFieldError('reg-pass','reg-pass-err')">
             <div class="field-error" id="reg-pass-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
+          </div>
+
+          <div class="form-group">
+            <label>Confirm password</label>
+            <input id="reg-pass2" type="password" placeholder="Re-enter your password" oninput="clearFieldError('reg-pass2','reg-pass2-err')">
+            <div class="field-error" id="reg-pass2-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
@@ -708,6 +798,14 @@
   </div>
 
   <script>
+    // Snapshot BEFORE CalyeAuth.init: detectSessionInUrl consumes the recovery
+    // tokens and strips location.hash, so later checks against location.hash
+    // would miss the reset link and auto-redirect into the app.
+    let recoveryLanding = (function () {
+      var s = location.search + ' ' + location.hash;
+      return /type=recovery\b/.test(s) || /(^|[\s&#])access_token=/.test(s);
+    })();
+
     CalyeAuth.init('calye-responder');
 
     // All users live in Santa Rosa City, Laguna — so registration only asks for
@@ -733,14 +831,17 @@
     let pendingAddr = { barangay: '', house: '', subdivision: '' };
     let gatePollTimer = null;
 
-    function showErr(id, msg) {
+    function showErr(id, msg, ok) {
       const el = document.getElementById(id);
       el.textContent = msg;
+      el.classList.toggle('ok', !!ok);
       el.classList.add('show');
     }
 
     function clearErr(id) {
-      document.getElementById(id).classList.remove('show');
+      const el = document.getElementById(id);
+      el.classList.remove('show');
+      el.classList.remove('ok');
     }
 
     /* Inline field errors: shown instantly under the field at fault. */
@@ -765,18 +866,27 @@
     function clearAuthFieldErrors() {
       [['login-email', 'login-email-err'], ['login-pass', 'login-pass-err'],
        ['reg-name', 'reg-name-err'], ['reg-email', 'reg-email-err'],
-       ['reg-pass', 'reg-pass-err'], ['reg-employment', 'reg-employment-err'],
+       ['reg-pass', 'reg-pass-err'], ['reg-pass2', 'reg-pass2-err'],
+       ['reg-employment', 'reg-employment-err'],
        ['reg-barangay', 'reg-barangay-err'],
-       ['reg-house', 'reg-house-err']].forEach(pair => clearFieldError(pair[0], pair[1]));
+       ['reg-house', 'reg-house-err'],
+       ['forgot-email', 'forgot-email-err'],
+       ['reset-pass', 'reset-pass-err'], ['reset-pass2', 'reset-pass2-err']
+      ].forEach(pair => clearFieldError(pair[0], pair[1]));
     }
 
     function showPanel(name) {
-      document.getElementById('tab-signin').classList.toggle('active', name === 'signin');
+      const underSignin = name === 'signin' || name === 'forgot' || name === 'reset';
+      document.getElementById('tab-signin').classList.toggle('active', underSignin);
       document.getElementById('tab-register').classList.toggle('active', name === 'register');
       document.getElementById('panel-signin').classList.toggle('active', name === 'signin');
       document.getElementById('panel-register').classList.toggle('active', name === 'register');
+      document.getElementById('panel-forgot').classList.toggle('active', name === 'forgot');
+      document.getElementById('panel-reset').classList.toggle('active', name === 'reset');
       clearErr('login-error');
       clearErr('reg-error');
+      clearErr('forgot-error');
+      clearErr('reset-error');
       clearAuthFieldErrors();
     }
 
@@ -978,6 +1088,7 @@
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const pass = document.getElementById('reg-pass').value;
+      const pass2 = document.getElementById('reg-pass2').value;
       const employment = document.getElementById('reg-employment').value.trim();
       const barangay = document.getElementById('reg-barangay').value.trim();
       const house = document.getElementById('reg-house').value.trim();
@@ -998,6 +1109,8 @@
         const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
         if (!pw.ok) flagReg('reg-pass', 'reg-pass-err', pw.message);
       }
+      if (!pass2) flagReg('reg-pass2', 'reg-pass2-err', 'Please re-enter your password.');
+      else if (pass2 !== pass) flagReg('reg-pass2', 'reg-pass2-err', 'Passwords do not match.');
       if (!employment) flagReg('reg-employment', 'reg-employment-err', 'Please enter your employment / agency.');
       if (!barangay) flagReg('reg-barangay', 'reg-barangay-err', 'Please select your barangay.');
       if (!house) flagReg('reg-house', 'reg-house-err', 'Please enter your house / unit / street address.');
@@ -1030,8 +1143,78 @@
       CalyeAuth.signOut().then(() => location.reload());
     }
 
-    // If a verified session already exists, go straight to the app.
+    function doForgotPassword() {
+      const email = document.getElementById('forgot-email').value.trim();
+      clearAuthFieldErrors();
+      clearErr('forgot-error');
+      if (!email) { setFieldError('forgot-email', 'forgot-email-err', 'Please enter your email.'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFieldError('forgot-email', 'forgot-email-err', 'That email address does not look right.'); return; }
+      setBtn('forgot-btn', true, 'Sending…');
+      CalyeAuth.resetPasswordForEmail(email, location.origin + location.pathname).then(res => {
+        setBtn('forgot-btn', false, 'Send reset link');
+        if (res.error) { showErr('forgot-error', res.error); return; }
+        // Same message whether or not the email exists — the form can't be
+        // used to probe which accounts are registered.
+        showErr('forgot-error', 'Check your email for a password reset link. It expires shortly.', true);
+        document.getElementById('forgot-email').value = '';
+      });
+    }
+
+    function doResetPassword() {
+      const pass = document.getElementById('reset-pass').value;
+      const pass2 = document.getElementById('reset-pass2').value;
+      const sessEmail = resetRecoveryEmail || '';
+      clearAuthFieldErrors();
+      clearErr('reset-error');
+      let firstBad = null;
+      const flagReg = (inputId, errId, msg) => {
+        setFieldError(inputId, errId, msg);
+        if (!firstBad) firstBad = inputId;
+      };
+      if (!pass) flagReg('reset-pass', 'reset-pass-err', 'Please enter a new password.');
+      else {
+        const pw = CalyeAuth.passwordPolicy(pass, { email: sessEmail });
+        if (!pw.ok) flagReg('reset-pass', 'reset-pass-err', pw.message);
+      }
+      if (!pass2) flagReg('reset-pass2', 'reset-pass2-err', 'Please re-enter your new password.');
+      else if (pass2 !== pass) flagReg('reset-pass2', 'reset-pass2-err', 'Passwords do not match.');
+      if (firstBad) { document.getElementById(firstBad).focus(); return; }
+      setBtn('reset-btn', true, 'Saving…');
+      CalyeAuth.updateUserPassword(pass).then(res => {
+        if (res.error) { setBtn('reset-btn', false, 'Set new password'); showErr('reset-error', res.error); return; }
+        CalyeAuth.getStatus().then(st => {
+          if (st.status === 'approved') location.href = 'calye-safe-responders.html';
+          else showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
+        });
+      });
+    }
+
+    // Password-recovery landing: Supabase redirects here with a recovery
+    // session (PASSWORD_RECOVERY event) or #access_token…type=recovery in the
+    // URL hash. `recoveryLanding` was snapshotted before init stripped the hash.
+    let resetRecoveryEmail = '';
+    function enterResetPanel(email) {
+      recoveryLanding = true;
+      resetRecoveryEmail = email || resetRecoveryEmail;
+      showPanel('reset');
+      const el = document.getElementById('reset-pass');
+      if (el) el.focus();
+    }
+    CalyeAuth.onAuthEvent(function (event, session) {
+      if (event === 'PASSWORD_RECOVERY') {
+        enterResetPanel(session && session.user && session.user.email);
+      }
+    });
+    if (recoveryLanding) {
+      CalyeAuth.currentSession().then(s => {
+        enterResetPanel(s && s.user && s.user.email);
+      });
+    }
+
+    // If a verified session already exists, go straight to the app —
+    // unless we just came back from a password-reset email link.
     CalyeAuth.getStatus().then(st => {
+      if (recoveryLanding || document.getElementById('panel-reset').classList.contains('active')) return;
       if (st.status === 'approved') {
         location.href = 'calye-safe-responders.html';
       } else if (st.session) {

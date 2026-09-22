@@ -104,6 +104,58 @@ window.CalyeAuth = (function () {
   }
 
   /**
+   * Send a password-reset email. The link returns the user to `redirectTo`
+   * (typically this page). Returns { error }.
+   */
+  function resetPasswordForEmail(email, redirectTo) {
+    return new Promise(function (resolve) {
+      var c = getClient();
+      if (!c) { resolve({ error: 'Database not reachable' }); return; }
+      var dest = redirectTo ||
+        (window.location.origin + window.location.pathname);
+      c.auth.resetPasswordForEmail(email, { redirectTo: dest })
+        .then(function (res) {
+          if (res.error) { resolve({ error: res.error.message }); return; }
+          resolve({ error: null });
+        }).catch(function (e) {
+          resolve({ error: e.message || 'Could not send the reset email' });
+        });
+    });
+  }
+
+  /**
+   * Set a new password for the current session user (recovery flow).
+   * Returns { error, session, user }.
+   */
+  function updateUserPassword(newPassword) {
+    return new Promise(function (resolve) {
+      var c = getClient();
+      if (!c) { resolve({ error: 'Database not reachable' }); return; }
+      c.auth.updateUser({ password: newPassword })
+        .then(function (res) {
+          if (res.error) { resolve({ error: res.error.message }); return; }
+          var session = res.data && res.data.session ? res.data.session : null;
+          var user = res.data && res.data.user ? res.data.user : null;
+          if (session) lastSession = session;
+          resolve({ error: null, session: session, user: user });
+        }).catch(function (e) {
+          resolve({ error: e.message || 'Could not update the password' });
+        });
+    });
+  }
+
+  /**
+   * Subscribe to supabase auth events ('PASSWORD_RECOVERY', 'SIGNED_IN', …).
+   */
+  function onAuthEvent(cb) {
+    var c = getClient();
+    if (!c || typeof cb !== 'function') return;
+    c.auth.onAuthStateChange(function (event, session) {
+      cb(event, session);
+    });
+  }
+
+  /**
    * Upload a valid-ID photo into the 'verification-ids' bucket.
    * Path: {userId}/{timestamp}-{sanitized filename}
    * Returns { error, path, url }.
@@ -348,6 +400,9 @@ window.CalyeAuth = (function () {
     signUp: signUp,
     signIn: signIn,
     signOut: signOut,
+    resetPasswordForEmail: resetPasswordForEmail,
+    updateUserPassword: updateUserPassword,
+    onAuthEvent: onAuthEvent,
     uploadId: uploadId,
     submitVerification: submitVerification,
     getStatus: getStatus,
