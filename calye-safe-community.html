@@ -90,6 +90,14 @@
       color: #FFFFFF;
     }
 
+    :root[data-theme="dark"] .nav-item:not(.report-btn) {
+      color: #FFFFFF;
+    }
+
+    :root[data-theme="dark"] .nav-item:not(.report-btn).active {
+      color: var(--primary-text);
+    }
+
     :root[data-theme="dark"] .skel {
       background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
     }
