@@ -4118,6 +4118,9 @@
       const submitGroup = groupOf();
       reports.unshift({
         id: rid,
+        // Owner tag — "My Reports" must only ever show the signed-in user's
+        // own reports ('local' = filed on this device while logged out).
+        ownerUid: currentUid || 'local',
         type: (submitGroup ? submitGroup.name : selectedType) || 'Incident',
         subtype: selectedSubtype || '',
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
@@ -4242,7 +4245,13 @@
 
     function renderReports() {
       const list = document.getElementById('reports-list');
-      const filtered = currentFilter === 'all' ? reports : reports.filter(r => r.status === currentFilter);
+      // Final ownership guard: a signed-in user only ever sees their own
+      // reports here (plus this device's logged-out filings). Anything else
+      // in the cache is someone else's data and must stay hidden.
+      const mine = currentUid
+        ? (reports || []).filter(r => !r.ownerUid || r.ownerUid === currentUid || r.ownerUid === 'local')
+        : (reports || []);
+      const filtered = currentFilter === 'all' ? mine : mine.filter(r => r.status === currentFilter);
       if (filtered.length === 0) {
         list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No reports found.</p></div>';
         return;
@@ -5372,10 +5381,17 @@
       setTimeout(() => { offlineNotified = false; }, 120000);
     }
     function syncMyReports(uid) {
-      const opts = { order: 'created_at', asc: false, limit: 50 };
-      if (uid) opts.filters = [['reporter_id', 'eq', uid]];
+      // Without a signed-in user we must NEVER pull other people's reports:
+      // just render this device's local cache (demo/offline preview).
+      if (!uid) { renderReports(); return; }
+      const opts = { order: 'created_at', asc: false, limit: 50, filters: [['reporter_id', 'eq', uid]] };
       CalyeDB.fetch('reports', opts).then(dbReports => {
         if (!dbReports || !dbReports.length) return;
+        // Belt-and-suspenders: drop anyone else's rows even if RLS is off
+        // (e.g. demo-access.sql disables RLS, so the filter above alone
+        // would not protect My Reports).
+        dbReports = dbReports.filter(r => r && r.reporter_id === uid);
+        if (!dbReports.length) return;
         const ids = dbReports.map(r => r.id);
         CalyeDB.fetch('report_timeline', { filters: [['report_id', 'in', ids]], limit: 250 }).then(tlRows => {
           const tlByReport = (tlRows || []).reduce((acc, t) => {
@@ -5398,6 +5414,7 @@
                 const active = r.status === 'responding' || r.status === 'on_site';
                 return {
                   id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
+                  ownerUid: uid,
                   type: r.type,
                   loc: r.location || 'Barangay Calye',
                   date: fmtDate(r.created_at),
@@ -5421,10 +5438,13 @@
                 // Merge — DB wins on conflict, but local-only reports
                 // (filed offline / not yet synced) are kept so a sync can
                 // never wipe what the user sees after logout/login.
+                // Ownership guard: never retain another account's rows that
+                // may linger from an earlier fetch-all while RLS was off.
+                const isMine = r => !r || !r.ownerUid || r.ownerUid === uid || r.ownerUid === 'local';
                 const byId = {};
                 mapped.forEach(r => { byId[r.id] = r; });
-                (reports || []).forEach(r => { if (r && r.id && !byId[r.id]) byId[r.id] = r; });
-                reports = Object.values(byId);
+                (reports || []).forEach(r => { if (r && r.id && !byId[r.id] && isMine(r)) byId[r.id] = r; });
+                reports = Object.values(byId).filter(isMine);
                 saveStoredData(reportsKey(), reports);
                 renderReports();
                 refreshCommunityStats();
