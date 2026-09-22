@@ -230,6 +230,35 @@
       display: block;
     }
 
+    /* Inline field errors — shown instantly where the problem is */
+    .field-error {
+      display: none;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--danger);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    .field-error.show {
+      display: flex;
+    }
+
+    .field-error svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    input.input-error,
+    select.input-error {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
+    }
+
     .btn {
       width: 100%;
       padding: 15px;
@@ -584,12 +613,14 @@
 
           <div class="form-group">
             <label>Email</label>
-            <input id="login-email" type="email" placeholder="responder@email.com" value="">
+            <input id="login-email" type="email" placeholder="responder@email.com" value="" oninput="clearFieldError('login-email','login-email-err')">
+            <div class="field-error" id="login-email-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>Password</label>
-            <input id="login-pass" type="password" placeholder="Enter your password" value="" onkeydown="if(event.key==='Enter')doLogin()">
+            <input id="login-pass" type="password" placeholder="Enter your password" value="" onkeydown="if(event.key==='Enter')doLogin()" oninput="clearFieldError('login-pass','login-pass-err')">
+            <div class="field-error" id="login-pass-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
@@ -608,27 +639,31 @@
 
           <div class="form-group">
             <label>Full name</label>
-            <input id="reg-name" type="text" placeholder="Mark Anthony Reyes">
+            <input id="reg-name" type="text" placeholder="Mark Anthony Reyes" oninput="clearFieldError('reg-name','reg-name-err')">
+            <div class="field-error" id="reg-name-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>Email</label>
-            <input id="reg-email" type="email" placeholder="responder@email.com">
+            <input id="reg-email" type="email" placeholder="responder@email.com" oninput="clearFieldError('reg-email','reg-email-err')">
+            <div class="field-error" id="reg-email-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>Password</label>
-            <input id="reg-pass" type="password" placeholder="At least 6 characters">
+            <input id="reg-pass" type="password" placeholder="At least 6 characters" oninput="clearFieldError('reg-pass','reg-pass-err')">
+            <div class="field-error" id="reg-pass-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>Employment / Agency</label>
-            <input id="reg-employment" type="text" placeholder="e.g. Santa Rosa QRT · Unit RES-014">
+            <input id="reg-employment" type="text" placeholder="e.g. Santa Rosa QRT · Unit RES-014" oninput="clearFieldError('reg-employment','reg-employment-err')">
+            <div class="field-error" id="reg-employment-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>Barangay</label>
-            <select id="reg-barangay" onchange="pendingAddr.barangay = this.value">
+            <select id="reg-barangay" onchange="pendingAddr.barangay = this.value; clearFieldError('reg-barangay','reg-barangay-err')">
               <option value="">Select barangay…</option>
               <option>Aplaya</option><option>Balibago</option><option>Caingin</option>
               <option>Dila</option><option>Dita</option><option>Don Jose</option>
@@ -637,11 +672,13 @@
               <option>Market Area</option><option>Pook</option><option>Pulong Santa Cruz</option>
               <option>Santo Domingo</option><option>Sinalhan</option><option>Tagapo</option>
             </select>
+            <div class="field-error" id="reg-barangay-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
             <label>House / Unit / Street</label>
-            <input id="reg-house" type="text" placeholder="e.g. 12 Barangay Rd., Unit 3, Matatag Building" oninput="pendingAddr.house = this.value">
+            <input id="reg-house" type="text" placeholder="e.g. 12 Barangay Rd., Unit 3, Matatag Building" oninput="pendingAddr.house = this.value; clearFieldError('reg-house','reg-house-err')">
+            <div class="field-error" id="reg-house-err"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><span></span></div>
           </div>
 
           <div class="form-group">
@@ -706,6 +743,33 @@
       document.getElementById(id).classList.remove('show');
     }
 
+    /* Inline field errors: shown instantly under the field at fault. */
+    function setFieldError(inputId, errId, msg) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errId);
+      if (input) input.classList.add('input-error');
+      if (err) {
+        const label = err.querySelector('span');
+        if (label) label.textContent = msg;
+        err.classList.add('show');
+      }
+    }
+
+    function clearFieldError(inputId, errId) {
+      const input = document.getElementById(inputId);
+      const err = document.getElementById(errId);
+      if (input) input.classList.remove('input-error');
+      if (err) err.classList.remove('show');
+    }
+
+    function clearAuthFieldErrors() {
+      [['login-email', 'login-email-err'], ['login-pass', 'login-pass-err'],
+       ['reg-name', 'reg-name-err'], ['reg-email', 'reg-email-err'],
+       ['reg-pass', 'reg-pass-err'], ['reg-employment', 'reg-employment-err'],
+       ['reg-barangay', 'reg-barangay-err'],
+       ['reg-house', 'reg-house-err']].forEach(pair => clearFieldError(pair[0], pair[1]));
+    }
+
     function showPanel(name) {
       document.getElementById('tab-signin').classList.toggle('active', name === 'signin');
       document.getElementById('tab-register').classList.toggle('active', name === 'register');
@@ -713,6 +777,7 @@
       document.getElementById('panel-register').classList.toggle('active', name === 'register');
       clearErr('login-error');
       clearErr('reg-error');
+      clearAuthFieldErrors();
     }
 
     function setBtn(id, busy, text) {
@@ -879,15 +944,24 @@
     function doLogin() {
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-pass').value;
-      if (!email || !pass) { showErr('login-error', 'Please enter your email and password to continue.'); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('login-error', 'Please enter a valid email address.'); return; }
+      clearAuthFieldErrors();
       clearErr('login-error');
+      let firstBad = null;
+      const flag = (inputId, errId, msg) => {
+        setFieldError(inputId, errId, msg);
+        if (!firstBad) firstBad = inputId;
+      };
+      if (!email) flag('login-email', 'login-email-err', 'Please enter your email.');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) flag('login-email', 'login-email-err', 'That email address does not look right.');
+      if (!pass) flag('login-pass', 'login-pass-err', 'Please enter your password.');
+      if (firstBad) { document.getElementById(firstBad).focus(); return; }
       setBtn('login-btn', true, 'Signing in…');
 
       CalyeAuth.signIn(email, pass).then(res => {
         if (res.error) {
           setBtn('login-btn', false, 'Sign In');
-          showErr('login-error', res.error);
+          setFieldError('login-pass', 'login-pass-err', 'Invalid login credentials.');
+          document.getElementById('login-pass').focus();
           return;
         }
         CalyeAuth.getStatus().then(st => {
@@ -909,22 +983,32 @@
       const house = document.getElementById('reg-house').value.trim();
       const subdivision = document.getElementById('reg-subdivision').value.trim();
 
-      if (!name) { showErr('reg-error', 'Please enter your full name.'); return; }
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('reg-error', 'Please enter a valid email address.'); return; }
-      if (!pass) { showErr('reg-error', 'Please enter a password.'); return; }
-      const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
-      if (!pw.ok) { showErr('reg-error', pw.message); return; }
-      if (!employment) { showErr('reg-error', 'Please enter your employment / agency.'); return; }
-      if (!barangay) { showErr('reg-error', 'Please select your barangay.'); return; }
-      if (!house) { showErr('reg-error', 'Please enter your house / unit / street address.'); return; }
+      clearAuthFieldErrors();
       clearErr('reg-error');
+      let firstBad = null;
+      const flagReg = (inputId, errId, msg) => {
+        setFieldError(inputId, errId, msg);
+        if (!firstBad) firstBad = inputId;
+      };
+      if (!name) flagReg('reg-name', 'reg-name-err', 'Please enter your full name.');
+      if (!email) flagReg('reg-email', 'reg-email-err', 'Please enter your email.');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) flagReg('reg-email', 'reg-email-err', 'That email address does not look right.');
+      if (!pass) flagReg('reg-pass', 'reg-pass-err', 'Please enter a password.');
+      else {
+        const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
+        if (!pw.ok) flagReg('reg-pass', 'reg-pass-err', pw.message);
+      }
+      if (!employment) flagReg('reg-employment', 'reg-employment-err', 'Please enter your employment / agency.');
+      if (!barangay) flagReg('reg-barangay', 'reg-barangay-err', 'Please select your barangay.');
+      if (!house) flagReg('reg-house', 'reg-house-err', 'Please enter your house / unit / street address.');
+      if (firstBad) { document.getElementById(firstBad).focus(); return; }
 
       pendingAddr = { barangay: barangay, house: house, subdivision: subdivision };
       const address = composeAddress(barangay, house, subdivision);
 
       setBtn('reg-btn', true, 'Creating account…');
       CalyeAuth.signUp({ role: 'responder', full_name: name, email: email, password: pass }).then(reg => {
-        if (reg.error) { setBtn('reg-btn', false, 'Create Account'); showErr('reg-error', reg.error); return; }
+        if (reg.error) { setBtn('reg-btn', false, 'Create Account'); setFieldError('reg-email', 'reg-email-err', reg.error); document.getElementById('reg-email').focus(); return; }
 
         if (!reg.session) {
           setBtn('reg-btn', false, 'Create Account');
