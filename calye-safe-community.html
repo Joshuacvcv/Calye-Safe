@@ -3302,7 +3302,7 @@
         <h3>App preferences</h3>
         <div class="form-group">
           <label>Language</label>
-          <select id="ap-language" style="width:100%;">
+          <select id="ap-language" style="width:100%;" onchange="saveLanguagePref(this.value)">
             <option value="English">English</option>
             <option value="Filipino">Filipino</option>
           </select>
@@ -3325,7 +3325,7 @@
             <label class="toggle"><input type="checkbox" id="ap-motion" onchange="setPref('reducedMotion', this.checked)"><span class="toggle-slider"></span></label>
           </div>
         </div>
-        <div class="card" style="margin-bottom:16px;">
+        <div class="card" style="margin-bottom:0;">
           <div class="toggle-row">
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text);">High Contrast Text</div>
@@ -3334,7 +3334,6 @@
             <label class="toggle"><input type="checkbox" id="ap-contrast" onchange="setPref('highContrast', this.checked)"><span class="toggle-slider"></span></label>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="saveAppearance()">Save Preferences</button>
       </div>
     </div>
 
@@ -5372,13 +5371,10 @@
       showModal('appearance-modal');
     }
 
-    function saveAppearance() {
-      profile.language = document.getElementById('ap-language').value;
-      profile.reducedMotion = document.getElementById('ap-motion').checked;
-      profile.highContrast = document.getElementById('ap-contrast').checked;
+    function saveLanguagePref(val) {
+      profile.language = val;
       saveStoredObj(LS_KEY_PROFILE, profile);
-      closeModal('appearance-modal');
-      showToast('App preferences saved.');
+      showToast('Language set to ' + val + '.');
     }
 
     const STATIC_INFO = {
