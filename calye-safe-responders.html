@@ -49,6 +49,32 @@
             --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        /* ── DARK MODE ── */
+        :root[data-theme="dark"] {
+            --bg: #0E1622;
+            --card: #182234;
+            --text: #F1F5F9;
+            --text2: #C3CEDD;
+            --text3: #8B98AC;
+            --border: #2B3A52;
+            --surface2: #22304A;
+            --success-light: rgba(46, 125, 50, 0.22);
+            --warning-light: rgba(245, 124, 0, 0.22);
+            --danger-light: rgba(229, 57, 53, 0.22);
+            --info-light: rgba(21, 101, 192, 0.28);
+            --accent-light: rgba(245, 166, 35, 0.20);
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.50);
+        }
+
+        :root[data-theme="dark"] .leaflet-tile-pane {
+            filter: brightness(0.82) saturate(0.9);
+        }
+
+        :root[data-theme="dark"] .skel {
+            background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
+        }
+
         html,
         body {
             height: 100%;
@@ -846,13 +872,13 @@
             }
         }
 
-        /* ── GLOBAL 1s TIMING (matches resident app) ── */
+        /* ── GLOBAL 0.5s TIMING (matches resident app) ── */
         @media (prefers-reduced-motion: no-preference) {
 
             #app-shell,
             #app-shell *:not(.leaflet-container):not(.leaflet-container *) {
-                animation-duration: 1s !important;
-                transition-duration: 1s !important;
+                animation-duration: 0.5s !important;
+                transition-duration: 0.5s !important;
             }
         }
 
@@ -2163,6 +2189,7 @@
             }
         }
     </style>
+    <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('calye_theme')||'light');}catch(e){}</script>
 </head>
 
 <body>
@@ -2335,6 +2362,18 @@
                     <span class="label">On Duty Status</span>
                     <label class="toggle">
                         <input type="checkbox" id="duty-toggle-2" checked onchange="toggleDuty(true)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <span class="section-label">Preferences</span>
+                <div class="profile-menu-item" style="cursor:default;">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                    <span class="label">Dark Mode</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="rp-dark" onchange="setResponderTheme(this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -4306,6 +4345,22 @@
             return `${h}:${m < 10 ? '0' : ''}${m} ${ap}`;
         }
 
+        // ── APP THEME (light / dark), shared across Calye Safe apps ──
+        function applyResponderTheme() {
+            try {
+                var t = localStorage.getItem('calye_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+                var c = document.getElementById('rp-dark');
+                if (c) c.checked = (t === 'dark');
+            } catch (e) { }
+        }
+
+        function setResponderTheme(dark) {
+            try { localStorage.setItem('calye_theme', dark ? 'dark' : 'light'); } catch (e) { }
+            applyResponderTheme();
+            showToast(dark ? 'Dark mode enabled.' : 'Light mode enabled.');
+        }
+
         let toastTimer;
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -4474,6 +4529,7 @@
         }
 
         // ══════════════════════════ INIT ══════════════════════════
+        applyResponderTheme();
         renderHome();
         renderQueue();
         renderHistory();

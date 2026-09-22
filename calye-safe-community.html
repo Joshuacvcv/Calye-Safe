@@ -12,6 +12,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <script src="santarosa-boundary.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -40,6 +41,12 @@
       --text2: #1A1A1A;
       --text3: #333333;
       --border: #E2E8F4;
+      --surface2: #E9EEF6;
+      --success-light: #E8F5E9;
+      --warning-light: #FFF3E0;
+      --danger-light: #FDECEA;
+      --info-light: #E3F2FD;
+      --accent-light: #FDE9BB;
       --radius: 14px;
       --radius-sm: 10px;
       --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
@@ -48,6 +55,32 @@
       --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
       --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
       --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ── DARK MODE ── */
+    :root[data-theme="dark"] {
+      --bg: #0E1622;
+      --card: #182234;
+      --text: #F1F5F9;
+      --text2: #C3CEDD;
+      --text3: #8B98AC;
+      --border: #2B3A52;
+      --surface2: #22304A;
+      --success-light: rgba(46, 125, 50, 0.22);
+      --warning-light: rgba(245, 124, 0, 0.22);
+      --danger-light: rgba(229, 57, 53, 0.22);
+      --info-light: rgba(21, 101, 192, 0.28);
+      --accent-light: rgba(245, 166, 35, 0.20);
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.50);
+    }
+
+    :root[data-theme="dark"] .leaflet-tile-pane {
+      filter: brightness(0.82) saturate(0.9);
+    }
+
+    :root[data-theme="dark"] .skel {
+      background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
     }
 
     html,
@@ -2165,14 +2198,14 @@
       transform: scale(0.97) translateY(0);
     }
 
-    /* ── GLOBAL 1s TIMING (user request) ──
-       Every app animation/transition runs at 1s. Leaflet map internals
+    /* ── GLOBAL 0.5s TIMING (user request) ──
+       Every app animation/transition runs at 0.5s. Leaflet map internals
        are excluded so panning/zooming stays usable. */
     @media (prefers-reduced-motion: no-preference) {
       #app-shell,
       #app-shell *:not(.leaflet-container):not(.leaflet-container *) {
-        animation-duration: 1s !important;
-        transition-duration: 1s !important;
+        animation-duration: 0.5s !important;
+        transition-duration: 0.5s !important;
       }
     }
 
@@ -2186,6 +2219,7 @@
       }
     }
   </style>
+  <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('calye_theme')||'light');}catch(e){}</script>
 </head>
 
 <body>
@@ -2336,6 +2370,13 @@
           <div id="map-geocode-results"
             style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-top:4px;overflow:hidden;box-shadow:var(--shadow);position:relative;z-index:1000;">
           </div>
+        </div>
+        <!-- Hotspot heatmap toggle (same rendering as the admin console) -->
+        <div
+          style="padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+          <span style="font-size:12px;font-weight:700;color:var(--text2);">Heatmap</span>
+          <label class="toggle"><input type="checkbox" id="res-heat-toggle" onchange="toggleResidentHeat(this)"><span class="toggle-slider"></span></label>
+          <span style="font-size:10.5px;color:var(--text3);font-weight:600;">Hotspot overlay</span>
         </div>
         <div
           style="padding:6px 14px;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;overflow-x:auto;">
@@ -2769,7 +2810,7 @@
             <circle cx="12" cy="12" r="3" />
             <path d="M19.07 4.93A10 10 0 014.93 19.07M14.12 14.12A3 3 0 119.88 9.88" />
           </svg>
-          <span class="label">Appearance</span>
+          <span class="label">App preferences</span>
           <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
               <path d="M9 18l6-6-6-6" />
             </svg></div>
@@ -3221,13 +3262,22 @@
     <div class="modal-overlay" id="appearance-modal" onclick="closeModal('appearance-modal')">
       <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:28px;">
         <div class="modal-handle"></div>
-        <h3>Appearance</h3>
+        <h3>App preferences</h3>
         <div class="form-group">
           <label>Language</label>
           <select id="ap-language" style="width:100%;">
             <option value="English">English</option>
             <option value="Filipino">Filipino</option>
           </select>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="toggle-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">Dark Mode</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Easier on the eyes at night</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="ap-dark" onchange="setThemeMode(this.checked)"><span class="toggle-slider"></span></label>
+          </div>
         </div>
         <div class="card" style="margin-bottom:10px;">
           <div class="toggle-row">
@@ -3648,6 +3698,41 @@
           .bindPopup(`<div class="popup-title">${inc.label}</div><div class="popup-loc">📍 ${inc.loc}</div><div class="popup-badge"><span class="badge ${statusClass[inc.status] || 'pending'}">${statusLabel[inc.status] || inc.status}</span></div>`);
         incidentMarkers.push(marker);
       });
+      refreshResidentHeat();
+    }
+
+    // ── HOTSPOT HEAT LAYER (same rendering as the admin console) ──
+    let residentHeatLayer = null;
+    let residentHeatOn = false;
+    const RES_HEAT_MAJOR = { crime: 1, fire: 1, flooding: 1, accident: 1, medical: 1 };
+
+    function residentHeatPoints() {
+      const pts = [];
+      const q = (mapSearchQuery || '').toLowerCase().trim();
+      (mapIncidents || []).forEach(inc => {
+        if (activeMapFilter !== 'all' && inc.type !== activeMapFilter) return;
+        if (q && !String(inc.label || '').toLowerCase().includes(q) && !String(inc.loc || '').toLowerCase().includes(q) && !String(inc.type || '').toLowerCase().includes(q)) return;
+        if (typeof isPointInSantaRosa === 'function' && !isPointInSantaRosa(inc.lat, inc.lng)) return;
+        if (typeof inc.lat !== 'number' || typeof inc.lng !== 'number') return;
+        pts.push([inc.lat, inc.lng, RES_HEAT_MAJOR[inc.type] ? 1 : 0.55]);
+      });
+      return pts;
+    }
+
+    function refreshResidentHeat() {
+      if (!incidentMap) return;
+      if (residentHeatLayer) { incidentMap.removeLayer(residentHeatLayer); residentHeatLayer = null; }
+      if (!residentHeatOn) return;
+      const pts = residentHeatPoints();
+      if (pts.length && typeof L.heatLayer === 'function') {
+        residentHeatLayer = L.heatLayer(pts, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(incidentMap);
+      }
+    }
+
+    function toggleResidentHeat(cb) {
+      residentHeatOn = !!(cb && cb.checked);
+      refreshResidentHeat();
+      showToast(residentHeatOn ? 'Hotspot heat layer on.' : 'Hotspot heat layer off.');
     }
 
     function filterMapBySearch(val) {
@@ -5214,6 +5299,22 @@
       showModal('notif-settings-modal');
     }
 
+    // ── APP THEME (light / dark), shared across Calye Safe apps ──
+    function applyTheme() {
+      try {
+        var t = localStorage.getItem('calye_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        var c = document.getElementById('ap-dark');
+        if (c) c.checked = (t === 'dark');
+      } catch (e) { }
+    }
+
+    function setThemeMode(dark) {
+      try { localStorage.setItem('calye_theme', dark ? 'dark' : 'light'); } catch (e) { }
+      applyTheme();
+      showToast(dark ? 'Dark mode enabled.' : 'Light mode enabled.');
+    }
+
     function setPref(field, val) {
       if (field in profile.notif) profile.notif[field] = val;
       else profile[field] = val;
@@ -5230,6 +5331,7 @@
       document.getElementById('ap-language').value = profile.language;
       document.getElementById('ap-motion').checked = profile.reducedMotion;
       document.getElementById('ap-contrast').checked = profile.highContrast;
+      try { document.getElementById('ap-dark').checked = (localStorage.getItem('calye_theme') || 'light') === 'dark'; } catch (e) { }
       showModal('appearance-modal');
     }
 
@@ -5239,7 +5341,7 @@
       profile.highContrast = document.getElementById('ap-contrast').checked;
       saveStoredObj(LS_KEY_PROFILE, profile);
       closeModal('appearance-modal');
-      showToast('Appearance preferences saved.');
+      showToast('App preferences saved.');
     }
 
     const STATIC_INFO = {

@@ -40,7 +40,6 @@
       --radius-sm: 10px;
       --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
       --shadow-lg: 0 8px 32px rgba(30, 58, 95, 0.16);
-      --status-h: 44px;
     }
 
     html,
@@ -66,39 +65,9 @@
       flex-direction: column;
     }
 
-    .status-bar {
-      height: var(--status-h);
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 5;
-    }
-
-    .status-bar .time {
-      color: #fff;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .status-bar .icons {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .status-bar .icons svg {
-      fill: #fff;
-      width: 16px;
-      height: 16px;
-    }
-
     .login-header {
       background: var(--primary);
-      padding: 18px 20px 26px;
+      padding: 24px 20px 26px;
       flex-shrink: 0;
       position: relative;
       overflow: hidden;
@@ -576,15 +545,6 @@
 </head>
 <body>
   <div id="app-shell">
-    <div class="status-bar">
-      <div class="time" id="clock-time">9:41</div>
-      <div class="icons">
-        <svg viewBox="0 0 24 24"><path d="M2 16.76h18.5v2.74H2z"/><path d="M2 12h14.5v2.74H2z"/><path d="M2 7.24h9.5v2.74H2z"/></svg>
-        <svg viewBox="0 0 24 24"><path d="M3 12l3 3 3-9 3 14 3-8 3 6 3-3"/></svg>
-        <svg viewBox="0 0 24 24"><rect x="1" y="7" width="4" height="10" rx="1"/><rect x="7" y="4" width="4" height="16" rx="1"/><rect x="13" y="9" width="4" height="6" rx="1"/></svg>
-      </div>
-    </div>
-
     <div class="login-header">
       <div class="brand">
         <div class="brand-logo" onclick="location.reload()" title="Reload app" style="cursor:pointer;">
@@ -975,15 +935,6 @@
     function doLogout() {
       CalyeAuth.signOut().then(() => location.reload());
     }
-
-    (function tick() {
-      const now = new Date();
-      let h = now.getHours(); const m = now.getMinutes();
-      const ap = h >= 12 ? 'PM' : 'AM';
-      h = h % 12; if (h === 0) h = 12;
-      document.getElementById('clock-time').textContent = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ap;
-      setTimeout(tick, 30000);
-    })();
 
     // If a verified session already exists, go straight to the app.
     CalyeAuth.getStatus().then(st => {
