@@ -281,7 +281,7 @@
       left: 0;
       bottom: 0;
       width: 3px;
-      background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 60%, transparent 100%);
+      background: var(--primary);
       opacity: 0.18;
     }
 
@@ -304,7 +304,7 @@
       width: 44px;
       height: 44px;
       border-radius: 12px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -446,7 +446,7 @@
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -503,7 +503,7 @@
       right: 0;
       bottom: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 40%, var(--accent) 75%, transparent 100%);
+      background: var(--primary);
       opacity: 0.22;
     }
 
@@ -961,7 +961,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, var(--danger), #FB923C);
+      background: var(--danger);
     }
 
     .priority-header {
@@ -1113,7 +1113,7 @@
     }
 
     .btn-respond.primary {
-      background: linear-gradient(135deg, var(--danger), #DC2626);
+      background: var(--danger);
       color: #fff;
       box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
     }
@@ -1625,7 +1625,7 @@
     .detail-avatar {
       width: 46px; height: 46px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      background: var(--primary);
       display: flex; align-items: center; justify-content: center;
       font-family: 'Nunito', sans-serif;
       font-size: 15px;
@@ -1888,9 +1888,10 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(6px);
-      z-index: 100;
+      background: rgba(15, 23, 42, 0.45);
+      /* No backdrop blur: blurring the live maps underneath every frame is
+         what made every popup stutter. */
+      z-index: 2000;
       display: none;
       align-items: center;
       justify-content: center;
@@ -1988,7 +1989,7 @@
     }
 
     .modal-btn.confirm {
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      background: var(--accent);
       color: #fff;
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
     }
@@ -1998,7 +1999,7 @@
     }
 
     .modal-btn.danger-confirm {
-      background: linear-gradient(135deg, var(--danger), #B71C1C);
+      background: var(--danger);
       color: #fff;
       box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
     }
@@ -2263,12 +2264,10 @@
     @keyframes modalIn {
       from {
         opacity: 0;
-        transform: scale(0.95) translateY(4px);
       }
 
       to {
         opacity: 1;
-        transform: scale(1) translateY(0);
       }
     }
 
@@ -2962,7 +2961,7 @@
     }
 
     .verify-btn.delete {
-      background: linear-gradient(135deg, var(--danger), #B71C1C);
+      background: var(--danger);
       color: #fff;
       border: none;
       box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
@@ -3126,7 +3125,7 @@
     .settings-save-btn {
       padding: 10px 22px;
       border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      background: var(--primary);
       color: #fff;
       border: none;
       font-family: inherit;
@@ -3155,7 +3154,7 @@
     #admin-gate {
       position: fixed; inset: 0; z-index: 99999;
       display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at 20% 0%, #16233a 0%, #0a0f1c 60%);
+      background: #0a0f1c;
       font-family: 'Nunito', sans-serif;
     }
     #admin-gate.hidden { display: none; }
@@ -3167,7 +3166,7 @@
     .gate-logo {
       width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #1d6fe0, #1ab3a6); color: #fff; font-weight: 900; font-size: 22px;
+      background: #1d6fe0; color: #fff; font-weight: 900; font-size: 22px;
       overflow: hidden;
     }
     .gate-logo img {
@@ -3198,7 +3197,7 @@
     .pw-toggle svg { width: 18px; height: 18px; }
     .gate-btn {
       width: 100%; padding: 13px; margin-top: 4px; border: none; border-radius: 10px;
-      background: linear-gradient(135deg, #1d6fe0, #129fbe); color: #fff;
+      background: #1d6fe0; color: #fff;
       font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
     }
     .gate-btn:disabled { opacity: 0.6; cursor: wait; }
@@ -3449,10 +3448,10 @@
               </div>
             </div>
 
-            <!-- ALL REPORTS TABLE -->
+            <!-- RECENT REPORTS TABLE (overview shows the 5 most recent) -->
             <div class="panel" style="animation-delay:0.25s;">
               <div class="panel-header">
-                <div class="sec-title">All Reports</div>
+                <div class="sec-title">Recent Reports</div>
                 <div class="filter-tabs">
                   <button class="ftab active" onclick="filterTable('all',this)">All</button>
                   <button class="ftab" onclick="filterTable('urgent',this)">Urgent</button>
@@ -3813,45 +3812,61 @@
 
           <!-- Legend -->
           <div
-            style="display:flex;align-items:center;gap:14px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);flex-wrap:wrap;row-gap:6px;">
+            style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;">
             <span
               style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
             <span
               style="font-size:10.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;background:var(--danger-light);padding:3px 9px;border-radius:20px;">Major</span>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--danger);"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Flooding</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--crime);"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#B71C1C;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Crime</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--fire);"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Fire</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--accident);"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Accident</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#0D47A1;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Flooding</span>
             </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Accidents</span>
+            </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
             <span
               style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--warning);"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazard</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#1565C0;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Clogged Drains</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--success);"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Garbage</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Broken Streetlights</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--text3);"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Other</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#2E7D32;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Uncollected Garbage</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#F57C00;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Vandalism</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Public Disturbance</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazards</span>
             </div>
             <div style="margin-left:auto;font-size:12px;color:var(--text3);font-weight:600;">📍 <span
                 id="page-map-loc-label">Santa Rosa, Laguna, Philippines</span></div>
           </div>
 
+        </div>
         </div>
 
         <!-- ANNOUNCEMENTS PAGE -->
@@ -4720,7 +4735,8 @@
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-weight:600;font-size:13px;">No reports found.</td></tr>`;
         return;
       }
-      tbody.innerHTML = data.map(r => `
+      // Overview shows only the 5 most recent (reports arrive newest-first).
+      tbody.innerHTML = data.slice(0, 5).map(r => `
     <tr>
       <td><span class="report-num">${r.id}</span></td>
       <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div>${r.outsideCity ? '<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA</div>' : ''}</td>
@@ -5164,7 +5180,7 @@ const pageTitles = {
       const topbar = 89;
       const paddingV = 44; // 22px top + 22px bottom
       const toolbar = 52;
-      const legend = 52;
+      const legend = 80; // two-row legend (Major + Minor)
       const gaps = 28;
       const h = window.innerHeight - topbar - paddingV - toolbar - legend - gaps;
       const mapRow = document.querySelector('#page-map .map-row');
@@ -5931,14 +5947,16 @@ const pageTitles = {
       return '<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">' + escHtml(msg) + '</div>';
     }
 
-    /* Play the open animations: bars swipe in, donut segments sweep in. */
-    function playDrillAnims(body) {
+    /* Play the open animations: bars swipe in, donut segments sweep in.
+       baseDelayMs lets the modal entrance finish first. */
+    function playDrillAnims(body, baseDelayMs) {
       if (!body || !body.querySelectorAll) return;
+      const base = (baseDelayMs || 0) / 1000;
       const grow = function (sel, prop) {
         const els = body.querySelectorAll(sel);
         for (let k = 0; k < els.length; k++) {
           (function (el, i) {
-            el.style.transitionDelay = (i * 0.09) + 's';
+            el.style.transitionDelay = (base + i * 0.09) + 's';
             requestAnimationFrame(function () {
               requestAnimationFrame(function () { el.style[prop] = el.getAttribute('data-v'); });
             });
@@ -5956,7 +5974,7 @@ const pageTitles = {
       document.querySelectorAll('#page-analytics .stat-card').forEach(c => c.classList.remove('drill-active'));
       const card = document.getElementById('an-drill-card-' + kind);
       if (card) card.classList.add('drill-active');
-      renderAnalyticsDrill();
+      renderAnalyticsDrill(220);
       document.getElementById('modal-analytics-drill').classList.add('open');
     }
 
@@ -5966,18 +5984,18 @@ const pageTitles = {
       document.getElementById('modal-analytics-drill').classList.remove('open');
     }
 
-    function renderAnalyticsDrill() {
+    function renderAnalyticsDrill(delayMs) {
       if (!analyticsDrill) return;
-      if (analyticsDrill === 'zone') renderDrillZone();
-      else if (analyticsDrill === 'cat') renderDrillCat();
-      else renderDrillRes();
+      if (analyticsDrill === 'zone') renderDrillZone(delayMs);
+      else if (analyticsDrill === 'cat') renderDrillCat(delayMs);
+      else renderDrillRes(delayMs);
     }
 
     function shortZone(loc) {
       return String(loc || 'Unknown');
     }
 
-    function renderDrillZone() {
+    function renderDrillZone(delayMs) {
       document.getElementById('an-drill-title').textContent = 'Incidents by Zone';
       const spots = (((lastAnalyticsSummary || {}).hotspots) || []).slice(0, 5);
       const body = document.getElementById('an-drill-body');
@@ -5992,10 +6010,10 @@ const pageTitles = {
           + '<div class="hbar-count">' + s.count + '</div>'
           + '</div>';
       }).join('');
-      playDrillAnims(body);
+      playDrillAnims(body, delayMs);
     }
 
-    function renderDrillCat() {
+    function renderDrillCat(delayMs) {
       document.getElementById('an-drill-title').textContent = 'Reports by Category';
       const cats = (((lastAnalyticsSummary || {}).by_category) || []).slice(0, 6);
       const body = document.getElementById('an-drill-body');
@@ -6027,10 +6045,10 @@ const pageTitles = {
         + '</svg>'
         + '<div class="donut-legend">' + legend + '</div>'
         + '</div>';
-      playDrillAnims(body);
+      playDrillAnims(body, delayMs);
     }
 
-    function renderDrillRes() {
+    function renderDrillRes(delayMs) {
       document.getElementById('an-drill-title').textContent = 'Avg. Resolution Time by Week';
       const body = document.getElementById('an-drill-body');
       body.innerHTML = '<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">Loading resolution data…</div>';
@@ -6079,7 +6097,7 @@ const pageTitles = {
           }).join('')
           + '</div>'
           + '<div style="margin-top:12px;font-size:12px;color:var(--text3);font-weight:600;">Overall average ' + fmtResHours(overall / 60) + ' across ' + withDur.length + ' resolved report(s) · <span style="color:var(--accent);font-weight:800;">orange</span> = above average.</div>';
-        playDrillAnims(body);
+        playDrillAnims(body, delayMs);
       }).catch(function () {
         if (analyticsDrill !== 'res') return;
         body.innerHTML = drillEmpty('Could not load resolution data.');
@@ -6576,7 +6594,7 @@ const pageTitles = {
         <tr class="lb-row ${isSelected ? 'selected' : ''}" onclick="selectPerfResponder('${p.responder_id}')">
           <td>
             <div class="responder-cell">
-              <div class="r-avatar" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));">${initials}</div>
+              <div class="r-avatar" style="background:var(--primary);">${initials}</div>
               <div>
                 <div class="r-name">${p.name}</div>
                 <div class="r-unit">${p.unit_id} · ${p.vehicle || p.agency}</div>
@@ -7255,7 +7273,8 @@ const pageTitles = {
 
       if (pageMapMarkers) {
         pageMapMarkers.clearLayers();
-        const catColors = { flood: '#E53935', hazard: '#F9A825', garbage: '#2E7D32', other: '#607D8B', crime: '#8E24AA', fire: '#FF7043', accident: '#3949AB' };
+        // Resident palette — matches the legend and the community app.
+        const catColors = { flood: '#0D47A1', hazard: '#C62828', garbage: '#2E7D32', other: '#607D8B', crime: '#B71C1C', fire: '#D84315', accident: '#6A1B9A' };
         pins.forEach(p => {
           if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
           const color = catColors[p.cat] || '#607D8B';
@@ -7560,12 +7579,18 @@ const pageTitles = {
       });
       CalyeDB.fetch('map_incidents', { limit: 200 }).then(rows => {
         if (!rows || !rows.length) return;
+        // Resident mapKeys → closed admin cats (+ real severity). Keeps pins,
+        // legend, filters and heat in sync instead of lumping minors as gray.
+        const MAPKEY_TO_CAT = { flooding: 'flood', road: 'hazard', crime: 'crime', fire: 'fire', accident: 'accident', garbage: 'garbage' };
+        const MAPKEY_MAJOR = { crime: 1, fire: 1, flooding: 1, accident: 1, medical: 1 };
         incidentPins = rows.map(p => ({
           id: p.id || p.report_id, dbId: p.id,
           type: p.label || p.type,
           loc: p.location || 'Barangay Calye',
           status: p.status === 'resolved' ? 'resolved' : (p.status === 'responding' || p.status === 'on_site') ? 'responding' : 'pending',
-          cat: p.type, severity: 'minor', lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
+          cat: MAPKEY_TO_CAT[p.type] || 'other',
+          severity: MAPKEY_MAJOR[p.type] ? 'major' : 'minor',
+          lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
         }));
         if (pageMapInited) {
           renderPageMapList(incidentPins);
