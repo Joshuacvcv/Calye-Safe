@@ -51,6 +51,47 @@ window.CalyeAuth = (function () {
    * Creates the auth user with metadata so the DB trigger can set the role.
    * Returns { error, session, user }.
    */
+  /**
+   * SHA-256 hex fingerprint of a password (never store the plaintext).
+   * Used only to detect "you already used this password" — not for auth.
+   */
+  function passwordFingerprint(pw) {
+    return new Promise(function (resolve) {
+      try {
+        if (!window.crypto || !window.crypto.subtle || typeof TextEncoder === 'undefined') {
+          resolve('');
+          return;
+        }
+        var data = new TextEncoder().encode('calye-pw:' + String(pw == null ? '' : pw));
+        window.crypto.subtle.digest('SHA-256', data).then(function (buf) {
+          var arr = new Uint8Array(buf);
+          var hex = '';
+          for (var i = 0; i < arr.length; i++) {
+            hex += ('0' + arr[i].toString(16)).slice(-2);
+          }
+          resolve(hex);
+        }).catch(function () { resolve(''); });
+      } catch (e) { resolve(''); }
+    });
+  }
+
+  function historyFromUser(user) {
+    var meta = (user && user.user_metadata) || {};
+    var hist = meta.pw_hist;
+    if (!Array.isArray(hist)) return [];
+    var out = [];
+    for (var i = 0; i < hist.length; i++) {
+      if (typeof hist[i] === 'string' && hist[i]) out.push(hist[i]);
+    }
+    return out;
+  }
+
+  function metaWithHistory(user, hist) {
+    var meta = Object.assign({}, (user && user.user_metadata) || {});
+    meta.pw_hist = hist;
+    return meta;
+  }
+
   function signUp(opts) {
     return new Promise(function (resolve) {
       var c = getClient();
@@ -59,22 +100,27 @@ window.CalyeAuth = (function () {
         role: opts.role || 'resident',
         full_name: opts.full_name || ''
       };
-      c.auth.signUp({
-        email: opts.email,
-        password: opts.password,
-        options: { data: meta }
-      }).then(function (res) {
-        if (res.error) { resolve({ error: res.error.message }); return; }
-        var user = res.data && res.data.user ? res.data.user : null;
-        var session = res.data && res.data.session ? res.data.session : null;
-        lastSession = session;
-        resolve({ session: session, user: user, error: null });
-      }).catch(function (e) { resolve({ error: e.message || 'Sign-up failed' }); });
+      passwordFingerprint(opts.password).then(function (fp) {
+        if (fp) meta.pw_hist = [fp];
+        c.auth.signUp({
+          email: opts.email,
+          password: opts.password,
+          options: { data: meta }
+        }).then(function (res) {
+          if (res.error) { resolve({ error: res.error.message }); return; }
+          var user = res.data && res.data.user ? res.data.user : null;
+          var session = res.data && res.data.session ? res.data.session : null;
+          lastSession = session;
+          resolve({ session: session, user: user, error: null });
+        }).catch(function (e) { resolve({ error: e.message || 'Sign-up failed' }); });
+      });
     });
   }
 
   /**
    * Email + password sign in. Returns { error, session, user }.
+   * Also backfills the password-history fingerprint on first sign-in after
+   * this feature ships, so a later reset can reject the same password.
    */
   function signIn(email, password) {
     return new Promise(function (resolve) {
@@ -86,7 +132,18 @@ window.CalyeAuth = (function () {
           var session = res.data && res.data.session ? res.data.session : null;
           var user = res.data && res.data.user ? res.data.user : null;
           lastSession = session;
-          resolve({ session: session, user: user, error: null });
+          passwordFingerprint(password).then(function (fp) {
+            if (!fp || !user) { resolve({ session: session, user: user, error: null }); return; }
+            var hist = historyFromUser(user);
+            if (hist.indexOf(fp) !== -1) {
+              resolve({ session: session, user: user, error: null });
+              return;
+            }
+            hist = [fp].concat(hist).slice(0, 8);
+            c.auth.updateUser({ data: metaWithHistory(user, hist) })
+              .then(function () { resolve({ session: session, user: user, error: null }); })
+              .catch(function () { resolve({ session: session, user: user, error: null }); });
+          });
         }).catch(function (e) { resolve({ error: e.message || 'Sign-in failed' }); });
     });
   }
@@ -125,22 +182,48 @@ window.CalyeAuth = (function () {
 
   /**
    * Set a new password for the current session user (recovery flow).
-   * Returns { error, session, user }.
+   * Rejects passwords that appear in the account's recent history
+   * (user_metadata.pw_hist fingerprints). Returns { error, reused?, session, user }.
    */
   function updateUserPassword(newPassword) {
     return new Promise(function (resolve) {
       var c = getClient();
       if (!c) { resolve({ error: 'Database not reachable' }); return; }
-      c.auth.updateUser({ password: newPassword })
-        .then(function (res) {
-          if (res.error) { resolve({ error: res.error.message }); return; }
-          var session = res.data && res.data.session ? res.data.session : null;
-          var user = res.data && res.data.user ? res.data.user : null;
-          if (session) lastSession = session;
-          resolve({ error: null, session: session, user: user });
-        }).catch(function (e) {
-          resolve({ error: e.message || 'Could not update the password' });
+      c.auth.getSession().then(function (sres) {
+        var session = sres.data && sres.data.session ? sres.data.session : null;
+        var user = session && session.user ? session.user : null;
+        if (!user) {
+          resolve({ error: 'Your reset session expired. Request a new link.' });
+          return;
+        }
+        passwordFingerprint(newPassword).then(function (fp) {
+          var hist = historyFromUser(user);
+          if (fp && hist.indexOf(fp) !== -1) {
+            resolve({
+              error: 'That is one of your previous passwords. Choose a new one you have not used here before.',
+              reused: true
+            });
+            return;
+          }
+          var next = hist.slice();
+          if (fp) next.unshift(fp);
+          next = next.slice(0, 8);
+          c.auth.updateUser({
+            password: newPassword,
+            data: metaWithHistory(user, next)
+          }).then(function (res) {
+            if (res.error) { resolve({ error: res.error.message }); return; }
+            var outSession = res.data && res.data.session ? res.data.session : session;
+            var outUser = res.data && res.data.user ? res.data.user : user;
+            if (outSession) lastSession = outSession;
+            resolve({ error: null, session: outSession, user: outUser });
+          }).catch(function (e) {
+            resolve({ error: e.message || 'Could not update the password' });
+          });
         });
+      }).catch(function () {
+        resolve({ error: 'Could not read the current session' });
+      });
     });
   }
 
