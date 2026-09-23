@@ -40,6 +40,7 @@
             --text2: #1A1A1A;
             --text3: #333333;
             --border: #E2E8F4;
+            --border2: rgba(30, 58, 95, 0.18);
             --radius: 14px;
             --radius-sm: 10px;
             --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
@@ -63,6 +64,7 @@
             --text2: #C3CEDD;
             --text3: #8B98AC;
             --border: #2B3A52;
+            --border2: rgba(255, 255, 255, 0.14);
             --surface2: #22304A;
             --success-light: rgba(46, 125, 50, 0.22);
             --warning-light: rgba(245, 124, 0, 0.22);
@@ -309,8 +311,9 @@
 
         .screen-header .head-row {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
+            gap: 12px;
         }
 
         .screen-header h2 {
@@ -414,21 +417,20 @@
             letter-spacing: 0;
         }
 
-        /* ── DUTY CARD (top of the home sheet — curves upward) ── */
+        /* ── DUTY CARD (floating card, resident card language) ── */
         .duty-card {
             background: var(--card);
-            border-radius: 22px 22px 0 0;
-            padding: 18px 20px;
+            border-radius: 18px;
+            padding: 16px 18px;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin: -24px 0 0;
+            margin: -24px 16px 14px;
             position: relative;
             z-index: 2;
-            border: none;
-            border-bottom: 1px solid var(--border);
+            border: 1px solid var(--border);
         }
 
         .duty-left {
@@ -466,8 +468,8 @@
 
         .toggle {
             position: relative;
-            width: 46px;
-            height: 26px;
+            width: 42px;
+            height: 24px;
             flex-shrink: 0;
         }
 
@@ -480,31 +482,31 @@
         .toggle-slider {
             position: absolute;
             inset: 0;
-            background: var(--border);
-            border-radius: 13px;
+            background: var(--border2, var(--border));
+            border-radius: 24px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
         .toggle-slider:before {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             left: 3px;
             bottom: 3px;
             background: #fff;
             border-radius: 50%;
-            transition: 0.3s;
+            transition: 0.2s;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
         }
 
         .toggle input:checked+.toggle-slider {
-            background: var(--success);
+            background: var(--primary);
         }
 
         .toggle input:checked+.toggle-slider:before {
-            transform: translateX(20px);
+            transform: translateX(18px);
         }
 
         /* ── STAT MINI GRID ── */
@@ -2232,11 +2234,13 @@
         <!-- ===== HOME ===== -->
         <div class="screen active" id="screen-home">
             <div class="screen-header">
-                <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:38px;height:38px;border-radius:11px;display:block;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
                 <div class="head-row">
-                    <div>
-                        <h2 id="home-greeting">Good morning, Mark</h2>
-                        <p>Santa Rosa, Laguna · Quick Response Team</p>
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:42px;height:42px;border-radius:12px;display:block;cursor:pointer;flex-shrink:0;">
+                        <div style="min-width:0;flex:1;">
+                            <h2 id="home-greeting" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning, Mark</h2>
+                            <p style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Santa Rosa, Laguna · Quick Response Team</p>
+                        </div>
                     </div>
                     <button class="head-icon-btn" onclick="openNotifCenter()" title="Notifications">
                         <svg viewBox="0 0 24 24">
@@ -3262,7 +3266,7 @@
             </div>
             <div class="qc-footer">
               <span class="status-pill ${j.status}">${statusLabels[j.status]}</span>
-              <span class="qc-meta">${j.distanceKm} km · ${j.reportedTime.split('·')[1] || j.reportedTime}</span>
+              <span class="qc-meta">${typeof j.distanceKm === 'number' ? j.distanceKm + ' km · ' : ''}${j.reportedTime.split('·')[1] || j.reportedTime}</span>
             </div>
             ${j.notes ? `<div class="qc-note">📌 ${j.notes}</div>` : ''}
           </div>

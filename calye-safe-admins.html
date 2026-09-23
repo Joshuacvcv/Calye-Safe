@@ -815,6 +815,114 @@
       opacity: 0.7;
     }
 
+    /* ── ANALYTICS DRILL-DOWN (click a stat card for its chart) ── */
+    #page-analytics .stat-card {
+      cursor: pointer;
+    }
+
+    #page-analytics .stat-card.drill-active {
+      border-color: var(--primary-text);
+      box-shadow: 0 0 0 2px rgba(30, 58, 95, 0.28);
+    }
+
+    #modal-analytics-drill .modal-head h3 {
+      font-size: 18px;
+    }
+
+    #modal-analytics-drill .modal-body {
+      padding: 26px;
+    }
+
+    .hbar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .hbar-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .hbar-label {
+      width: 240px;
+      flex-shrink: 0;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text2);
+      text-align: right;
+      line-height: 1.35;
+    }
+
+    .hbar-track {
+      flex: 1;
+      background: var(--surface3);
+      border-radius: 7px;
+      height: 26px;
+      overflow: hidden;
+    }
+
+    .hbar-fill {
+      height: 100%;
+      border-radius: 7px;
+      min-width: 3px;
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .drill-wbar {
+      transition: height 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .drill-seg {
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+
+    .hbar-count {
+      width: 60px;
+      flex-shrink: 0;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .donut-flex {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      flex-wrap: wrap;
+    }
+
+    .donut-legend {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .donut-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .donut-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .donut-row .pct {
+      margin-left: auto;
+      font-weight: 800;
+      color: var(--text);
+    }
+
     /* ── PANEL ── */
     .panel {
       background: var(--surface);
@@ -3888,9 +3996,9 @@
                 <span id="analytics-range-note" style="font-size:11px;font-weight:700;color:var(--text2);margin-left:auto;"></span>
               </div>
 
-              <!-- STAT CARDS (live) -->
+              <!-- STAT CARDS (live — click one to drill into its chart) -->
               <div class="stat-grid">
-                <div class="stat-card">
+                <div class="stat-card" id="an-drill-card-zone" onclick="toggleAnalyticsDrill('zone')" title="Show incidents by zone">
                   <div class="glow" style="background:var(--danger);"></div>
                   <div class="top">
                     <div class="icon" style="background:var(--danger-light);">
@@ -3906,7 +4014,7 @@
                   <div class="lbl">Top High-Risk Zone</div>
                   <div class="sub" id="an-top-zone-sub">No incident data</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="an-drill-card-cat" onclick="toggleAnalyticsDrill('cat')" title="Show reports by category">
                   <div class="glow" style="background:var(--accent);"></div>
                   <div class="top">
                     <div class="icon" style="background:var(--accent-light);">
@@ -3921,7 +4029,7 @@
                   <div class="lbl">Top Recurring Issue</div>
                   <div class="sub" id="an-top-cat-sub">No incident data</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card" id="an-drill-card-res" onclick="toggleAnalyticsDrill('res')" title="Show resolution time by week">
                   <div class="glow" style="background:var(--primary);"></div>
                   <div class="top">
                     <div class="icon" style="background:var(--info-light);">
@@ -4348,6 +4456,22 @@
       <div class="modal-footer">
         <button class="modal-btn confirm" onclick="closeModal('modal-report-details')">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS DRILL-DOWN MODAL -->
+  <div class="modal-overlay" id="modal-analytics-drill" onclick="if(event.target===this)closeAnalyticsDrill()">
+    <div class="modal-box" style="width:800px;max-width:94vw;">
+      <div class="modal-head">
+        <h3 id="an-drill-title">Breakdown</h3>
+        <button class="modal-close" onclick="closeAnalyticsDrill()">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="an-drill-body" style="max-height:70vh;overflow:auto;"></div>
     </div>
   </div>
 
@@ -5765,6 +5889,181 @@ const pageTitles = {
       renderInsights(s, rows);
       renderDeptAllocation(rows);
       renderAnalyticsHeat(rows);
+      lastAnalyticsSummary = s;
+      lastAnalyticsRows = rows || [];
+      if (analyticsDrill) renderAnalyticsDrill();
+    }
+
+    // ── ANALYTICS DRILL-DOWN (click a stat card for its chart) ──
+    let analyticsDrill = null; // 'zone' | 'cat' | 'res' | null
+    let lastAnalyticsSummary = null;
+    let lastAnalyticsRows = [];
+
+    const DRILL_COLORS = ['var(--danger)', 'var(--accent)', 'var(--primary-text)', 'var(--success)', 'var(--warning)', 'var(--info)'];
+
+    function escHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function drillEmpty(msg) {
+      return '<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">' + escHtml(msg) + '</div>';
+    }
+
+    /* Play the open animations: bars swipe in, donut segments sweep in. */
+    function playDrillAnims(body) {
+      if (!body || !body.querySelectorAll) return;
+      const grow = function (sel, prop) {
+        const els = body.querySelectorAll(sel);
+        for (let k = 0; k < els.length; k++) {
+          (function (el, i) {
+            el.style.transitionDelay = (i * 0.09) + 's';
+            requestAnimationFrame(function () {
+              requestAnimationFrame(function () { el.style[prop] = el.getAttribute('data-v'); });
+            });
+          })(els[k], k);
+        }
+      };
+      grow('.hbar-fill', 'width');
+      grow('.drill-wbar', 'height');
+      grow('.drill-seg', 'strokeDashoffset');
+    }
+
+    function toggleAnalyticsDrill(kind) {
+      if (analyticsDrill === kind) { closeAnalyticsDrill(); return; }
+      analyticsDrill = kind;
+      document.querySelectorAll('#page-analytics .stat-card').forEach(c => c.classList.remove('drill-active'));
+      const card = document.getElementById('an-drill-card-' + kind);
+      if (card) card.classList.add('drill-active');
+      renderAnalyticsDrill();
+      document.getElementById('modal-analytics-drill').classList.add('open');
+    }
+
+    function closeAnalyticsDrill() {
+      analyticsDrill = null;
+      document.querySelectorAll('#page-analytics .stat-card').forEach(c => c.classList.remove('drill-active'));
+      document.getElementById('modal-analytics-drill').classList.remove('open');
+    }
+
+    function renderAnalyticsDrill() {
+      if (!analyticsDrill) return;
+      if (analyticsDrill === 'zone') renderDrillZone();
+      else if (analyticsDrill === 'cat') renderDrillCat();
+      else renderDrillRes();
+    }
+
+    function shortZone(loc) {
+      return String(loc || 'Unknown');
+    }
+
+    function renderDrillZone() {
+      document.getElementById('an-drill-title').textContent = 'Incidents by Zone';
+      const spots = (((lastAnalyticsSummary || {}).hotspots) || []).slice(0, 5);
+      const body = document.getElementById('an-drill-body');
+      if (!spots.length) { body.innerHTML = drillEmpty('No zone data for the selected period.'); return; }
+      const max = Math.max.apply(null, spots.map(s => s.count)) || 1;
+      body.innerHTML = spots.map(function (s, i) {
+        const pct = Math.max(2, Math.round(100 * s.count / max));
+        const color = DRILL_COLORS[i % DRILL_COLORS.length];
+        return '<div class="hbar-row" title="' + escHtml(s.location) + '">'
+          + '<div class="hbar-label">' + escHtml(shortZone(s.location)) + '</div>'
+          + '<div class="hbar-track"><div class="hbar-fill" data-v="' + pct + '%" style="width:0%;background:' + color + ';"></div></div>'
+          + '<div class="hbar-count">' + s.count + '</div>'
+          + '</div>';
+      }).join('');
+      playDrillAnims(body);
+    }
+
+    function renderDrillCat() {
+      document.getElementById('an-drill-title').textContent = 'Reports by Category';
+      const cats = (((lastAnalyticsSummary || {}).by_category) || []).slice(0, 6);
+      const body = document.getElementById('an-drill-body');
+      const total = cats.reduce(function (a, c) { return a + (c.count || 0); }, 0);
+      if (!total) { body.innerHTML = drillEmpty('No category data for the selected period.'); return; }
+      const R = 80, C = 2 * Math.PI * R;
+      let acc = 0;
+      const segs = cats.map(function (c, i) {
+        const frac = (c.count || 0) / total;
+        const len = Math.max(frac * C - 2, 0.5);
+        const target = -acc;
+        const s = '<circle class="drill-seg" data-v="' + target.toFixed(1) + '" cx="110" cy="110" r="' + R + '" fill="none" stroke="' + DRILL_COLORS[i % DRILL_COLORS.length] + '" stroke-width="32"'
+          + ' stroke-dasharray="' + len.toFixed(1) + ' ' + C.toFixed(1) + '" stroke-dashoffset="' + C.toFixed(1) + '" transform="rotate(-90 110 110)"/>';
+        acc += frac * C;
+        return s;
+      }).join('');
+      const legend = cats.map(function (c, i) {
+        const label = ANALYTICS_CATEGORY_LABELS[c.category] || c.category;
+        const pct = Math.round(100 * (c.count || 0) / total);
+        return '<div class="donut-row"><span class="donut-dot" style="background:' + DRILL_COLORS[i % DRILL_COLORS.length] + ';"></span>'
+          + escHtml(label) + ' <span style="color:var(--text3);">· ' + c.count + '</span>'
+          + '<span class="pct">' + pct + '%</span></div>';
+      }).join('');
+      body.innerHTML = '<div class="donut-flex">'
+        + '<svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="Reports by category">'
+        + segs
+        + '<text x="110" y="106" text-anchor="middle" style="fill:var(--text);font-size:30px;font-weight:900;font-family:Nunito,sans-serif;">' + total + '</text>'
+        + '<text x="110" y="128" text-anchor="middle" style="fill:var(--text3);font-size:12px;font-weight:700;">reports</text>'
+        + '</svg>'
+        + '<div class="donut-legend">' + legend + '</div>'
+        + '</div>';
+      playDrillAnims(body);
+    }
+
+    function renderDrillRes() {
+      document.getElementById('an-drill-title').textContent = 'Avg. Resolution Time by Week';
+      const body = document.getElementById('an-drill-body');
+      body.innerHTML = '<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">Loading resolution data…</div>';
+      CalyeDB.fetch('resolved_history', { order: 'resolved_at', asc: false, limit: 200 }).then(function (hist) {
+        if (analyticsDrill !== 'res') return;
+        hist = hist || [];
+        const withDur = hist.filter(h => h && h.duration_min != null && !isNaN(Number(h.duration_min)));
+        if (!withDur.length) { body.innerHTML = drillEmpty('No resolution timing data yet.'); return; }
+        // Bucket into weeks (short ranges) or months (long ranges).
+        const longRange = analyticsRange === 0 || analyticsRange > 31;
+        const buckets = [];
+        if (longRange) {
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+            buckets.push({ label: d.toLocaleDateString('en-US', { month: 'short' }), start: new Date(d.getFullYear(), d.getMonth(), 1), end: new Date(d.getFullYear(), d.getMonth() + 1, 1), vals: [] });
+          }
+        } else {
+          const now = new Date(); now.setHours(0, 0, 0, 0);
+          for (let i = 4; i >= 0; i--) {
+            const end = new Date(now.getTime() - i * 7 * 86400000);
+            const start = new Date(end.getTime() - 6 * 86400000);
+            buckets.push({ label: start.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }), start: start, end: new Date(end.getTime() + 86400000), vals: [] });
+          }
+        }
+        withDur.forEach(function (h) {
+          const t = new Date(h.resolved_at).getTime();
+          if (isNaN(t)) return;
+          const b = buckets.find(function (x) { return t >= x.start.getTime() && t < x.end.getTime(); });
+          if (b) b.vals.push(Number(h.duration_min));
+        });
+        const avgs = buckets.map(function (b) {
+          return b.vals.length ? b.vals.reduce(function (a, v) { return a + v; }, 0) / b.vals.length : null;
+        });
+        const overall = withDur.reduce(function (a, h) { return a + Number(h.duration_min); }, 0) / withDur.length;
+        const maxV = Math.max.apply(null, avgs.filter(function (v) { return v != null; }).concat([overall])) || 1;
+        body.innerHTML = '<div style="display:flex;align-items:stretch;gap:12px;height:180px;">'
+          + buckets.map(function (b, i) {
+            const v = avgs[i];
+            const h = v == null ? 2 : Math.max(5, Math.round(100 * v / maxV));
+            const col = v == null ? 'var(--border)' : (v > overall ? 'var(--accent)' : 'var(--info)');
+            return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;" title="' + escHtml(b.label) + (v == null ? ': no data' : ': ' + fmtResHours(v / 60)) + '">'
+              + '<div style="font-size:10px;font-weight:800;color:var(--text3);">' + (v == null ? '—' : fmtResHours(v / 60)) + '</div>'
+              + '<div class="drill-wbar" data-v="' + h + '%" style="width:100%;max-width:54px;height:0%;background:' + col + ';border-radius:6px 6px 0 0;"></div>'
+              + '<div style="font-size:11px;font-weight:700;color:var(--text3);">' + escHtml(b.label) + '</div>'
+              + '</div>';
+          }).join('')
+          + '</div>'
+          + '<div style="margin-top:12px;font-size:12px;color:var(--text3);font-weight:600;">Overall average ' + fmtResHours(overall / 60) + ' across ' + withDur.length + ' resolved report(s) · <span style="color:var(--accent);font-weight:800;">orange</span> = above average.</div>';
+        playDrillAnims(body);
+      }).catch(function () {
+        if (analyticsDrill !== 'res') return;
+        body.innerHTML = drillEmpty('Could not load resolution data.');
+      });
     }
 
     function renderTrendBars(months) {

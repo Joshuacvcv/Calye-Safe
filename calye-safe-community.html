@@ -42,6 +42,7 @@
       --text2: #1A1A1A;
       --text3: #333333;
       --border: #E2E8F4;
+      --border2: rgba(30, 58, 95, 0.18);
       --surface2: #E9EEF6;
       --success-light: #E8F5E9;
       --warning-light: #FFF3E0;
@@ -65,6 +66,7 @@
       --success: #66BB6A;
       --warning: #FFB74D;
       --info: #64A6F5;
+      --border2: rgba(255, 255, 255, 0.14);
       --bg: #0E1622;
       --card: #182234;
       --text: #F1F5F9;
@@ -1381,8 +1383,9 @@
 
     .toggle {
       position: relative;
-      width: 44px;
+      width: 42px;
       height: 24px;
+      flex-shrink: 0;
     }
 
     .toggle input {
@@ -1394,10 +1397,10 @@
     .toggle-slider {
       position: absolute;
       inset: 0;
-      background: var(--border);
-      border-radius: 12px;
+      background: var(--border2, var(--border));
+      border-radius: 24px;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.2s;
     }
 
     .toggle-slider:before {
@@ -1409,15 +1412,16 @@
       bottom: 3px;
       background: #fff;
       border-radius: 50%;
-      transition: 0.3s;
+      transition: 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .toggle input:checked+.toggle-slider {
-      background: var(--accent);
+      background: var(--primary);
     }
 
     .toggle input:checked+.toggle-slider:before {
-      transform: translateX(20px);
+      transform: translateX(18px);
     }
 
     .radio-group {
