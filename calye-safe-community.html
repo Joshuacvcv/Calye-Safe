@@ -114,6 +114,45 @@
       color: var(--primary-text);
     }
 
+    /* Hotline suggest banner keeps a dark surface in dark mode so its
+       light text stays readable. */
+    :root[data-theme="dark"] #hotline-suggest-banner {
+      background: #17263C !important;
+      border-color: rgba(100, 166, 245, 0.35) !important;
+    }
+
+    :root[data-theme="dark"] #hotline-suggest-banner > svg {
+      stroke: #8FBDF5;
+    }
+
+    :root[data-theme="dark"] #hotline-suggest-banner #hsb-title,
+    :root[data-theme="dark"] #hotline-suggest-banner #hsb-body strong {
+      color: #FFFFFF !important;
+    }
+
+    :root[data-theme="dark"] #hotline-suggest-banner #hsb-body {
+      color: #C3CEDD !important;
+    }
+
+    :root[data-theme="dark"] #hotline-suggest-banner #hsb-link {
+      color: #8FBDF5 !important;
+    }
+
+    /* Incident tiles need a brighter outline on dark surfaces. */
+    :root[data-theme="dark"] .incident-type,
+    :root[data-theme="dark"] .incident-type.minor {
+      border-color: #3D5478;
+    }
+
+    /* Selected minor tile: navy-on-navy is invisible in dark mode,
+       so use the light-blue text accent instead. */
+    :root[data-theme="dark"] .incident-type.minor.selected {
+      border-color: var(--primary-text);
+      background: rgba(143, 189, 245, 0.10);
+      box-shadow: 0 0 0 2px rgba(143, 189, 245, 0.45);
+      outline-color: var(--primary-text);
+    }
+
     :root[data-theme="dark"] .skel {
       background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
     }
@@ -2545,7 +2584,7 @@
             <div style="font-size:11.5px;color:var(--text2);margin-top:2px;line-height:1.5;" id="hsb-body">For
               life-threatening emergencies call <strong>911</strong>. Tap a type below to see the right office for
               that report.</div>
-            <div style="font-size:11px;color:var(--primary-text);font-weight:700;margin-top:6px;cursor:pointer;"
+            <div style="font-size:11px;color:var(--primary-text);font-weight:700;margin-top:6px;cursor:pointer;" id="hsb-link"
               onclick="switchScreen('hotlines')">View all Emergency Hotlines →</div>
           </div>
         </div>
