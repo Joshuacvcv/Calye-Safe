@@ -597,9 +597,16 @@
       position: relative;
     }
 
+    /* Subtle hover motion everywhere (transform/opacity only — compositor
+       work, no layout or paint, so it stays smooth). */
+    .nav-item:hover {
+      transform: translateX(3px);
+    }
+
     .topbar-btn:hover {
       background: var(--surface3);
       border-color: var(--border2);
+      transform: translateY(-1px);
     }
 
     .topbar-btn:active {
@@ -1278,6 +1285,11 @@
       font-size: 11.5px;
       font-weight: 800;
       letter-spacing: 0.04em;
+      transition: transform 0.18s var(--ease-out);
+    }
+
+    .badge:hover {
+      transform: scale(1.06);
     }
 
     .badge::before {
@@ -1842,6 +1854,10 @@
 
     .map-btn:active {
       transform: scale(0.97);
+    }
+
+    .map-btn:hover {
+      transform: translateY(-1px);
     }
 
     .map-btn svg {
@@ -2501,6 +2517,7 @@
     .ftab:hover {
       background: var(--surface3);
       color: var(--text2);
+      transform: translateY(-1px);
     }
 
     .ftab:active {
@@ -2792,6 +2809,10 @@
       background: var(--primary);
       color: #fff;
       border-color: var(--primary-text);
+    }
+
+    .verify-filter:hover {
+      transform: translateY(-1px);
     }
 
     .verify-filter:active {
@@ -3766,12 +3787,16 @@
               <button class="ftab active" id="mf-all" onclick="pageMapFilter('all',this)">All</button>
               <button class="ftab" id="mf-major" onclick="pageMapFilter('major',this)"
                 style="border-color:rgba(229,57,53,0.35);">Major Incidents</button>
-              <button class="ftab" id="mf-flood" onclick="pageMapFilter('flood',this)">Flooding</button>
               <button class="ftab" id="mf-crime" onclick="pageMapFilter('crime',this)">Crime</button>
               <button class="ftab" id="mf-fire" onclick="pageMapFilter('fire',this)">Fire</button>
-              <button class="ftab" id="mf-accident" onclick="pageMapFilter('accident',this)">Accidents</button>
-              <button class="ftab" id="mf-hazard" onclick="pageMapFilter('hazard',this)">Hazards</button>
-              <button class="ftab" id="mf-garbage" onclick="pageMapFilter('garbage',this)">Garbage</button>
+              <button class="ftab" id="mf-flooding" onclick="pageMapFilter('flooding',this)">Flooding</button>
+              <button class="ftab" id="mf-medical" onclick="pageMapFilter('medical',this)">Medical</button>
+              <button class="ftab" id="mf-structural" onclick="pageMapFilter('structural',this)">Structural</button>
+              <button class="ftab" id="mf-road" onclick="pageMapFilter('road',this)">Road Hazards</button>
+              <button class="ftab" id="mf-garbage" onclick="pageMapFilter('garbage',this)">Garbage &amp; Sanitation</button>
+              <button class="ftab" id="mf-disturbance" onclick="pageMapFilter('disturbance',this)">Disturbances</button>
+              <button class="ftab" id="mf-utility" onclick="pageMapFilter('utility',this)">Utilities</button>
+              <button class="ftab" id="mf-health" onclick="pageMapFilter('health',this)">Health Concerns</button>
             </div>
           </div>
 
@@ -3834,33 +3859,37 @@
               <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Accidents</span>
             </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#C2185B;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Medical</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#5D4037;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Structural</span>
+            </div>
             </div>
             <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
             <span
               style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#1565C0;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Clogged Drains</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Broken Streetlights</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazards</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:#2E7D32;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Uncollected Garbage</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#F57C00;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Vandalism</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Garbage &amp; Sanitation</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
               <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Public Disturbance</span>
+                style="font-size:12px;color:var(--text2);font-weight:600;">Disturbances</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
-                style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazards</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Utilities</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#7B1FA2;"></div><span
+                style="font-size:12px;color:var(--text2);font-weight:600;">Health Concerns</span>
             </div>
             <div style="margin-left:auto;font-size:12px;color:var(--text3);font-weight:600;">📍 <span
                 id="page-map-loc-label">Santa Rosa, Laguna, Philippines</span></div>
@@ -5085,8 +5114,8 @@
       showToastMsg('Account settings saved', 'success');
     }
 
-    // General preferences save instantly on change (no save button).
-    function saveAdminPrefs(silent) {
+    // General preferences save instantly on change (no save button, no popup).
+    function saveAdminPrefs() {
       try {
         var prefs = {
           language: document.getElementById('set-language').value,
@@ -5096,7 +5125,6 @@
         };
         localStorage.setItem('calye_admin_prefs', JSON.stringify(prefs));
       } catch (e) { }
-      if (!silent) showToastMsg('Preference saved', 'success');
     }
 
     function applyAdminPrefs() {
@@ -5112,7 +5140,7 @@
     applyAdminPrefs();
 
     function toggleSetting(el, label) {
-      showToastMsg(label + (el.checked ? ' enabled' : ' disabled'), 'info');
+      /* Preference toggles apply instantly with no popup. */
     }
 
     // ── APP THEME (light / dark), shared across Calye Safe apps ──
@@ -5128,7 +5156,6 @@
     function setAdminTheme(dark) {
       try { localStorage.setItem('calye_theme', dark ? 'dark' : 'light'); } catch (e) { }
       applyAdminTheme();
-      showToastMsg(dark ? 'Dark mode enabled' : 'Light mode enabled', 'success');
     }
 
     applyAdminTheme();
@@ -5208,7 +5235,6 @@ const pageTitles = {
         item.querySelector('.notif-dot').classList.add('read');
       });
       document.querySelector('#notif-btn .dot').style.display = 'none';
-      showToastMsg('All notifications marked as read', 'success');
     }
 
     // ── LIVE NOTIFICATIONS (derived from real reports — newest first) ──
@@ -5718,7 +5744,6 @@ const pageTitles = {
             const label = data[0].display_name.split(',').slice(0, 3).join(',');
             document.getElementById('map-search-input').value = '';
             loadMapByCoords(lat, lon, label);
-            showToastMsg('Location found: ' + label.split(',')[0], 'success');
           } else {
             if (loading) {
               loading.style.display = 'none';
@@ -7186,7 +7211,6 @@ const pageTitles = {
               L.circleMarker([lat, lon], { radius: 8, color: '#E53935', weight: 3, fillColor: '#E53935', fillOpacity: 0.85 })
                 .addTo(pageMap).bindPopup('<b>📍 ' + label + '</b>').openPopup();
             }
-            showToastMsg('Found: ' + data[0].display_name.split(',')[0], 'success');
           } else {
             if (loadingTxt) loadingTxt.textContent = 'Location not found. Try another term.';
             showToastMsg('Location not found', 'info');
@@ -7203,7 +7227,6 @@ const pageTitles = {
       document.getElementById('page-map-search').value = '';
       pageMapLoadCoords(14.3122, 121.1114, 'Santa Rosa, Laguna, Philippines');
       pageMapFilter('all', document.getElementById('mf-all'));
-      showToastMsg('Map reset to Santa Rosa, Laguna', 'info');
     }
 
     // ── HOTSPOT HEAT LAYER (same Geospatial Hotspot rendering as Analytics) ──
@@ -7223,7 +7246,7 @@ const pageTitles = {
     function pageMapFilteredPins() {
       return pageMapFilter_active === 'all' ? incidentPins
         : pageMapFilter_active === 'major' ? incidentPins.filter(p => p.severity === 'major')
-          : incidentPins.filter(p => p.cat === pageMapFilter_active);
+          : incidentPins.filter(p => (p.mkey || p.cat) === pageMapFilter_active);
     }
 
     function refreshPageMapHeat() {
@@ -7260,7 +7283,7 @@ const pageTitles = {
       pageMapFilter_active = cat;
       const filtered = cat === 'all' ? incidentPins
         : cat === 'major' ? incidentPins.filter(p => p.severity === 'major')
-          : incidentPins.filter(p => p.cat === cat);
+          : incidentPins.filter(p => (p.mkey || p.cat) === cat);
       renderPageMapList(filtered);
       const badge = document.getElementById('page-map-badge-txt');
       if (badge) badge.textContent = filtered.length + ' incident' + (filtered.length !== 1 ? 's' : '');
@@ -7274,7 +7297,7 @@ const pageTitles = {
       if (pageMapMarkers) {
         pageMapMarkers.clearLayers();
         // Resident palette — matches the legend and the community app.
-        const catColors = { flood: '#0D47A1', hazard: '#C62828', garbage: '#2E7D32', other: '#607D8B', crime: '#B71C1C', fire: '#D84315', accident: '#6A1B9A' };
+        const catColors = { flood: '#0D47A1', hazard: '#C62828', garbage: '#2E7D32', other: '#607D8B', crime: '#B71C1C', fire: '#D84315', accident: '#6A1B9A', medical: '#C2185B', structural: '#5D4037' };
         pins.forEach(p => {
           if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
           const color = catColors[p.cat] || '#607D8B';
@@ -7296,7 +7319,7 @@ const pageTitles = {
       const statusColor = { pending: 'var(--warning)', responding: 'var(--primary)', resolved: 'var(--success)' };
 
       list.innerHTML = pins.map(p => `
-    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye');showToastMsg('Zoomed to ${p.loc}','info')"
+    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye')"
       style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
       onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
@@ -7581,17 +7604,23 @@ const pageTitles = {
         if (!rows || !rows.length) return;
         // Resident mapKeys → closed admin cats (+ real severity). Keeps pins,
         // legend, filters and heat in sync instead of lumping minors as gray.
-        const MAPKEY_TO_CAT = { flooding: 'flood', road: 'hazard', crime: 'crime', fire: 'fire', accident: 'accident', garbage: 'garbage' };
+        // mkey preserves the report group (road/garbage/…) for minor filters.
+        const MAPKEY_TO_CAT = { flooding: 'flood', road: 'hazard', crime: 'crime', fire: 'fire', accident: 'accident', garbage: 'garbage', medical: 'medical', structural: 'structural' };
         const MAPKEY_MAJOR = { crime: 1, fire: 1, flooding: 1, accident: 1, medical: 1 };
-        incidentPins = rows.map(p => ({
-          id: p.id || p.report_id, dbId: p.id,
-          type: p.label || p.type,
-          loc: p.location || 'Barangay Calye',
-          status: p.status === 'resolved' ? 'resolved' : (p.status === 'responding' || p.status === 'on_site') ? 'responding' : 'pending',
-          cat: MAPKEY_TO_CAT[p.type] || 'other',
-          severity: MAPKEY_MAJOR[p.type] ? 'major' : 'minor',
-          lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
-        }));
+        const LEGACY_TO_GROUP = { clogged: 'garbage', streetlight: 'road', vandalism: 'disturbance' };
+        incidentPins = rows.map(p => {
+          const rawKey = LEGACY_TO_GROUP[p.type] || p.type;
+          return {
+            id: p.id || p.report_id, dbId: p.id,
+            type: p.label || p.type,
+            loc: p.location || 'Barangay Calye',
+            status: p.status === 'resolved' ? 'resolved' : (p.status === 'responding' || p.status === 'on_site') ? 'responding' : 'pending',
+            cat: MAPKEY_TO_CAT[rawKey] || 'other',
+            mkey: rawKey,
+            severity: MAPKEY_MAJOR[rawKey] ? 'major' : 'minor',
+            lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
+          };
+        });
         if (pageMapInited) {
           renderPageMapList(incidentPins);
           pageMapFilter('all', document.getElementById('mf-all'));

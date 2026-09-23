@@ -241,10 +241,23 @@
 
     .nav-item.active {
       color: var(--primary-text);
+      font-weight: 800;
     }
 
     .nav-item.active svg {
       transform: scale(1.1);
+    }
+
+    .nav-item:not(.report-btn).active::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary-text);
     }
 
     .nav-item.report-btn {
@@ -327,16 +340,16 @@
     .alert-banner {
       background: linear-gradient(135deg, #FF6B35, #E53935);
       border-radius: var(--radius);
-      padding: 14px 16px;
+      padding: 18px 20px;
       display: flex;
-      gap: 12px;
+      gap: 14px;
       align-items: flex-start;
-      box-shadow: 0 4px 16px rgba(229, 57, 53, 0.25);
+      box-shadow: 0 8px 28px rgba(229, 57, 53, 0.4);
     }
 
     .alert-banner svg {
-      width: 20px;
-      height: 20px;
+      width: 28px;
+      height: 28px;
       fill: #fff;
       flex-shrink: 0;
       margin-top: 2px;
@@ -344,15 +357,15 @@
 
     .alert-banner .txt h4 {
       color: #fff;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
     }
 
     .alert-banner .txt p {
-      color: rgba(255, 255, 255, 0.85);
-      font-size: 12px;
-      margin-top: 2px;
-      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      margin-top: 3px;
+      line-height: 1.45;
     }
 
     .nearby-item {
@@ -2338,7 +2351,7 @@
 
       <div class="scroll-content" style="padding-top:20px;">
         <!-- Alert Banner (live — newest active major incident, hidden if none) -->
-        <div class="alert-banner" id="home-alert-banner" style="display:none;margin-bottom:4px;">
+        <div class="alert-banner" id="home-alert-banner" style="display:none;margin-bottom:16px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
@@ -2475,22 +2488,16 @@
           <div class="filter-tab major" onclick="filterMapTab(this,'structural')"
             style="padding:6px 12px;white-space:nowrap;">Structural</div>
           <div class="filter-tab-divider"></div>
-          <div class="filter-tab" onclick="filterMapTab(this,'clogged')" style="padding:6px 12px;white-space:nowrap;">
-            Clogged Drains</div>
-          <div class="filter-tab" onclick="filterMapTab(this,'streetlight')"
-            style="padding:6px 12px;white-space:nowrap;">Broken Streetlights</div>
+          <div class="filter-tab" onclick="filterMapTab(this,'road')" style="padding:6px 12px;white-space:nowrap;">
+            Road Hazards</div>
           <div class="filter-tab" onclick="filterMapTab(this,'garbage')" style="padding:6px 12px;white-space:nowrap;">
-            Uncollected Garbage</div>
-          <div class="filter-tab" onclick="filterMapTab(this,'vandalism')" style="padding:6px 12px;white-space:nowrap;">
-            Vandalism</div>
+            Garbage &amp; Sanitation</div>
           <div class="filter-tab" onclick="filterMapTab(this,'disturbance')"
-            style="padding:6px 12px;white-space:nowrap;">Public Disturbance</div>
-          <div class="filter-tab" onclick="filterMapTab(this,'road')" style="padding:6px 12px;white-space:nowrap;">Road
-            Hazards</div>
+            style="padding:6px 12px;white-space:nowrap;">Disturbances</div>
           <div class="filter-tab" onclick="filterMapTab(this,'utility')" style="padding:6px 12px;white-space:nowrap;">
             Utilities</div>
           <div class="filter-tab" onclick="filterMapTab(this,'health')" style="padding:6px 12px;white-space:nowrap;">
-            Health</div>
+            Health Concerns</div>
         </div>
 
         <!-- Mapbox Map -->
@@ -2523,28 +2530,24 @@
             Minor Incidents</div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#1565C0;"></div><span
-                style="font-size:10px;color:var(--text2);">Clogged Drains</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
-                style="font-size:10px;color:var(--text2);">Broken Streetlights</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
+                style="font-size:10px;color:var(--text2);">Road Hazards</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
               <div style="width:10px;height:10px;border-radius:50%;background:#2E7D32;"></div><span
-                style="font-size:10px;color:var(--text2);">Uncollected Garbage</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#F57C00;"></div><span
-                style="font-size:10px;color:var(--text2);">Vandalism</span>
+                style="font-size:10px;color:var(--text2);">Garbage &amp; Sanitation</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
               <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
-                style="font-size:10px;color:var(--text2);">Public Disturbance</span>
+                style="font-size:10px;color:var(--text2);">Disturbances</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
-                style="font-size:10px;color:var(--text2);">Road Hazards</span>
+              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
+                style="font-size:10px;color:var(--text2);">Utilities</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#7B1FA2;"></div><span
+                style="font-size:10px;color:var(--text2);">Health Concerns</span>
             </div>
           </div>
         </div>
@@ -2757,31 +2760,16 @@
         </div>
         <div class="form-group">
           <label>Take Photo of the Incident</label>
-          <!-- Default camera button -->
+          <p style="font-size:11px;color:var(--text3);margin:2px 0 8px;font-weight:600;">Optional — up to 4 images per report.</p>
+          <div id="media-thumbs" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+          <!-- Add-photo button (hides at the 4-photo maximum) -->
           <div class="upload-area" id="upload-area" onclick="chooseCamera()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
               <circle cx="12" cy="13" r="4" />
             </svg>
-            <p>Tap to take a photo of the incident</p>
+            <p id="upload-area-text">Tap to take a photo of the incident</p>
             <span>Photo captured live with the camera</span>
-          </div>
-          <!-- Preview after selection -->
-          <div id="media-preview" style="display:none;margin-top:8px;">
-            <img id="media-img"
-              style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--radius-sm);display:none;">
-            <video id="media-vid"
-              style="width:100%;max-height:180px;object-fit:cover;border-radius:var(--radius-sm);display:none;" controls
-              playsinline></video>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span id="media-name"
-                style="font-size:11px;color:#2E7D32;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
-              <span onclick="clearMedia()"
-                style="font-size:11px;color:var(--danger);font-weight:600;cursor:pointer;">Remove</span>
-            </div>
           </div>
         </div>
         <div class="form-group">
@@ -3448,7 +3436,6 @@
         if (currentUid) localStorage.removeItem(reportsKey());
         else localStorage.removeItem(LS_KEY_REPORTS);
       } catch (e) { /* ignore */ }
-      showToast('Demo data has been reset.');
       setTimeout(() => location.reload(), 900);
     }
 
@@ -3535,11 +3522,11 @@
     const BRGY_CENTER = [14.3122, 121.1114]; // [lat, lng] Barangay Calye, Santa Rosa, Laguna
 
     let mapIncidents = loadStoredData(LS_KEY_INCIDENTS, [
-      { id: 1, type: 'clogged', label: 'Clogged Drain', loc: 'Mercado Village', status: 'responding', lat: 14.3148, lng: 121.1140 },
-      { id: 2, type: 'vandalism', label: 'Vandalism', loc: 'Brgy. Calye', status: 'pending', lat: 14.3105, lng: 121.1092 },
+      { id: 1, type: 'garbage', label: 'Clogged Drain', loc: 'Mercado Village', status: 'responding', lat: 14.3148, lng: 121.1140 },
+      { id: 2, type: 'disturbance', label: 'Vandalism', loc: 'Brgy. Calye', status: 'pending', lat: 14.3105, lng: 121.1092 },
       { id: 3, type: 'garbage', label: 'Uncollected Garbage', loc: 'Calye Street', status: 'responding', lat: 14.3090, lng: 121.1128 },
       { id: 4, type: 'disturbance', label: 'Public Disturbance', loc: 'Phase 2', status: 'urgent', lat: 14.3075, lng: 121.1100 },
-      { id: 5, type: 'streetlight', label: 'Broken Streetlight', loc: 'Sitio A', status: 'resolved', lat: 14.3135, lng: 121.1078 },
+      { id: 5, type: 'road', label: 'Broken Streetlight', loc: 'Sitio A', status: 'resolved', lat: 14.3135, lng: 121.1078 },
       { id: 6, type: 'road', label: 'Road Hazard', loc: 'Near School', status: 'resolved', lat: 14.3118, lng: 121.1155 },
       { id: 7, type: 'crime', label: 'Crime', loc: 'Brgy. Calye', status: 'urgent', lat: 14.3162, lng: 121.1098 },
       { id: 8, type: 'fire', label: 'Fire', loc: 'Sitio B', status: 'responding', lat: 14.3096, lng: 121.1160 },
@@ -3547,6 +3534,9 @@
       { id: 10, type: 'accident', label: 'Road Accident', loc: 'Division Road', status: 'urgent', lat: 14.3122, lng: 121.1114 },
     ]);
     const typeColors = { clogged: '#1565C0', streetlight: '#F9A825', garbage: '#2E7D32', vandalism: '#F57C00', disturbance: '#E53935', road: '#C62828', crime: '#B71C1C', fire: '#D84315', flooding: '#0D47A1', accident: '#6A1B9A', medical: '#C2185B', structural: '#5D4037', utility: '#00838F', health: '#7B1FA2' };
+    // Retired map keys fold into their report group so old pins stay visible.
+    const LEGACY_MAPKEY = { clogged: 'garbage', streetlight: 'road', vandalism: 'disturbance' };
+    function normMapKey(t) { return LEGACY_MAPKEY[t] || t; }
     // ========== INCIDENT TAXONOMY (step 1 groups + step 3 specifics) ==========
     // severity drives the Major/Minor grouping AND the DB severity value.
     // mapKey drives the community map pin/filter (local map keys).
@@ -3811,7 +3801,6 @@
     function toggleResidentHeat(cb) {
       residentHeatOn = !!(cb && cb.checked);
       refreshResidentHeat();
-      showToast(residentHeatOn ? 'Hotspot heat layer on.' : 'Hotspot heat layer off.');
     }
 
     function filterMapBySearch(val) {
@@ -3899,7 +3888,6 @@
 
     function geocodeReportSearch(val) {
       if (!val || val.trim().length < 2) { showToast('Enter a location to search.'); return; }
-      showToast('Searching location…');
       nominatimSearch(val, (err, results) => {
         if (err || !results.length) { showToast('Location not found. Try a different search.'); return; }
         const r = results[0];
@@ -3913,7 +3901,6 @@
         }
         const addrInput = document.getElementById('report-address');
         if (addrInput && !addrInput.value) addrInput.value = name;
-        showToast('📍 Location found!');
       });
     }
 
@@ -3931,7 +3918,6 @@
       filterMapBySearch(val);
       // Also geocode to pan the map
       if (!incidentMap) return;
-      showToast('Searching location on map…');
       nominatimSearch(val, (err, results) => {
         if (err || !results.length) {
           showToast('Location not found on map.');
@@ -3958,7 +3944,6 @@
           .addTo(incidentMap)
           .bindPopup(`<div class="popup-title">🔍 ${name}</div><div class="popup-loc" style="font-size:10px;margin-top:3px;color:#999;">Tap elsewhere to dismiss</div>`)
           .openPopup();
-        showToast('📍 Location found on map!');
       });
     }
 
@@ -4009,9 +3994,6 @@
         reportMap.flyTo(latlng, 17);
         if (userLocMarker) userLocMarker.remove();
         userLocMarker = L.marker(latlng, { icon: makeUserDotIcon() }).addTo(reportMap);
-        if (!reportLocationPinned) {
-          showToast('Map centered to your location. Tap to pin the incident.');
-        }
       }, () => {
         showToast('Unable to get GPS location. Tap the map to pin.');
       }, { enableHighAccuracy: true, timeout: 8000 });
@@ -4105,7 +4087,8 @@
       if (titleReset) { titleReset.value = ''; titleReset.classList.remove('field-error'); }
       const titleErrReset = document.getElementById('title-error-msg');
       if (titleErrReset) titleErrReset.classList.remove('show');
-      selectedMediaDataURL = null;
+      selectedMediaList = [];
+      renderMediaStrip();
       reportLocationPinned = false;
       if (reportMarker) { reportMarker.remove(); reportMarker = null; }
       if (userLocMarker) { userLocMarker.remove(); userLocMarker = null; }
@@ -4285,6 +4268,9 @@
         // Owner tag — "My Reports" must only ever show the signed-in user's
         // own reports ('local' = filed on this device while logged out).
         ownerUid: currentUid || 'local',
+        // Photos are optional (0–4); the strip below shows what was attached.
+        photos: selectedMediaList.slice(),
+        photo: selectedMediaList[0] || '',
         type: (submitGroup ? submitGroup.name : selectedType) || 'Incident',
         subtype: selectedSubtype || '',
         loc: document.getElementById('report-address')?.value || 'Barangay Calye',
@@ -4378,9 +4364,10 @@
         // created automatically by DB triggers (trg_create_report_timeline,
         // trg_sync_map_incidents) when the report row is inserted — we do
         // not insert them here to avoid duplicates and RLS conflicts.
-        if (selectedMediaDataURL) {
-            const mediaData = selectedMediaDataURL;
-            const mediaPath = 'reports/report-' + inserted[0].id + '-' + Date.now() + '.jpg';
+        if (selectedMediaList.length) {
+          const pending = selectedMediaList.slice();
+          pending.forEach(function (mediaData, i) {
+            const mediaPath = 'reports/report-' + inserted[0].id + '-' + Date.now() + '-' + i + '.jpg';
             CalyeDB.uploadStorage('evidence', mediaPath, mediaData).then(uploadedUrl => {
               CalyeDB.insert('report_media', [{
                 report_id: inserted[0].id,
@@ -4388,7 +4375,8 @@
                 url: uploadedUrl || mediaData
               }]);
             });
-          }
+          });
+        }
       });
     }
 
@@ -4432,14 +4420,20 @@
         </div>
         <span class="badge ${r.status}">${r.status === 'responding' ? 'Responding' : r.status === 'resolved' ? 'Resolved' : r.status === 'declined' ? 'Declined' : 'Pending'}</span>
       </div>
-      ${r.photo ? `
+      ${(r.photos && r.photos.length > 1) ? `
+      <div style="margin-top:10px;cursor:pointer;" onclick="event.stopPropagation();openSubmittedPhoto('${r.id}',0)">
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">
+          ${r.photos.map(src => `<img src="${src}" alt="Submitted photo" style="width:52px;height:52px;object-fit:cover;border-radius:8px;background:var(--border);flex:none;">`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">Tap to view ${r.photos.length} photos</div>
+      </div>` : (r.photo ? `
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="event.stopPropagation();openSubmittedPhoto('${r.id}')">
         <img src="${r.photo}" alt="Your submitted photo" style="width:52px;height:52px;object-fit:cover;border-radius:8px;background:var(--border);flex:none;"/>
         <div>
           <div style="font-size:12px;font-weight:700;color:var(--text);">Your submitted photo</div>
           <div style="font-size:11px;color:var(--text3);">Tap to view full photo</div>
         </div>
-      </div>` : ''}
+      </div>` : '')}
       <div class="report-footer">
         <span class="report-date">${r.date}</span>
         <span style="font-size:11px;color:var(--primary-text);font-weight:600;">${r.id}</span>
@@ -4515,13 +4509,28 @@
       document.body.appendChild(overlay);
     }
 
-    function openSubmittedPhoto(reportId) {
+    function openSubmittedPhoto(reportId, startIdx) {
       const r = reports.find(x => x.id === reportId);
-      if (!r || !r.photo) return;
+      if (!r) return;
+      const list = (r.photos && r.photos.length) ? r.photos : (r.photo ? [r.photo] : []);
+      if (!list.length) return;
+      let i = Math.max(0, Math.min(startIdx || 0, list.length - 1));
       const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-      overlay.innerHTML = `<img src="${r.photo}" alt="Your submitted photo" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;gap:14px;cursor:zoom-out;padding:16px;';
+      const draw = () => {
+        overlay.innerHTML =
+          (list.length > 1 ? '<span id="ph-prev" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">‹</span>' : '')
+          + '<div style="text-align:center;min-width:0;"><img src="' + list[i] + '" alt="Submitted photo ' + (i + 1) + '" style="max-width:78vw;max-height:76vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">'
+          + (list.length > 1 ? '<div style="color:#fff;font-size:12px;font-weight:700;margin-top:8px;">' + (i + 1) + ' of ' + list.length + '</div>' : '')
+          + '</div>'
+          + (list.length > 1 ? '<span id="ph-next" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">›</span>' : '');
+        const pv = document.getElementById('ph-prev');
+        const nx = document.getElementById('ph-next');
+        if (pv) pv.onclick = e => { e.stopPropagation(); i = (i - 1 + list.length) % list.length; draw(); };
+        if (nx) nx.onclick = e => { e.stopPropagation(); i = (i + 1) % list.length; draw(); };
+      };
       overlay.onclick = function () { document.body.removeChild(overlay); };
+      draw();
       document.body.appendChild(overlay);
     }
 
@@ -5133,14 +5142,43 @@
       }
     }
 
-    // ========== MEDIA (capture-only) ==========
+    // ========== MEDIA (capture-only, up to 4 photos per report) ==========
+    const MAX_REPORT_PHOTOS = 4;
     let activeCameraStream = null;
     let currentFacingMode = 'environment';
     let capturedDataURL = null;
-    let selectedMediaDataURL = null;
+    let selectedMediaList = [];
 
     function chooseCamera() {
+      if (selectedMediaList.length >= MAX_REPORT_PHOTOS) {
+        showToast('Maximum 4 photos per report.');
+        return;
+      }
       openCameraModal();
+    }
+
+    function renderMediaStrip() {
+      const wrap = document.getElementById('media-thumbs');
+      const addBtn = document.getElementById('upload-area');
+      const txt = document.getElementById('upload-area-text');
+      if (!wrap) return;
+      wrap.innerHTML = selectedMediaList.map(function (src, i) {
+        return '<div style="position:relative;width:72px;height:72px;flex-shrink:0;">'
+          + '<img src="' + src + '" alt="Report photo ' + (i + 1) + '" style="width:72px;height:72px;object-fit:cover;border-radius:10px;background:var(--border);display:block;">'
+          + '<span onclick="event.stopPropagation();removeMediaAt(' + i + ')" title="Remove photo" style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:var(--danger);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.25);line-height:1;">×</span>'
+          + '</div>';
+      }).join('');
+      wrap.style.display = selectedMediaList.length ? 'flex' : 'none';
+      const full = selectedMediaList.length >= MAX_REPORT_PHOTOS;
+      if (addBtn) addBtn.style.display = full ? 'none' : 'flex';
+      if (txt) txt.textContent = selectedMediaList.length
+        ? 'Add another photo (' + selectedMediaList.length + ' of ' + MAX_REPORT_PHOTOS + ')'
+        : 'Tap to take a photo of the incident';
+    }
+
+    function removeMediaAt(i) {
+      selectedMediaList.splice(i, 1);
+      renderMediaStrip();
     }
 
     function _showCamState(state) {
@@ -5308,23 +5346,14 @@
 
     function confirmPhoto() {
       if (!capturedDataURL) return;
-
-      selectedMediaDataURL = capturedDataURL;
-
-      const img = document.getElementById('media-img');
-      const vid = document.getElementById('media-vid');
-      const nameEl = document.getElementById('media-name');
-      const preview = document.getElementById('media-preview');
-
-      img.src = capturedDataURL;
-      img.style.display = 'block';
-      vid.style.display = 'none';
-      nameEl.textContent = 'Photo_' + Date.now() + '.jpg';
-      preview.style.display = 'block';
-      document.getElementById('upload-area').style.display = 'none';
-
+      if (selectedMediaList.length >= MAX_REPORT_PHOTOS) {
+        showToast('Maximum 4 photos per report.');
+        closeCameraModal();
+        return;
+      }
+      selectedMediaList.push(capturedDataURL);
+      renderMediaStrip();
       closeCameraModal();
-      showToast('Photo added to your report.');
     }
 
     function closeCameraModal() {
@@ -5341,11 +5370,8 @@
     }
 
     function clearMedia() {
-      selectedMediaDataURL = null;
-      document.getElementById('media-preview').style.display = 'none';
-      document.getElementById('media-img').src = '';
-      document.getElementById('media-vid').src = '';
-      document.getElementById('upload-area').style.display = 'flex';
+      selectedMediaList = [];
+      renderMediaStrip();
     }
 
     // ========== PROFILE ==========
@@ -5420,7 +5446,6 @@
       saveStoredObj(LS_KEY_PROFILE, profile);
       renderProfileHeader();
       closeModal('profile-info-modal');
-      showToast('Profile updated.');
     }
 
     function openNotifSettings() {
@@ -5444,19 +5469,12 @@
     function setThemeMode(dark) {
       try { localStorage.setItem('calye_theme', dark ? 'dark' : 'light'); } catch (e) { }
       applyTheme();
-      showToast(dark ? 'Dark mode enabled.' : 'Light mode enabled.');
     }
 
     function setPref(field, val) {
       if (field in profile.notif) profile.notif[field] = val;
       else profile[field] = val;
       saveStoredObj(LS_KEY_PROFILE, profile);
-      const labels = {
-        reportUpdates: 'Report status updates', emergencyAlerts: 'Emergency alerts',
-        announcements: 'Barangay announcements', tips: 'Community tips',
-        reducedMotion: 'Reduce motion', highContrast: 'High contrast text'
-      };
-      showToast((labels[field] || field) + (val ? ' enabled' : ' disabled'));
     }
 
     function openAppearance() {
@@ -5470,7 +5488,6 @@
     function saveLanguagePref(val) {
       profile.language = val;
       saveStoredObj(LS_KEY_PROFILE, profile);
-      showToast('Language set to ' + val + '.');
     }
 
     const STATIC_INFO = {
@@ -5597,7 +5614,7 @@
         if (!pins || !pins.length) return;
         mapIncidents = pins.map(p => ({
           id: p.id,
-          type: p.type,
+          type: normMapKey(p.type),
           label: p.label || p.type,
           loc: p.location || '',
           status: p.status === 'resolved' ? 'resolved' : p.status === 'responding' || p.status === 'on_site' ? 'responding' : 'pending',
@@ -5636,10 +5653,12 @@
           }, {});
           buildReportNotifs(dbReports, tlByReport);
           CalyeDB.fetch('report_media', { filters: [['report_id', 'in', ids]], limit: 250 }).then(mediaRows => {
-            const mediaByReport = (mediaRows || []).reduce((acc, m) => {
-              if (m.report_id && m.url && !acc[m.report_id]) acc[m.report_id] = m.url;
-              return acc;
-            }, {});
+            const mediaByReport = {};
+            (mediaRows || []).forEach(m => {
+              if (m.report_id && m.url) {
+                (mediaByReport[m.report_id] = mediaByReport[m.report_id] || []).push(m.url);
+              }
+            });
             CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], limit: 250 }).then(asnRows => {
               const asnByReport = (asnRows || []).reduce((acc, a) => {
                 if (a.report_id && !acc[a.report_id]) acc[a.report_id] = a;
@@ -5658,7 +5677,8 @@
                   source: r.source && r.source.toUpperCase() || 'BRGY',
                   lat: r.lat, lng: r.lng,
                   timeline: mapDbTimeline(tlByReport[r.id], fmtDate(r.created_at)),
-                  photo: mediaByReport[r.id] || '',
+                  photos: mediaByReport[r.id] || [],
+                  photo: (mediaByReport[r.id] || [])[0] || '',
                   resolutionNotes: asn.resolution_notes || '',
                   proofUrl: asn.proof_url || '',
                   responder: active ? {

@@ -3031,7 +3031,6 @@
                 localStorage.removeItem(LS_KEY_JOBS);
                 localStorage.removeItem(LS_KEY_HISTORY);
             } catch (e) { /* ignore */ }
-            showToast('Demo data has been reset');
             setTimeout(() => location.reload(), 900);
         }
 
@@ -3768,7 +3767,6 @@
             area.classList.add('filled');
             document.getElementById('proof-text').textContent = 'Photo captured ✓';
             closeProofCam();
-            showToast('Proof photo added.');
         }
 
         function closeProofCam() {
@@ -3931,7 +3929,6 @@
             saveResponderProfileData(rProfile);
             renderResponderProfile();
             closeSheet('rpi-overlay');
-            showToast('Personal information updated.');
         }
 
         function saveResponderShift() {
@@ -3939,14 +3936,11 @@
             rProfile.sector = document.getElementById('rshift-sector').value.trim() || rProfile.sector;
             saveResponderProfileData(rProfile);
             closeSheet('rshift-overlay');
-            showToast('Shift schedule updated.');
         }
 
         function setResponderPref(field, val) {
             rProfile.notif[field] = val;
             saveResponderProfileData(rProfile);
-            const labels = { dispatch: 'New dispatch alerts', reminders: 'Status reminders', ops: 'Barangay Ops updates' };
-            showToast((labels[field] || field) + (val ? ' enabled' : ' disabled'));
         }
 
         const RSTATIC_INFO = {
@@ -4396,7 +4390,6 @@
         function setResponderTheme(dark) {
             try { localStorage.setItem('calye_theme', dark ? 'dark' : 'light'); } catch (e) { }
             applyResponderTheme();
-            showToast(dark ? 'Dark mode enabled.' : 'Light mode enabled.');
         }
 
         let toastTimer;
