@@ -3181,6 +3181,21 @@
       outline: none; background: #f7f9fc; color: #0f1a2b;
     }
     .gate-field:focus { border-color: #1d6fe0; background: #fff; }
+    .pw-toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+    }
+    .pw-toggle svg { width: 18px; height: 18px; }
     .gate-btn {
       width: 100%; padding: 13px; margin-top: 4px; border: none; border-radius: 10px;
       background: linear-gradient(135deg, #1d6fe0, #129fbe); color: #fff;
@@ -3207,7 +3222,12 @@
       <div class="gate-sub">Sign in with an admin or staff account</div>
       <div id="gate-msg" class="gate-msg"></div>
       <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
-      <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
+      <div style="position:relative;margin-bottom:10px;">
+        <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:42px;margin-bottom:0;" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
+        <button type="button" class="pw-toggle" onclick="toggleGatePw()" aria-label="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <div id="gate-hint" class="gate-msg" style="display:none"></div>
       <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
       <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
@@ -8043,6 +8063,17 @@ const pageTitles = {
       } else {
         hint.style.display = 'none';
       }
+    }
+    function toggleGatePw() {
+      const input = document.getElementById('gate-pass');
+      const btn = document.querySelector('#admin-gate .pw-toggle');
+      if (!input) return;
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      const open = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+      const off = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      if (btn) { btn.innerHTML = show ? off : open; btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); }
+      input.focus();
     }
     function adminGateLogin() {
       const email = document.getElementById('gate-email').value.trim();
