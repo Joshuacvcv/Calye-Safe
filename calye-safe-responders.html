@@ -134,6 +134,21 @@
             flex-direction: column;
         }
 
+        /* On real device screens the shell fills the viewport so only the
+           content scrolls — the bottom nav stays pinned, never scrolling away. */
+        @media (max-height: 820px), (max-width: 420px) {
+            #app-shell {
+                width: 100vw;
+                max-width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
+
         /* ── SCREENS ── */
         .screen {
             flex: 1;
@@ -296,10 +311,10 @@
             color: var(--accent-dark);
         }
 
-        /* ── HEADER ── */
+        /* ── HEADER (shared rhythm: queue, job and every screen match) ── */
         .screen-header {
             background: var(--primary);
-            padding: 22px 20px 18px;
+            padding: 20px 20px 18px;
             flex-shrink: 0;
         }
 
@@ -503,6 +518,12 @@
 
         .toggle input:checked+.toggle-slider {
             background: var(--primary);
+        }
+
+        /* On Duty stays green — the only green toggle. */
+        #duty-toggle:checked+.toggle-slider,
+        #duty-toggle-2:checked+.toggle-slider {
+            background: var(--success);
         }
 
         .toggle input:checked+.toggle-slider:before {
@@ -966,7 +987,7 @@
         /* ── MAP ── */
         .map-frame {
             width: 100%;
-            height: 176px;
+            height: 200px;
             border-radius: var(--radius);
             overflow: hidden;
             background: #CFD8DC;
@@ -987,8 +1008,8 @@
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 5px 14px;
-            font-size: 11px;
+            padding: 6px 16px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--primary-text);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -997,24 +1018,24 @@
 
         .map-meta-row {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-top: 12px;
         }
 
         .map-meta-item {
             flex: 1;
             background: var(--card);
             border-radius: var(--radius-sm);
-            padding: 9px 12px;
+            padding: 12px 14px;
             box-shadow: var(--shadow);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .map-meta-item svg {
-            width: 15px;
-            height: 15px;
+            width: 17px;
+            height: 17px;
             stroke: var(--primary-text);
             fill: none;
             stroke-width: 2;
@@ -1022,14 +1043,14 @@
         }
 
         .map-meta-item .v {
-            font-size: 13px;
+            font-size: 14.5px;
             font-weight: 700;
             color: var(--text);
             line-height: 1.1;
         }
 
         .map-meta-item .l {
-            font-size: 9px;
+            font-size: 10px;
             color: var(--text3);
             font-weight: 600;
             text-transform: uppercase;
@@ -1237,28 +1258,28 @@
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin: 12px 0;
+            gap: 10px;
+            margin: 14px 0;
         }
 
         .info-item {
             background: var(--bg);
             border-radius: var(--radius-sm);
-            padding: 9px 11px;
+            padding: 11px 13px;
             border: 1px solid var(--border);
         }
 
         .info-item .il {
-            font-size: 9.5px;
+            font-size: 10.5px;
             color: var(--text3);
             text-transform: uppercase;
             letter-spacing: 0.06em;
             font-weight: 800;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
 
         .info-item .iv {
-            font-size: 12.5px;
+            font-size: 13.5px;
             color: var(--text);
             font-weight: 600;
         }
@@ -1266,13 +1287,13 @@
         .desc-box {
             background: var(--bg);
             border-radius: var(--radius-sm);
-            padding: 12px;
+            padding: 14px;
             border: 1px solid var(--border);
             margin-bottom: 12px;
         }
 
         .desc-box p {
-            font-size: 12.5px;
+            font-size: 13px;
             color: var(--text2);
             line-height: 1.55;
             font-weight: 500;
@@ -3240,7 +3261,6 @@
             document.getElementById('duty-dot').classList.toggle('on', onDuty);
             document.getElementById('duty-title').textContent = onDuty ? 'On Duty' : 'Off Duty';
             document.getElementById('duty-sub').textContent = onDuty ? "You're visible to dispatch" : "You won't receive new assignments";
-            showToast(onDuty ? 'You are now On Duty' : 'You are now Off Duty');
             if (!onDuty && dispatchTimer) { clearTimeout(dispatchTimer); }
         }
 
@@ -3324,7 +3344,7 @@
               <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <div>
-              <h2 style="font-size:17px;">${j.type}</h2>
+              <h2 style="font-size:19px;">${j.type}</h2>
               <p>${j.id} · ${j.barangay}</p>
             </div>
           </div>
@@ -3353,9 +3373,9 @@
                 <svg viewBox="0 0 24 24" stroke="${c.color}">${c.icon}</svg>
               </div>
               <div style="flex:1;">
-                <h4 style="font-size:15px;">${j.type}</h4>
+                <h4 style="font-size:16px;">${j.type}</h4>
                 ${j.subtype ? `<div style="font-size:11px;color:var(--text3);font-weight:600;">${j.subtype}</div>` : ''}
-                <div style="font-size:11.5px;color:var(--text2);">📍 ${j.loc}</div>
+                <div style="font-size:12.5px;color:var(--text2);">📍 ${j.loc}</div>
               </div>
               <span class="severity-tag ${j.severity}">${j.severity.toUpperCase()}</span>
             </div>

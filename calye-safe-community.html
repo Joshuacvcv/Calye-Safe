@@ -182,6 +182,21 @@
       color: var(--text);
     }
 
+    /* On real device screens the shell fills the viewport so only the
+       content scrolls — the bottom nav stays pinned, never scrolling away. */
+    @media (max-height: 820px), (max-width: 420px) {
+      #app-shell {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
     .screen {
       flex: 1;
       overflow-y: auto;
@@ -638,15 +653,16 @@
     }
 
     .step-dot {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      transition: background 0.3s, color 0.3s;
+      font-size: 15px;
+      font-weight: 800;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+      flex-shrink: 0;
     }
 
     #report-step-1,
@@ -656,14 +672,22 @@
     }
 
     .step-dot.done {
-      background: var(--primary);
+      background: var(--accent);
       color: #fff;
+    }
+
+    .step-dot.done svg {
+      width: 18px;
+      height: 18px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
     }
 
     .step-dot.active {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.25);
+      box-shadow: 0 0 0 5px rgba(245, 166, 35, 0.25);
     }
 
     .step-dot.pending {
@@ -673,14 +697,15 @@
 
     .step-line {
       flex: 1;
-      height: 2px;
+      height: 4px;
+      border-radius: 2px;
       background: var(--border);
-      max-width: 40px;
+      max-width: 56px;
       transition: background 0.3s;
     }
 
     .step-line.done {
-      background: var(--primary);
+      background: var(--accent);
     }
 
     .form-group {
@@ -2509,11 +2534,11 @@
             Major Incidents</div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#B71C1C;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
                 style="font-size:10px;color:var(--text2);">Crime</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
                 style="font-size:10px;color:var(--text2);">Fire</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
@@ -2521,7 +2546,7 @@
                 style="font-size:10px;color:var(--text2);">Flooding</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
                 style="font-size:10px;color:var(--text2);">Accidents</span>
             </div>
           </div>
@@ -2530,7 +2555,7 @@
             Minor Incidents</div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
                 style="font-size:10px;color:var(--text2);">Road Hazards</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
@@ -2538,15 +2563,15 @@
                 style="font-size:10px;color:var(--text2);">Garbage &amp; Sanitation</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
                 style="font-size:10px;color:var(--text2);">Disturbances</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#5D4037;"></div><span
                 style="font-size:10px;color:var(--text2);">Utilities</span>
             </div>
             <div style="display:flex;align-items:center;gap:5px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#7B1FA2;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#AD1457;"></div><span
                 style="font-size:10px;color:var(--text2);">Health Concerns</span>
             </div>
           </div>
@@ -2760,7 +2785,7 @@
         </div>
         <div class="form-group">
           <label>Take Photo of the Incident</label>
-          <p style="font-size:11px;color:var(--text3);margin:2px 0 8px;font-weight:600;">Optional — up to 4 images per report.</p>
+          <p style="font-size:11px;color:var(--text3);margin:2px 0 8px;font-weight:600;">Optional — up to 2 images per report.</p>
           <div id="media-thumbs" style="display:none;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
           <!-- Add-photo button (hides at the 4-photo maximum) -->
           <div class="upload-area" id="upload-area" onclick="chooseCamera()">
@@ -2873,15 +2898,16 @@
               <path d="M9 18l6-6-6-6" />
             </svg></div>
         </div>
-        <div class="profile-menu-item" onclick="openAppearance()">
+        <span class="section-label">Preferences</span>
+        <div class="profile-menu-item" style="cursor:default;">
           <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.07 4.93A10 10 0 014.93 19.07M14.12 14.12A3 3 0 119.88 9.88" />
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
           </svg>
-          <span class="label">App preferences</span>
-          <div class="chevron"><svg viewBox="0 0 24 24" stroke="currentColor">
-              <path d="M9 18l6-6-6-6" />
-            </svg></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);">Dark Mode</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">Easier on the eyes at night</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="ap-dark" onchange="setThemeMode(this.checked)"><span class="toggle-slider"></span></label>
         </div>
         <span class="section-label">About</span>
         <div class="profile-menu-item" onclick="openStaticModal('about')">
@@ -3326,48 +3352,6 @@
       </div>
     </div>
 
-    <!-- PROFILE — APPEARANCE MODAL -->
-    <div class="modal-overlay" id="appearance-modal" onclick="closeModal('appearance-modal')">
-      <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:28px;">
-        <div class="modal-handle"></div>
-        <h3>App preferences</h3>
-        <div class="form-group">
-          <label>Language</label>
-          <select id="ap-language" style="width:100%;" onchange="saveLanguagePref(this.value)">
-            <option value="English">English</option>
-            <option value="Filipino">Filipino</option>
-          </select>
-        </div>
-        <div class="card" style="margin-bottom:10px;">
-          <div class="toggle-row">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);">Dark Mode</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Easier on the eyes at night</div>
-            </div>
-            <label class="toggle"><input type="checkbox" id="ap-dark" onchange="setThemeMode(this.checked)"><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:10px;">
-          <div class="toggle-row">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);">Reduce Motion</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Minimize animations while using the app</div>
-            </div>
-            <label class="toggle"><input type="checkbox" id="ap-motion" onchange="setPref('reducedMotion', this.checked)"><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:0;">
-          <div class="toggle-row">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text);">High Contrast Text</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Sharper text for easier reading</div>
-            </div>
-            <label class="toggle"><input type="checkbox" id="ap-contrast" onchange="setPref('highContrast', this.checked)"><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- PROFILE — STATIC INFO MODAL (About / Terms / Privacy) -->
     <div class="modal-overlay" id="static-info-modal" onclick="closeModal('static-info-modal')">
       <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:28px;">
@@ -3533,7 +3517,7 @@
       { id: 9, type: 'flooding', label: 'Flooding', loc: 'Mercado Village', status: 'responding', lat: 14.3148, lng: 121.1140 },
       { id: 10, type: 'accident', label: 'Road Accident', loc: 'Division Road', status: 'urgent', lat: 14.3122, lng: 121.1114 },
     ]);
-    const typeColors = { clogged: '#1565C0', streetlight: '#F9A825', garbage: '#2E7D32', vandalism: '#F57C00', disturbance: '#E53935', road: '#C62828', crime: '#B71C1C', fire: '#D84315', flooding: '#0D47A1', accident: '#6A1B9A', medical: '#C2185B', structural: '#5D4037', utility: '#00838F', health: '#7B1FA2' };
+    const typeColors = { clogged: '#1565C0', streetlight: '#F9A825', garbage: '#2E7D32', vandalism: '#F57C00', disturbance: '#00838F', road: '#F9A825', crime: '#6A1B9A', fire: '#E53935', flooding: '#0D47A1', accident: '#D84315', medical: '#C2185B', structural: '#455A64', utility: '#5D4037', health: '#AD1457' };
     // Retired map keys fold into their report group so old pins stay visible.
     const LEGACY_MAPKEY = { clogged: 'garbage', streetlight: 'road', vandalism: 'disturbance' };
     function normMapKey(t) { return LEGACY_MAPKEY[t] || t; }
@@ -3562,13 +3546,13 @@
         'Creek or estero overflow',
         'Clogged drainage causing severe flooding'
       ] },
-      { key: 'fire', tile: 'Fire', name: 'Fire (Sunog)', severity: 'major', icon: 'fire', color: '#D84315', mapKey: 'fire', dbCat: 'fire', items: [
+      { key: 'fire', tile: 'Fire', name: 'Fire (Sunog)', severity: 'major', icon: 'fire', color: '#E53935', mapKey: 'fire', dbCat: 'fire', items: [
         'Residential house fires',
         'Informal settler area fires (spread risk is high)',
         'Grass fires / cogon fires near communities',
         'Electrical fire from faulty wiring'
       ] },
-      { key: 'crime', tile: 'Crime & Safety', name: 'Crime & Public Safety', severity: 'major', icon: 'crime', color: '#B71C1C', mapKey: 'crime', dbCat: 'crime', items: [
+      { key: 'crime', tile: 'Crime & Safety', name: 'Crime & Public Safety', severity: 'major', icon: 'crime', color: '#6A1B9A', mapKey: 'crime', dbCat: 'crime', items: [
         'Robbery / hold-up incidents',
         'Physical assault or mauling',
         'Illegal drug-related incidents',
@@ -3590,7 +3574,7 @@
         'Bridge damage or collapse risk',
         'Building fire risk from LPG gas leaks'
       ] },
-      { key: 'road', tile: 'Road Hazards', name: 'Road & Infrastructure Hazards', severity: 'minor', icon: 'road', color: '#C62828', mapKey: 'road', dbCat: 'hazard', items: [
+      { key: 'road', tile: 'Road Hazards', name: 'Road & Infrastructure Hazards', severity: 'minor', icon: 'road', color: '#F9A825', mapKey: 'road', dbCat: 'hazard', items: [
         'Potholes and road deterioration (malalim na butas sa kalsada)',
         'Broken or flickering streetlights (sira na ilaw sa daan)',
         'Fallen trees blocking roads after storms',
@@ -3604,7 +3588,7 @@
         'Burning of trash in residential areas (open burning)',
         'Dead animals on public roads or waterways'
       ] },
-      { key: 'disturbance', tile: 'Disturbances', name: 'Community Disturbances', severity: 'minor', icon: 'disturbance', color: '#E53935', mapKey: 'disturbance', dbCat: 'crime', items: [
+      { key: 'disturbance', tile: 'Disturbances', name: 'Community Disturbances', severity: 'minor', icon: 'disturbance', color: '#00838F', mapKey: 'disturbance', dbCat: 'crime', items: [
         'Loud noise / videoke disturbances late at night',
         'Neighbor disputes / away-away',
         'Stray animals causing road hazards or biting incidents',
@@ -3613,14 +3597,14 @@
         'Illegal construction without permit',
         'Obstruction of fire hydrants or emergency routes'
       ] },
-      { key: 'utility', tile: 'Utilities', name: 'Environmental / Utility Issues', severity: 'minor', icon: 'utility', color: '#00838F', mapKey: 'utility', dbCat: 'hazard', items: [
+      { key: 'utility', tile: 'Utilities', name: 'Environmental / Utility Issues', severity: 'minor', icon: 'utility', color: '#5D4037', mapKey: 'utility', dbCat: 'hazard', items: [
         'Water supply interruption complaints',
         'Water pipe leaks in public areas',
         'Electrical wire hazards (hanging wires, exposed cables)',
         'Sewage or septic tank overflow onto streets',
         'Pest infestation complaints (rats, mosquitoes — dengue risk)'
       ] },
-      { key: 'health', tile: 'Health Concerns', name: 'Public Health Concerns', severity: 'minor', icon: 'health', color: '#7B1FA2', mapKey: 'health', dbCat: 'other', items: [
+      { key: 'health', tile: 'Health Concerns', name: 'Public Health Concerns', severity: 'minor', icon: 'health', color: '#AD1457', mapKey: 'health', dbCat: 'other', items: [
         'Suspected dengue outbreak cluster in a sitio',
         'Stray dog bites (rabies risk)',
         'Food stall or carinderia sanitation complaints',
@@ -4120,11 +4104,15 @@
     }
 
     function goStep(n) {
+      const CHECK_SVG = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
       [1, 2, 3].forEach(i => {
         const el = document.getElementById('report-step-' + i);
         if (el) el.style.display = (i === n ? 'block' : 'none');
         const dot = document.getElementById('sdot-' + i);
-        if (dot) dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+        if (dot) {
+          dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+          dot.innerHTML = (i < n) ? CHECK_SVG : String(i);
+        }
         if (i < 3) {
           const line = document.getElementById('sline-' + i);
           if (line) line.className = 'step-line' + (i < n ? ' done' : '');
@@ -4999,10 +4987,10 @@
 
     const ALERT_DOT_CLASS = { flood: 'flood', fire: 'fire', garbage: 'garbage', crime: 'crime', accident: 'accident', hazard: 'hazard', medical: 'medical', structural: 'structural', utility: 'utility', health: 'health' };
     const ALERT_TONES = {
-      flood: ['#E3F2FD', '#1565C0'], fire: ['#FFEBEE', '#C62828'], garbage: ['#E8F5E9', '#2E7D32'],
-      crime: ['#FCE4EC', '#AD1457'], accident: ['#FFF3E0', '#EF6C00'], hazard: ['#FFF8E1', '#F9A825'],
-      medical: ['#FCE4EC', '#C2185B'], structural: ['#EFEBE9', '#5D4037'], utility: ['#E0F7FA', '#00838F'],
-      health: ['#F3E5F5', '#7B1FA2'], other: ['#ECEFF1', '#607D8B']
+      flood: ['#E3F2FD', '#1565C0'], fire: ['#FFEBEE', '#E53935'], garbage: ['#E8F5E9', '#2E7D32'],
+      crime: ['#F1E6FB', '#6A1B9A'], accident: ['#FFF3E0', '#EF6C00'], hazard: ['#FFF8E1', '#F9A825'],
+      medical: ['#FCE4EC', '#C2185B'], structural: ['#EFEBE9', '#5D4037'], utility: ['#EFEBE9', '#5D4037'],
+      health: ['#FBE3ED', '#AD1457'], other: ['#ECEFF1', '#607D8B']
     };
     const ALERT_ICONS = {
       flood: '<path d="M2 12.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/><path d="M2 17.5c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/>',
@@ -5142,8 +5130,8 @@
       }
     }
 
-    // ========== MEDIA (capture-only, up to 4 photos per report) ==========
-    const MAX_REPORT_PHOTOS = 4;
+    // ========== MEDIA (capture-only, up to 2 photos per report) ==========
+    const MAX_REPORT_PHOTOS = 2;
     let activeCameraStream = null;
     let currentFacingMode = 'environment';
     let capturedDataURL = null;
@@ -5151,7 +5139,7 @@
 
     function chooseCamera() {
       if (selectedMediaList.length >= MAX_REPORT_PHOTOS) {
-        showToast('Maximum 4 photos per report.');
+        showToast('Maximum 2 photos per report.');
         return;
       }
       openCameraModal();
@@ -5347,7 +5335,7 @@
     function confirmPhoto() {
       if (!capturedDataURL) return;
       if (selectedMediaList.length >= MAX_REPORT_PHOTOS) {
-        showToast('Maximum 4 photos per report.');
+        showToast('Maximum 2 photos per report.');
         closeCameraModal();
         return;
       }
@@ -5399,10 +5387,7 @@
       phone: '0917-000-0000',
       barangay: 'Barangay Calye',
       joined: 'May 19, 2026',
-      notif: { reportUpdates: true, emergencyAlerts: true, announcements: true, tips: false },
-      language: 'English',
-      reducedMotion: false,
-      highContrast: false
+      notif: { reportUpdates: true, emergencyAlerts: true, announcements: true, tips: false }
     }, loadStoredObj(LS_KEY_PROFILE, {}));
 
     function timeGreeting() {
@@ -5471,22 +5456,11 @@
       applyTheme();
     }
 
+    applyTheme();
+
     function setPref(field, val) {
       if (field in profile.notif) profile.notif[field] = val;
       else profile[field] = val;
-      saveStoredObj(LS_KEY_PROFILE, profile);
-    }
-
-    function openAppearance() {
-      document.getElementById('ap-language').value = profile.language;
-      document.getElementById('ap-motion').checked = profile.reducedMotion;
-      document.getElementById('ap-contrast').checked = profile.highContrast;
-      try { document.getElementById('ap-dark').checked = (localStorage.getItem('calye_theme') || 'light') === 'dark'; } catch (e) { }
-      showModal('appearance-modal');
-    }
-
-    function saveLanguagePref(val) {
-      profile.language = val;
       saveStoredObj(LS_KEY_PROFILE, profile);
     }
 

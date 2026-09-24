@@ -719,15 +719,9 @@
       }
     }
 
+    /* Flat cards — the blurred glow wash is removed in both modes. */
     .stat-card .glow {
-      position: absolute;
-      top: -30px;
-      right: -30px;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      opacity: 0.07;
-      filter: blur(25px);
+      display: none;
     }
 
     .stat-card .top {
@@ -928,6 +922,37 @@
       margin-left: auto;
       font-weight: 800;
       color: var(--text);
+    }
+
+    /* ── ANALYTICS PAGE SCROLL: one scrollbar at the screen edge; the
+       insights rail stays static while the left column scrolls. ── */
+    #page-analytics > div {
+      overflow-y: auto;
+      align-items: flex-start;
+      padding-right: 6px;
+      scrollbar-width: thin;
+    }
+
+    #page-analytics > div::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    #page-analytics > div::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px;
+    }
+
+    #page-analytics .col-left {
+      overflow: visible;
+      max-height: none;
+    }
+
+    #page-analytics .col-right {
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      overflow: visible;
+      max-height: none;
     }
 
     /* ── PANEL ── */
@@ -1722,6 +1747,19 @@
     }
     #perf-stat-grid {
       grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    /* KPI hierarchy: the two headline cards lead, the rest support. */
+    #perf-stat-grid .stat-card.featured .val {
+      font-size: 38px;
+    }
+
+    #perf-stat-grid .stat-card:not(.featured) .val {
+      font-size: 26px;
+    }
+
+    #perf-stat-grid .stat-card:not(.featured) .lbl {
+      font-size: 12px;
     }
     #perf-main-layout > * {
       min-width: 0;
@@ -3404,10 +3442,10 @@
             <!-- STAT CARDS -->
             <div class="stat-grid">
               <div class="stat-card">
-                <div class="glow" style="background:var(--accent);"></div>
+                <div class="glow" style="background:var(--primary);"></div>
                 <div class="top">
-                  <div class="icon" style="background:rgba(245,158,11,0.12);">
-                    <svg viewBox="0 0 24 24" style="stroke:var(--accent);">
+                  <div class="icon" style="background:var(--info-light);">
+                    <svg viewBox="0 0 24 24" style="stroke:var(--primary-text);">
                       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                     </svg>
@@ -3419,10 +3457,10 @@
                 <div class="sub">All time · Barangay Calye</div>
               </div>
               <div class="stat-card">
-                <div class="glow" style="background:var(--primary);"></div>
+                <div class="glow" style="background:var(--accent);"></div>
                 <div class="top">
-                  <div class="icon" style="background:var(--info-light);">
-                    <svg viewBox="0 0 24 24" style="stroke:var(--primary-text);">
+                  <div class="icon" style="background:var(--accent-light);">
+                    <svg viewBox="0 0 24 24" style="stroke:var(--accent-dark);">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -3844,11 +3882,11 @@
             <span
               style="font-size:10.5px;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.06em;background:var(--danger-light);padding:3px 9px;border-radius:20px;">Major</span>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#B71C1C;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Crime</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Fire</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -3856,7 +3894,7 @@
                 style="font-size:12px;color:var(--text2);font-weight:600;">Flooding</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Accidents</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -3864,7 +3902,7 @@
                 style="font-size:12px;color:var(--text2);font-weight:600;">Medical</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#5D4037;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#455A64;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Structural</span>
             </div>
             </div>
@@ -3872,7 +3910,7 @@
             <span
               style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#C62828;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Road Hazards</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -3880,15 +3918,15 @@
                 style="font-size:12px;color:var(--text2);font-weight:600;">Garbage &amp; Sanitation</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Disturbances</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#5D4037;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Utilities</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#7B1FA2;"></div><span
+              <div style="width:10px;height:10px;border-radius:50%;background:#AD1457;"></div><span
                 style="font-size:12px;color:var(--text2);font-weight:600;">Health Concerns</span>
             </div>
             <div style="margin-left:auto;font-size:12px;color:var(--text3);font-weight:600;">📍 <span
@@ -4045,7 +4083,7 @@
 
         <!-- ANALYTICS PAGE -->
         <div id="page-analytics" class="page-panel">
-          <div style="display:flex;flex-direction:row;gap:22px;flex:1;min-height:0;overflow:hidden;">
+          <div style="display:flex;flex-direction:row;gap:22px;flex:1;min-height:0;overflow-y:auto;">
 
             <!-- LEFT COLUMN -->
             <div class="col-left">
@@ -4430,37 +4468,6 @@
                     <input type="checkbox" id="set-darkmode" onchange="setAdminTheme(this.checked)">
                     <span class="toggle-slider"></span>
                   </label>
-                </div>
-                <div class="settings-form-grid">
-                  <div>
-                    <label class="settings-field-label">Language</label>
-                    <select class="modal-select" id="set-language" onchange="saveAdminPrefs()">
-                      <option value="en">English</option>
-                      <option value="fil">Filipino</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="settings-field-label">Time Zone</label>
-                    <select class="modal-select" id="set-timezone" onchange="saveAdminPrefs()">
-                      <option value="ph">(GMT+8) Philippine Standard Time</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="settings-field-label">Default Landing Page</label>
-                    <select class="modal-select" id="set-landing" onchange="saveAdminPrefs()">
-                      <option value="dashboard">Dashboard Overview</option>
-                      <option value="reports">All Reports</option>
-                      <option value="map">Incident Map</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="settings-field-label">Auto-refresh Interval</label>
-                    <select class="modal-select" id="set-refresh" onchange="saveAdminPrefs()">
-                      <option value="30">30 seconds</option>
-                      <option value="60" selected>1 minute</option>
-                      <option value="300">5 minutes</option>
-                    </select>
-                  </div>
                 </div>
               </div>
             </div>
@@ -5113,31 +5120,6 @@
       document.getElementById('set-confirmpass').value = '';
       showToastMsg('Account settings saved', 'success');
     }
-
-    // General preferences save instantly on change (no save button, no popup).
-    function saveAdminPrefs() {
-      try {
-        var prefs = {
-          language: document.getElementById('set-language').value,
-          timezone: document.getElementById('set-timezone').value,
-          landing: document.getElementById('set-landing').value,
-          refresh: document.getElementById('set-refresh').value
-        };
-        localStorage.setItem('calye_admin_prefs', JSON.stringify(prefs));
-      } catch (e) { }
-    }
-
-    function applyAdminPrefs() {
-      try {
-        var prefs = JSON.parse(localStorage.getItem('calye_admin_prefs') || '{}');
-        ['language', 'timezone', 'landing', 'refresh'].forEach(function (k) {
-          var el = document.getElementById('set-' + k);
-          if (el && prefs[k]) el.value = prefs[k];
-        });
-      } catch (e) { }
-    }
-
-    applyAdminPrefs();
 
     function toggleSetting(el, label) {
       /* Preference toggles apply instantly with no popup. */
@@ -5962,6 +5944,9 @@ const pageTitles = {
 
     const DRILL_COLORS = ['var(--danger)', 'var(--accent)', 'var(--primary-text)', 'var(--success)', 'var(--warning)', 'var(--info)'];
 
+    // Donut segments follow the incident-map legend, keyed by category.
+    const DRILL_CAT_COLORS = { crime: '#6A1B9A', fire: '#E53935', flood: '#0D47A1', accident: '#D84315', garbage: '#2E7D32', hazard: '#F9A825', other: '#9E9E9E' };
+
     function escHtml(s) {
       return String(s == null ? '' : s)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -6050,7 +6035,8 @@ const pageTitles = {
         const frac = (c.count || 0) / total;
         const len = Math.max(frac * C - 2, 0.5);
         const target = -acc;
-        const s = '<circle class="drill-seg" data-v="' + target.toFixed(1) + '" cx="110" cy="110" r="' + R + '" fill="none" stroke="' + DRILL_COLORS[i % DRILL_COLORS.length] + '" stroke-width="32"'
+        const color = DRILL_CAT_COLORS[c.category] || DRILL_CAT_COLORS.other;
+        const s = '<circle class="drill-seg" data-v="' + target.toFixed(1) + '" cx="110" cy="110" r="' + R + '" fill="none" stroke="' + color + '" stroke-width="32"'
           + ' stroke-dasharray="' + len.toFixed(1) + ' ' + C.toFixed(1) + '" stroke-dashoffset="' + C.toFixed(1) + '" transform="rotate(-90 110 110)"/>';
         acc += frac * C;
         return s;
@@ -6058,7 +6044,8 @@ const pageTitles = {
       const legend = cats.map(function (c, i) {
         const label = ANALYTICS_CATEGORY_LABELS[c.category] || c.category;
         const pct = Math.round(100 * (c.count || 0) / total);
-        return '<div class="donut-row"><span class="donut-dot" style="background:' + DRILL_COLORS[i % DRILL_COLORS.length] + ';"></span>'
+        const color = DRILL_CAT_COLORS[c.category] || DRILL_CAT_COLORS.other;
+        return '<div class="donut-row"><span class="donut-dot" style="background:' + color + ';"></span>'
           + escHtml(label) + ' <span style="color:var(--text3);">· ' + c.count + '</span>'
           + '<span class="pct">' + pct + '%</span></div>';
       }).join('');
@@ -6553,13 +6540,13 @@ const pageTitles = {
       const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
 
       grid.innerHTML = `
-        <div class="stat-card">
+        <div class="stat-card featured" style="border-top:3px solid var(--primary);">
           <div class="icon" style="background:var(--info-light);"><svg viewBox="0 0 24 24" style="stroke:var(--primary-text);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div class="val">${fmtMin(avgResponse)}</div>
           <div class="lbl">Avg. Response Time</div>
           <div class="sub">Assigned → En Route</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card featured" style="border-top:3px solid var(--success);">
           <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><polyline points="20 6 9 17 4 12"/></svg></div>
           <div class="val">${resolutionRate}%</div>
           <div class="lbl">Resolution Rate</div>
@@ -7297,7 +7284,7 @@ const pageTitles = {
       if (pageMapMarkers) {
         pageMapMarkers.clearLayers();
         // Resident palette — matches the legend and the community app.
-        const catColors = { flood: '#0D47A1', hazard: '#C62828', garbage: '#2E7D32', other: '#607D8B', crime: '#B71C1C', fire: '#D84315', accident: '#6A1B9A', medical: '#C2185B', structural: '#5D4037' };
+        const catColors = { flood: '#0D47A1', hazard: '#F9A825', garbage: '#2E7D32', other: '#9E9E9E', crime: '#6A1B9A', fire: '#E53935', accident: '#D84315', medical: '#C2185B', structural: '#455A64' };
         pins.forEach(p => {
           if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
           const color = catColors[p.cat] || '#607D8B';
@@ -7549,7 +7536,8 @@ const pageTitles = {
     }
 
     // ── LIVE BY-CATEGORY (THIS WEEK) — real counts from reports ──
-    const DASH_CAT_COLORS = { flood: 'var(--info)', hazard: 'var(--warning)', garbage: 'var(--success)', crime: 'var(--crime)', fire: 'var(--fire)', accident: 'var(--accident)', other: 'var(--text3)' };
+    // Same palette as the incident map pins.
+    const DASH_CAT_COLORS = { flood: '#0D47A1', hazard: '#F9A825', garbage: '#2E7D32', crime: '#6A1B9A', fire: '#E53935', accident: '#D84315', other: '#9E9E9E' };
 
     function renderDashCategory() {
       const barsEl = document.getElementById('dash-week-bars');
@@ -8072,6 +8060,22 @@ const pageTitles = {
       // Pin the identity this dashboard session claims, so privileged actions
       // can later detect when another tab overwrites the shared auth token.
       adminSessionUid = (gs && gs.session && gs.session.user && gs.session.user.id) || null;
+      // Reflect whichever staff/admin account signed in (email, name, chip).
+      try {
+        const prof = (gs && gs.profile) || {};
+        const em = document.getElementById('set-admin-email');
+        if (em && prof.email) em.value = prof.email;
+        const nm = document.getElementById('set-admin-name');
+        if (nm && prof.full_name) nm.value = prof.full_name;
+        const chipName = document.querySelector('.admin-chip .admin-info .name');
+        if (chipName && prof.full_name) chipName.textContent = prof.full_name;
+        const chipAv = document.querySelector('.admin-chip .admin-avatar');
+        if (chipAv && prof.full_name) {
+          chipAv.textContent = prof.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'BA';
+        }
+        const chipRole = document.querySelector('.admin-chip .admin-info .role');
+        if (chipRole && prof.role) chipRole.textContent = prof.role === 'admin' ? 'Administrator' : 'Staff';
+      } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
       loadDefaultMap();
       syncFromSupabase();
