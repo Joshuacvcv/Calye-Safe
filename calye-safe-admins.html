@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -138,7 +138,7 @@
     body {
       height: 100%;
       background: var(--bg);
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       color: var(--text);
       overflow: hidden;
     }
@@ -252,6 +252,89 @@
       #content { padding: 12px; }
     }
 
+    /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 100000;
+      background: #1E3A5F;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    #boot-splash.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    #boot-splash .bs-logo-wrap {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin-bottom: 14px;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    #boot-splash .bs-logo-wrap img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      display: block;
+    }
+
+    #boot-splash .bs-shine {
+      position: absolute;
+      inset: -20%;
+      z-index: 2;
+      background: linear-gradient(130deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+      transform: translateX(-130%);
+      animation: bsShine 1.4s ease-in-out 0.55s both;
+      pointer-events: none;
+    }
+
+    #boot-splash .bs-name {
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 1.1s both;
+    }
+
+    #boot-splash .bs-sub {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 1.25s both;
+    }
+
+    @keyframes bsPop {
+      from { transform: scale(0.5); }
+      to { transform: scale(1); }
+    }
+
+    @keyframes bsShine {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
+    @keyframes bsFadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
     /* ── LAYOUT ── */
     #shell {
       display: flex;
@@ -328,7 +411,7 @@
     }
 
     .sidebar-logo .brand {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 900;
       font-size: 20px;
       line-height: 1.25;
@@ -425,7 +508,7 @@
       font-weight: 800;
       padding: 2px 6px;
       border-radius: 20px;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .sidebar-footer {
@@ -450,7 +533,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 13px;
       font-weight: 800;
       color: #fff;
@@ -513,7 +596,7 @@
     }
 
     .topbar-left .page-title {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 800;
       font-size: 20px;
       line-height: 1.25;
@@ -752,7 +835,7 @@
       font-weight: 800;
       padding: 4px 9px;
       border-radius: 20px;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .trend.up {
@@ -766,7 +849,7 @@
     }
 
     .stat-card .val {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 32px;
       font-weight: 900;
       color: var(--text);
@@ -797,7 +880,7 @@
     }
 
     .sec-title {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 15px;
       font-weight: 800;
       color: var(--text);
@@ -1017,7 +1100,7 @@
     }
 
     .priority-id {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 12px;
       color: var(--text3);
       font-weight: 700;
@@ -1054,7 +1137,7 @@
     }
 
     .priority-type-info h3 {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 19px;
       font-weight: 800;
       color: var(--text);
@@ -1134,7 +1217,7 @@
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
-      font-family: 'Nunito Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 14px;
       font-weight: 700;
       display: flex;
@@ -1398,7 +1481,7 @@
     }
 
     .report-table .report-num {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 13px;
       color: var(--text3);
       font-weight: 700;
@@ -1515,7 +1598,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 12px;
       font-weight: 800;
       flex-shrink: 0;
@@ -1599,7 +1682,7 @@
       width: 30px; height: 30px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 10.5px;
       font-weight: 800;
       color: #fff;
@@ -1664,14 +1747,14 @@
       border-radius: 50%;
       background: var(--primary);
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 15px;
       font-weight: 800;
       color: #fff;
       flex-shrink: 0;
     }
 
-    .detail-name { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
+    .detail-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 800; color: var(--text); }
     .detail-role { font-size: 11px; color: var(--text3); font-weight: 600; margin-top: 2px; }
 
     .detail-body { padding: 16px 18px; }
@@ -1689,7 +1772,7 @@
       border-radius: var(--radius-sm);
       padding: 10px 12px;
     }
-    .detail-stat .dv { font-size: 16px; font-weight: 800; color: var(--text); font-family: 'Nunito', sans-serif; }
+    .detail-stat .dv { font-size: 16px; font-weight: 800; color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; }
     .detail-stat .dl { font-size: 9.5px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 
     .cat-breakdown-title {
@@ -1979,7 +2062,7 @@
     }
 
     .modal-head h3 {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 16px;
       font-weight: 800;
       color: var(--text);
@@ -2361,7 +2444,7 @@
     }
 
     .notif-panel-head h4 {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 14px;
       font-weight: 800;
       color: var(--text);
@@ -2527,7 +2610,7 @@
     }
 
     .page-coming h2 {
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 20px;
       font-weight: 800;
       color: var(--text2);
@@ -2632,7 +2715,7 @@
       font-weight: 800;
       padding: 2px 8px;
       border-radius: 20px;
-      font-family: 'Nunito', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     .cat-tag {
@@ -3212,33 +3295,88 @@
     /* ── ADMIN AUTH GATE ── */
     #admin-gate {
       position: fixed; inset: 0; z-index: 99999;
-      display: flex; align-items: center; justify-content: center;
-      background: #0a0f1c;
-      font-family: 'Nunito', sans-serif;
+      display: flex; flex-direction: column;
+      background: #1b2a44;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-y: auto;
     }
     #admin-gate.hidden { display: none; }
+    .gate-sky { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+    .gate-pin { position: absolute; bottom: -60px; opacity: 0; animation: gateRise linear infinite; }
+    .gate-pin i { display: block; width: 22px; height: 22px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); margin: 0 auto; }
+    .gate-pin b { display: block; width: 8px; height: 8px; border-radius: 50%; background: #1b2a44; margin: -16px auto 0; position: relative; }
+    @keyframes gateRise {
+      0% { transform: translateY(0); opacity: 0; }
+      12% { opacity: .5; }
+      85% { opacity: .35; }
+      100% { transform: translateY(-110vh); opacity: 0; }
+    }
+    .gate-tw { position: absolute; border-radius: 50%; background: #fff; animation: gateTwinkle 3.4s ease-in-out infinite; }
+    @keyframes gateTwinkle { 0%, 100% { opacity: 0; transform: scale(.5); } 50% { opacity: .5; transform: scale(1); } }
+    .gate-ticker { background: #E53935; overflow: hidden; white-space: nowrap; padding: 9px 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #fff; flex-shrink: 0; }
+    .gate-ticker span { display: inline-block; padding-left: 100%; animation: gateTick 24s linear infinite; }
+    .gate-ticker:hover span { animation-play-state: paused; }
+    @keyframes gateTick { to { transform: translateX(-100%); } }
+    .gate-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 36px; }
     .gate-card {
-      width: min(400px, 90vw); background: #ffffff; color: #0f1a2b;
-      border-radius: 18px; padding: 32px 28px;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.45); text-align: center;
+      display: flex; width: 960px; max-width: 96vw;
+      border-radius: 20px; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      opacity: 0; transform: translateY(22px);
+      animation: gateEnter .7s cubic-bezier(.22,1,.36,1) .1s both;
+    }
+    @keyframes gateEnter { to { opacity: 1; transform: none; } }
+    .gate-left {
+      flex: 1.25; background: #1E3A5F; color: #fff;
+      padding: 44px 38px; display: flex; flex-direction: column; justify-content: center; gap: 16px;
     }
     .gate-logo {
-      width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      background: #1d6fe0; color: #fff; font-weight: 900; font-size: 22px;
-      overflow: hidden;
+      width: 58px; height: 58px; border-radius: 16px; overflow: hidden; flex-shrink: 0;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.35);
     }
-    .gate-logo img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .gate-title { font-size: 20px; font-weight: 900; color: #0f1a2b; }
-    .gate-sub { font-size: 12.5px; font-weight: 700; color: #5b6b82; margin: 6px 0 20px; }
+    .gate-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gate-title { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+    .gate-title em { font-style: normal; color: #F5A623; }
+    .gate-sub { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+    .gate-flow { display: flex; align-items: flex-start; margin-top: 6px; }
+    .gate-step { flex: 1; text-align: center; position: relative; background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; }
+    .gate-step .dot { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; transition: transform .18s; }
+    .gate-step:hover .dot { transform: scale(1.18); }
+    .gate-step small { font-size: 10px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.75); line-height: 1.4; display: block; }
+    .gate-step:not(:last-child)::after { content: ''; position: absolute; top: 15px; left: calc(50% + 20px); right: calc(-50% + 20px); height: 2px; background: rgba(255,255,255,.2); border-radius: 2px; }
+    .gate-step.lit small { color: #fff; }
+    .gate-step.lit .dot { box-shadow: 0 0 0 5px rgba(245,166,35,.25); }
+    .gate-cap { font-size: 12px; color: #F5A623; font-weight: 700; min-height: 18px; }
+    .gate-stats { display: flex; gap: 10px; }
+    .gate-stat { flex: 1; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 10px 12px; }
+    .gate-stat b { display: block; font-size: 19px; }
+    .gate-stat span { font-size: 10px; color: rgba(255,255,255,.6); font-weight: 700; letter-spacing: .04em; }
+    .gate-right { flex: 1; background: #fff; padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; gap: 12px; color: #0f1a2b; }
+    .gate-tag { display: inline-block; background: #EAF0FB; color: #1E3A5F; font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 4px 10px; border-radius: 20px; margin-bottom: 4px; }
+    .gate-right h2 { font-size: 20px; font-weight: 800; }
+    .gate-right p.gate-lead { font-size: 12.5px; color: #5b6b82; }
     .gate-field {
-      width: 100%; box-sizing: border-box; padding: 12px 14px; margin-bottom: 10px;
+      width: 100%; box-sizing: border-box; padding: 12px 14px;
       border: 1.5px solid #dce3ee; border-radius: 10px; font-size: 14px; font-family: inherit;
       outline: none; background: #f7f9fc; color: #0f1a2b;
     }
     .gate-field:focus { border-color: #1d6fe0; background: #fff; }
+    .gate-btn {
+      width: 100%; padding: 13px; margin-top: 6px; border: none; border-radius: 10px;
+      background: #1d6fe0; color: #fff;
+      font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+    }
+    .gate-btn:disabled { opacity: 0.6; cursor: wait; }
+    .gate-link {
+      margin-top: 14px; background: none; border: none; color: #1d6fe0;
+      font-size: 12.5px; font-weight: 800; font-family: inherit; cursor: pointer;
+    }
+    .gate-msg { min-height: 18px; font-size: 12.5px; font-weight: 700; margin: 0 0 10px; }
+    .gate-hint { font-size: 11px; color: #8a97ab; font-weight: 700; margin-top: 16px; line-height: 1.5; }
+    @media (max-width: 860px) {
+      .gate-card { flex-direction: column; }
+      .gate-left { padding: 32px 28px; }
+    }
     .pw-toggle {
       position: absolute;
       right: 6px;
@@ -3272,24 +3410,57 @@
 
 <body>
 
+  <!-- BOOT SPLASH (logo pops, then a shine sweeps across — tap to skip) -->
+  <div id="boot-splash" onclick="hideBootSplash(true)">
+    <div class="bs-logo-wrap">
+      <img src="calye-safe-logo.png" alt="Calye Safe logo">
+      <span class="bs-shine"></span>
+    </div>
+    <div class="bs-name">Calye Safe</div>
+    <div class="bs-sub">Admin Console · Barangay Calye</div>
+  </div>
+
   <!-- ── AUTH GATE (admin dashboard is session-protected) ── -->
   <div id="admin-gate">
-    <div class="gate-card">
-      <div class="gate-logo" onclick="location.reload()" title="Reload page" style="cursor:pointer;"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
-      <div class="gate-title">Calye-Safe Admin</div>
-      <div class="gate-sub">Sign in with an admin or staff account</div>
-      <div id="gate-msg" class="gate-msg"></div>
-      <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
-      <div style="position:relative;margin-bottom:10px;">
-        <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:42px;margin-bottom:0;" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
-        <button type="button" class="pw-toggle" onclick="toggleGatePw()" aria-label="Show password">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+    <div class="gate-sky" id="gate-sky"></div>
+    <div class="gate-ticker"><span>● LIVE: Flooding — Mercado Village &nbsp;&nbsp; ● QRT-3 en route, ETA 6 min &nbsp;&nbsp; ● 16 open reports &nbsp;&nbsp; ● Road Hazard — Dita, resolved &nbsp;&nbsp;</span></div>
+    <div class="gate-stage">
+    <div class="gate-card" id="gate-card">
+      <div class="gate-left">
+        <div class="gate-logo" onclick="location.reload()" title="Reload page" style="cursor:pointer;"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
+        <div class="gate-title">Calye-Safe <em>Admin</em></div>
+        <div class="gate-sub">Command center for Barangay Calye — dispatch responders, verify residents, and track every incident live.</div>
+        <div class="gate-flow" id="gate-flow">
+          <button class="gate-step" data-cap="Residents file reports with photo + GPS pinpoint."><div class="dot" style="background:#F57C00;">1</div><small>REPORT</small></button>
+          <button class="gate-step" data-cap="Barangay staff verify IDs in one queue."><div class="dot" style="background:#1565C0;">2</div><small>VERIFY</small></button>
+          <button class="gate-step" data-cap="Nearest unit is dispatched with live ETA."><div class="dot" style="background:#D4841A;">3</div><small>DISPATCH</small></button>
+          <button class="gate-step" data-cap="Resolution proof closes the loop publicly."><div class="dot" style="background:#2E7D32;">4</div><small>RESOLVE</small></button>
+        </div>
+        <div class="gate-cap" id="gate-cap">Tap a step to see what happens →</div>
+        <div class="gate-stats">
+          <div class="gate-stat"><b>16</b><span>OPEN</span></div>
+          <div class="gate-stat"><b>3.2h</b><span>AVG RESPONSE</span></div>
+          <div class="gate-stat"><b>89%</b><span>RESOLVED</span></div>
+        </div>
       </div>
-      <div id="gate-hint" class="gate-msg" style="display:none"></div>
-      <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
-      <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
-      <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
+      <div class="gate-right">
+        <div><span class="gate-tag">STAFF ONLY</span></div>
+        <div class="gate-title" style="color:#0f1a2b;">Welcome back</div>
+        <div class="gate-sub" style="color:#5b6b82;">Sign in with an admin or staff account</div>
+        <div id="gate-msg" class="gate-msg"></div>
+        <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
+        <div style="position:relative;margin-bottom:10px;">
+          <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:42px;margin-bottom:0;" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
+          <button type="button" class="pw-toggle" onclick="toggleGatePw()" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="gate-hint" class="gate-msg" style="display:none"></div>
+        <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
+        <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
+        <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
+      </div>
+    </div>
     </div>
   </div>
 
@@ -3381,9 +3552,10 @@
         </div>
         <div class="nav-item" onclick="navTo('settings',this)">
           <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M2 12H4M20 12h2M17.66 18.66l1.41-1.41M5.34 5.34L3.93 3.93M12 2v2M12 20v2" />
+            <line x1="4" y1="7" x2="20" y2="7" />
+            <line x1="4" y1="17" x2="20" y2="17" />
+            <circle cx="10" cy="7" r="2.6" />
+            <circle cx="16" cy="17" r="2.6" />
           </svg>
           Settings
         </div>
@@ -3853,7 +4025,7 @@
               <div id="page-map-leaflet"
                 style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;z-index:1;"></div>
               <div id="page-map-badge"
-                style="position:absolute;top:12px;right:12px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:20px;font-family:'Nunito',sans-serif;z-index:4;box-shadow:0 2px 8px rgba(30,58,95,0.25);display:none;">
+                style="position:absolute;top:12px;right:12px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:800;padding:7px 13px;border-radius:20px;font-family:'Plus Jakarta Sans',sans-serif;z-index:4;box-shadow:0 2px 8px rgba(30,58,95,0.25);display:none;">
                 📍 <span id="page-map-badge-txt">8 incidents</span>
               </div>
               <div class="map-chip"
@@ -4232,7 +4404,7 @@
             <div class="panel" style="border:none;background:transparent;box-shadow:none;margin-bottom:18px;">
               <div>
                 <div style="font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;">Management · Analytics</div>
-                <div style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.02em;">Responder Performance</div>
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.02em;">Responder Performance</div>
                 <div style="font-size:12.5px;color:var(--text3);font-weight:600;margin-top:3px;">Response times, resolution rates, and workload across all field units</div>
               </div>
 
@@ -6052,7 +6224,7 @@ const pageTitles = {
       body.innerHTML = '<div class="donut-flex">'
         + '<svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label="Reports by category">'
         + segs
-        + '<text x="110" y="106" text-anchor="middle" style="fill:var(--text);font-size:30px;font-weight:900;font-family:Nunito,sans-serif;">' + total + '</text>'
+        + '<text x="110" y="106" text-anchor="middle" style="fill:var(--text);font-size:30px;font-weight:800;font-family:\'Plus Jakarta Sans\',sans-serif;">' + total + '</text>'
         + '<text x="110" y="128" text-anchor="middle" style="fill:var(--text3);font-size:12px;font-weight:700;">reports</text>'
         + '</svg>'
         + '<div class="donut-legend">' + legend + '</div>'
@@ -6833,7 +7005,7 @@ const pageTitles = {
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 16px;">
           ${mini.map(function (m) {
             return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-              <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${m.v}</div>
+              <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;">${m.v}</div>
               <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">${m.l}</div>
             </div>`;
           }).join('')}
@@ -7062,23 +7234,23 @@ const pageTitles = {
 
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${performers.length}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;">${performers.length}</div>
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Active Responders</div>
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Nunito',sans-serif;">${totalAssigned}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;">${totalAssigned}</div>
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Total Assigned</div>
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;color:var(--success);font-family:'Nunito',sans-serif;">${totalResolved}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--success);font-family:'Plus Jakarta Sans',sans-serif;">${totalResolved}</div>
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Resolved</div>
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;color:var(--primary-text);font-family:'Nunito',sans-serif;">${fmtMin(avgResponse)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--primary-text);font-family:'Plus Jakarta Sans',sans-serif;">${fmtMin(avgResponse)}</div>
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Avg Response</div>
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;">
-            <div style="font-size:20px;font-weight:800;color:var(--accent-dark);font-family:'Nunito',sans-serif;">${fmtMin(avgResolution)}</div>
+            <div style="font-size:20px;font-weight:800;color:var(--accent-dark);font-family:'Plus Jakarta Sans',sans-serif;">${fmtMin(avgResolution)}</div>
             <div style="font-size:10px;font-weight:700;color:var(--text3);margin-top:2px;">Avg Resolution</div>
           </div>
         </div>
@@ -8122,6 +8294,48 @@ const pageTitles = {
         hint.style.display = 'none';
       }
     }
+    // Gate ambience: floating pins, twinkles, clickable steps, card tilt.
+    (function gateAmbience() {
+      try {
+        const sky = document.getElementById('gate-sky');
+        if (sky) {
+          const colors = ['#F5A623', '#E53935', '#2E7D32', '#1565C0'];
+          for (let i = 0; i < 10; i++) {
+            const p = document.createElement('div');
+            p.className = 'gate-pin';
+            const c = colors[i % colors.length];
+            p.style.left = (4 + Math.random() * 92) + '%';
+            p.style.animationDuration = (9 + Math.random() * 9) + 's';
+            p.style.animationDelay = (-Math.random() * 14) + 's';
+            p.innerHTML = '<i style="background:' + c + ';"></i><b></b>';
+            sky.appendChild(p);
+          }
+          for (let k = 0; k < 26; k++) {
+            const t = document.createElement('div');
+            t.className = 'gate-tw';
+            const s = 2 + Math.random() * 3;
+            t.style.cssText += 'width:' + s + 'px;height:' + s + 'px;left:' + (Math.random() * 98) + '%;top:' + (Math.random() * 96) + '%;animation-delay:' + (-Math.random() * 3.4) + 's;animation-duration:' + (2.4 + Math.random() * 2.4) + 's;';
+            sky.appendChild(t);
+          }
+        }
+        const cap = document.getElementById('gate-cap');
+        document.querySelectorAll('#gate-flow .gate-step').forEach(function (s) {
+          s.addEventListener('click', function () {
+            document.querySelectorAll('#gate-flow .gate-step').forEach(function (o) { o.classList.remove('lit'); });
+            s.classList.add('lit');
+            if (cap) cap.textContent = s.getAttribute('data-cap');
+          });
+        });
+        const card = document.getElementById('gate-card');
+        if (card) {
+          document.getElementById('admin-gate').addEventListener('mousemove', function (e) {
+            const x = (e.clientX / window.innerWidth - 0.5) * 6;
+            const y = (e.clientY / window.innerHeight - 0.5) * -6;
+            card.style.transform = 'perspective(1200px) rotateY(' + x + 'deg) rotateX(' + y + 'deg)';
+          });
+        }
+      } catch (e) { }
+    })();
     function toggleGatePw() {
       const input = document.getElementById('gate-pass');
       const btn = document.querySelector('#admin-gate .pw-toggle');
@@ -8175,6 +8389,19 @@ const pageTitles = {
         }
       }).catch(() => gateMsg('Could not reach the database. Check your connection and retry.', false));
     }
+
+    // ── BOOT SPLASH (hide after the logo animation plays) ──
+    let bootSplashDone = false;
+    function hideBootSplash(now) {
+      if (bootSplashDone) return;
+      bootSplashDone = true;
+      const s = document.getElementById('boot-splash');
+      if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
+    }
+    try {
+      const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(hideBootSplash, bootReduced ? 300 : 2300);
+    } catch (e) { setTimeout(hideBootSplash, 2300); }
 
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();

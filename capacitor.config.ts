@@ -6,6 +6,14 @@ const config: CapacitorConfig = {
   appId: "ph.atsu.calyesafe",
   appName: "Calye Safe",
   webDir: "www",
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 1200,
+      launchAutoHide: true,
+      backgroundColor: "#1E3A5F",
+      showSpinner: false,
+    },
+  },
 };
 
 export default config;

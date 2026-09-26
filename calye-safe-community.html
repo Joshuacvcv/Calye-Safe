@@ -210,6 +210,88 @@
       animation: screenIn 0.55s var(--ease-out) both;
     }
 
+    /* ── BOOT SPLASH (logo animation on cold start) ── */
+    #boot-splash {
+      position: absolute;
+      inset: 0;
+      z-index: 9999;
+      background: #1E3A5F;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    #boot-splash.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    #boot-splash .bs-logo-wrap {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin-bottom: 14px;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    #boot-splash .bs-logo-wrap img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      display: block;
+    }
+
+    #boot-splash .bs-shine {
+      position: absolute;
+      inset: -20%;
+      z-index: 2;
+      background: linear-gradient(130deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+      transform: translateX(-130%);
+      animation: bsShine 1.4s ease-in-out 0.55s both;
+      pointer-events: none;
+    }
+
+    @keyframes bsPop {
+      from { transform: scale(0.5); }
+      to { transform: scale(1); }
+    }
+
+    @keyframes bsShine {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
+    #boot-splash .bs-name {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 1.1s both;
+    }
+
+    #boot-splash .bs-sub {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 1.25s both;
+    }
+
+    @keyframes bsFadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
     .screen::-webkit-scrollbar {
       display: none;
     }
@@ -261,18 +343,6 @@
 
     .nav-item.active svg {
       transform: scale(1.1);
-    }
-
-    .nav-item:not(.report-btn).active::after {
-      content: '';
-      position: absolute;
-      bottom: 5px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--primary-text);
     }
 
     .nav-item.report-btn {
@@ -355,30 +425,29 @@
     .alert-banner {
       background: linear-gradient(135deg, #FF6B35, #E53935);
       border-radius: var(--radius);
-      padding: 18px 20px;
+      padding: 20px 22px;
       display: flex;
-      gap: 14px;
-      align-items: flex-start;
+      gap: 16px;
+      align-items: center;
       box-shadow: 0 8px 28px rgba(229, 57, 53, 0.4);
     }
 
     .alert-banner svg {
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       fill: #fff;
       flex-shrink: 0;
-      margin-top: 2px;
     }
 
     .alert-banner .txt h4 {
       color: #fff;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 800;
     }
 
     .alert-banner .txt p {
       color: rgba(255, 255, 255, 0.9);
-      font-size: 13px;
+      font-size: 14px;
       margin-top: 3px;
       line-height: 1.45;
     }
@@ -2316,10 +2385,10 @@
 
     /* ── GLOBAL 0.5s TIMING (user request) ──
        Every app animation/transition runs at 0.5s. Leaflet map internals
-       are excluded so panning/zooming stays usable. */
+       and the boot splash (own choreography) are excluded. */
     @media (prefers-reduced-motion: no-preference) {
       #app-shell,
-      #app-shell *:not(.leaflet-container):not(.leaflet-container *) {
+      #app-shell *:not(.leaflet-container):not(.leaflet-container *):not(#boot-splash):not(#boot-splash *) {
         animation-duration: 0.5s !important;
         transition-duration: 0.5s !important;
       }
@@ -2340,6 +2409,16 @@
 
 <body>
   <div id="app-shell">
+
+    <!-- BOOT SPLASH (logo pops, then a shine sweeps across — tap to skip) -->
+    <div id="boot-splash" onclick="hideBootSplash(true)">
+      <div class="bs-logo-wrap">
+        <img src="calye-safe-logo.png" alt="Calye Safe logo">
+        <span class="bs-shine"></span>
+      </div>
+      <div class="bs-name">Calye Safe</div>
+      <div class="bs-sub">Barangay Calye · Santa Rosa</div>
+    </div>
 
     <!-- ===== DASHBOARD ===== -->
     <div class="screen active" id="screen-home">
@@ -2748,7 +2827,7 @@
         </div>
         <div class="form-group">
           <label>Landmark</label>
-          <input type="text" placeholder="e.g. Near Calye Elementary School">
+          <input id="report-landmark" type="text" placeholder="e.g. Near Calye Elementary School">
         </div>
         <button class="btn btn-primary" onclick="tryGoStep3()">
           Next
@@ -2810,18 +2889,18 @@
         </div>
         <div class="form-group">
           <label>Number of people affected (if known)</label>
-          <input type="number" placeholder="e.g. 5" min="0">
+          <input id="report-affected" type="number" placeholder="e.g. 5" min="0">
         </div>
         <label class="consent-row" style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;cursor:pointer;">
           <input type="checkbox" id="announce-consent" style="margin-top:2px;flex-shrink:0;width:18px;height:18px;accent-color:var(--accent);">
           <span style="font-size:12px;color:var(--text2);line-height:1.5;font-weight:600;">I consent to this report being uploaded as an announcement to warn residents near the incident.</span>
         </label>
-        <!-- No back button on step 3 as requested, only submit -->
-        <button class="btn btn-primary" id="submit-report-btn" onclick="submitReport()">
+        <!-- Review first — the real submit happens from the review popup -->
+        <button class="btn btn-primary" id="submit-report-btn" onclick="openReportReview()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          <span id="submit-report-label">Submit Report</span>
+          <span id="submit-report-label">Review Report</span>
         </button>
         <div style="height:16px;"></div>
       </div>
@@ -3124,6 +3203,26 @@
     </div>
 
     <!-- SUCCESS MODAL -->
+    <!-- REVIEW REPORT (validate before submitting) -->
+    <div class="modal-overlay" id="review-modal" onclick="closeModal('review-modal')">
+      <div class="modal-box" onclick="event.stopPropagation()" style="padding-bottom:20px;">
+        <div class="modal-handle"></div>
+        <h3>Review Your Report</h3>
+        <p style="font-size:12px;color:var(--text2);margin:0 0 14px;line-height:1.5;">Double-check the details below before sending this to the barangay.</p>
+        <div id="review-body" style="background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:9px;"></div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('review-modal')">Back</button>
+          <button class="btn btn-primary" style="flex:2;" id="review-submit-btn" onclick="submitReport()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span id="review-submit-label">Submit Report</span>
+          </button>
+        </div>
+        <div style="height:4px;"></div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="success-modal" onclick="closeModal('success-modal')">
       <div class="modal-box" onclick="event.stopPropagation()" style="text-align:center;">
         <div class="modal-handle"></div>
@@ -4093,7 +4192,11 @@
       const submitBtn = document.getElementById('submit-report-btn');
       const submitLabel = document.getElementById('submit-report-label');
       if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('btn-sent'); }
-      if (submitLabel) submitLabel.textContent = 'Submit Report';
+      if (submitLabel) submitLabel.textContent = 'Review Report';
+      const reviewBtn = document.getElementById('review-submit-btn');
+      const reviewLabel = document.getElementById('review-submit-label');
+      if (reviewBtn) { reviewBtn.disabled = false; reviewBtn.classList.remove('btn-sent'); }
+      if (reviewLabel) reviewLabel.textContent = 'Submit Report';
       const consentChk = document.getElementById('announce-consent');
       if (consentChk) consentChk.checked = false;
     }
@@ -4223,6 +4326,62 @@
       return '#BRGY-' + new Date().getFullYear() + '-' + new Date().getTime().toString(36).toUpperCase();
     }
 
+    function openReportReview() {
+      const g = groupOf();
+      const title = (document.getElementById('report-title') || {}).value || '';
+      const subtypeSel = document.getElementById('report-subtype');
+      const subtypeVal = subtypeSel ? subtypeSel.value : '';
+      const subtypeTxt = !subtypeVal ? '—' : (subtypeVal === '__other' ? 'Others — see description' : subtypeSel.options[subtypeSel.selectedIndex].text);
+      const addr = (document.getElementById('report-address') || {}).value || '';
+      const landmark = (document.getElementById('report-landmark') || {}).value || '';
+      const desc = (document.getElementById('report-description') || {}).value || '';
+      const affected = (document.getElementById('report-affected') || {}).value || '';
+      const consent = !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked);
+      const row = (label, val) =>
+        '<div style="display:flex;justify-content:space-between;gap:12px;">'
+        + '<span style="font-size:12px;color:var(--text3);flex-shrink:0;">' + label + '</span>'
+        + '<span style="font-size:12px;font-weight:700;color:var(--text);text-align:right;">' + val + '</span>'
+        + '</div>';
+      document.getElementById('review-body').innerHTML =
+        row('Incident', esc((g && g.name) || selectedType || 'Incident'))
+        + (title.trim() ? row('Title', esc(title.trim())) : '')
+        + row('Specific incident', esc(subtypeTxt))
+        + row('Location', esc(addr.trim() + (landmark.trim() ? ' · ' + landmark.trim() : '') || 'Barangay Calye'))
+        + row('Description', esc(desc.trim() || '—'))
+        + row('Immediate danger', selectedDangerVal === 'yes' ? 'Yes' : (selectedDangerVal === 'no' ? 'No' : '—'))
+        + (affected.trim() ? row('People affected', esc(affected.trim())) : '')
+        + row('Photos', selectedMediaList.length ? selectedMediaList.length + ' attached' : 'None')
+        + (selectedMediaList.length
+          ? '<div style="display:flex;gap:8px;overflow-x:auto;padding:2px 0;">' + selectedMediaList.map(function (src, i) {
+            return '<img src="' + src + '" alt="Attached photo ' + (i + 1) + '" onclick="openReviewPhoto(' + i + ')" style="width:64px;height:64px;object-fit:cover;border-radius:10px;background:var(--border);flex-shrink:0;cursor:zoom-in;">';
+          }).join('') + '</div>'
+          : '')
+        + row('Announcement consent', consent ? 'Yes' : 'No');
+      showModal('review-modal');
+    }
+
+    function openReviewPhoto(startIdx) {
+      if (!selectedMediaList.length) return;
+      let i = Math.max(0, Math.min(startIdx || 0, selectedMediaList.length - 1));
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;gap:14px;cursor:zoom-out;padding:16px;';
+      const draw = () => {
+        overlay.innerHTML =
+          (selectedMediaList.length > 1 ? '<span id="rv-prev" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">‹</span>' : '')
+          + '<div style="text-align:center;min-width:0;"><img src="' + selectedMediaList[i] + '" alt="Attached photo ' + (i + 1) + '" style="max-width:78vw;max-height:76vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">'
+          + (selectedMediaList.length > 1 ? '<div style="color:#fff;font-size:12px;font-weight:700;margin-top:8px;">' + (i + 1) + ' of ' + selectedMediaList.length + '</div>' : '')
+          + '</div>'
+          + (selectedMediaList.length > 1 ? '<span id="rv-next" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">›</span>' : '');
+        const pv = document.getElementById('rv-prev');
+        const nx = document.getElementById('rv-next');
+        if (pv) pv.onclick = e => { e.stopPropagation(); i = (i - 1 + selectedMediaList.length) % selectedMediaList.length; draw(); };
+        if (nx) nx.onclick = e => { e.stopPropagation(); i = (i + 1) % selectedMediaList.length; draw(); };
+      };
+      overlay.onclick = function () { document.body.removeChild(overlay); };
+      draw();
+      document.body.appendChild(overlay);
+    }
+
     function submitReport() {
       // Guard against double-click / double submission creating duplicate reports.
       if (submittingReport) {
@@ -4238,8 +4397,8 @@
       if (subErr) subErr.classList.remove('show');
       selectedSubtype = !subtypeVal ? '' : (subtypeVal === '__other' ? 'Others — see description' : subtypeVal);
       submittingReport = true;
-      const submitBtn = document.getElementById('submit-report-btn');
-      const submitLabel = document.getElementById('submit-report-label');
+      const submitBtn = document.getElementById('review-submit-btn') || document.getElementById('submit-report-btn');
+      const submitLabel = document.getElementById('review-submit-label') || document.getElementById('submit-report-label');
       if (submitBtn) submitBtn.disabled = true;
       if (submitLabel) submitLabel.textContent = 'Submitting...';
       const rid = generateReportNo();
@@ -4294,6 +4453,7 @@
       saveStoredData(LS_KEY_INCIDENTS, mapIncidents);
 
       pushReportToSupabase(rid);
+      closeModal('review-modal');
       showModal('success-modal');
       if (submitBtn) {
         submitBtn.classList.add('btn-sent');
@@ -5701,6 +5861,19 @@
       fetchHomeAlerts();
       ensureUserLoc();
     });
+
+    // ── BOOT SPLASH (hide after the logo animation plays) ──
+    let bootSplashDone = false;
+    function hideBootSplash(now) {
+      if (bootSplashDone) return;
+      bootSplashDone = true;
+      const s = document.getElementById('boot-splash');
+      if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
+    }
+    try {
+      const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(hideBootSplash, bootReduced ? 300 : 2300);
+    } catch (e) { setTimeout(hideBootSplash, 2300); }
 
     // Poll so the resident's tracker + feed stay in sync with admin/responder
     // updates (dispatch, en-route, on-site, resolved).
