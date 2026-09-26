@@ -107,10 +107,6 @@
             color: var(--primary-text);
         }
 
-        :root[data-theme="dark"] .skel {
-            background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
-        }
-
         html,
         body {
             height: 100%;
@@ -207,7 +203,8 @@
             position: absolute;
             inset: -20%;
             z-index: 2;
-            background: linear-gradient(130deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+            background: rgba(255, 255, 255, 0.45);
+            clip-path: polygon(40% 0, 54% 0, 62% 100%, 48% 100%);
             transform: translateX(-130%);
             animation: bsShine 1.4s ease-in-out 0.55s both;
             pointer-events: none;
@@ -346,7 +343,7 @@
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--text3), #7A8699);
+            background: var(--text3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -360,7 +357,7 @@
         }
 
         .nav-item.job-btn.live .job-circle {
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: var(--accent);
             box-shadow: 0 4px 16px rgba(245, 166, 35, 0.45);
             animation: jobPulse 1.8s ease-in-out;
         }
@@ -642,9 +639,9 @@
             line-height: 1.35;
         }
 
-        /* ── ACTIVE ASSIGNMENT BANNER (responder essence — navy gradient) ── */
+        /* ── ACTIVE ASSIGNMENT BANNER (responder essence — solid navy) ── */
         .active-banner {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            background: var(--primary);
             border-radius: var(--radius);
             padding: 16px 18px;
             box-shadow: 0 6px 20px rgba(30, 58, 95, 0.3);
@@ -900,7 +897,7 @@
             margin-left: -28px;
             margin-right: -8px;
             pointer-events: none;
-            background: linear-gradient(to right, transparent, var(--bg) 70%);
+            background: none;
             z-index: 1;
         }
 
@@ -953,22 +950,21 @@
             padding-top: 20px;
         }
 
-        /* ── SKELETAL LOADING (resident-style shimmer) ── */
-        @keyframes skelShimmer {
-            from {
-                background-position: 200% 0;
+        /* ── SKELETAL LOADING (solid surface, gentle pulse) ── */
+        @keyframes skelPulse {
+            0%,
+            100% {
+                opacity: 1;
             }
 
-            to {
-                background-position: -200% 0;
+            50% {
+                opacity: 0.55;
             }
         }
 
         .skel {
             background-color: var(--surface2, #EDF1F7);
-            background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.9) 50%, transparent 80%);
-            background-size: 200% 100%;
-            animation: skelShimmer 2.4s linear infinite;
+            animation: skelPulse 1.6s ease-in-out infinite;
         }
 
         .skel-list {
@@ -1416,7 +1412,7 @@
             width: 52px;
             height: 52px;
             border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, #D9E2F1, #C3D0E8);
+            background: #D9E2F1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1639,19 +1635,19 @@
         }
 
         .btn-step-assigned {
-            background: linear-gradient(135deg, var(--info), #1976D2);
+            background: var(--info);
             color: #fff;
             box-shadow: 0 4px 14px rgba(21, 101, 192, 0.35);
         }
 
         .btn-step-enroute {
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: var(--accent);
             color: #fff;
             box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
         }
 
         .btn-step-onsite {
-            background: linear-gradient(135deg, var(--success), #1B5E20);
+            background: var(--success);
             color: #fff;
             box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
         }
@@ -1670,7 +1666,7 @@
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, var(--danger), #C62828);
+            background: var(--danger);
             color: #fff;
             box-shadow: 0 4px 14px rgba(229, 57, 53, 0.3);
         }
@@ -1949,7 +1945,7 @@
             width: 70px;
             height: 70px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2056,7 +2052,7 @@
         }
 
         .btn-accept {
-            background: linear-gradient(135deg, var(--success), #1B5E20);
+            background: var(--success);
             color: #fff;
             box-shadow: 0 4px 14px rgba(46, 125, 50, 0.4);
         }
@@ -3055,7 +3051,7 @@
                 </div>
                 <div style="flex-shrink:0;background:var(--primary);padding:18px 20px 28px;display:flex;flex-direction:column;gap:10px;">
                     <button onclick="confirmProof()"
-                        style="width:100%;padding:15px;border-radius:12px;background:linear-gradient(135deg,var(--accent,#F5A623),var(--accent-dark,#D4841A));border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform 0.1s;"
+                        style="width:100%;padding:15px;border-radius:12px;background:var(--accent,#F5A623);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform 0.1s;"
                         onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
                         ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
@@ -4729,7 +4725,7 @@
                     <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;background:#FFEBEE;color:#C62828;">Access Restricted</span>
                     <h2 style="font-size:18px;margin:10px 0 6px;color:#1A2332;">Responder app only</h2>
                     <p style="font-size:13px;color:#5A6780;line-height:1.6;">This app is for authorized barangay responders. Your account is a '${role || 'user'}' — you cannot use it. Please sign in with a responder account.</p>
-                    <button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
+                    <button class="btn" style="margin-top:18px;background:#F5A623;color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
                   </div>
                 </div>`;
                 return;
@@ -4769,9 +4765,9 @@
                     ? '<div style="background:#FFEBEE;border-radius:10px;padding:12px;font-size:12.5px;color:#C62828;font-weight:600;margin:14px 0;">Rejected: ' + gate.profile.review_note + '</div>'
                     : ''}
                 ${!(gate.profile && gate.profile.id_doc_url)
-                    ? '<button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="location.href=\'responder-login.html\'">Complete Verification</button>'
+                    ? '<button class="btn" style="margin-top:18px;background:#F5A623;color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="location.href=\'responder-login.html\'">Complete Verification</button>'
                     : ''}
-                <button class="btn" style="margin-top:18px;background:linear-gradient(135deg,#F5A623,#D4841A);color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
+                <button class="btn" style="margin-top:18px;background:#F5A623;color:#fff;padding:15px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;width:100%;" onclick="CalyeAuth.signOut().then(() => location.href='responder-login.html')">Sign Out</button>
               </div>
             </div>`;
 

@@ -155,10 +155,6 @@
       outline-color: var(--primary-text);
     }
 
-    :root[data-theme="dark"] .skel {
-      background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.14) 50%, transparent 80%);
-    }
-
     html,
     body {
       height: 100%;
@@ -254,7 +250,8 @@
       position: absolute;
       inset: -20%;
       z-index: 2;
-      background: linear-gradient(130deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+      background: rgba(255, 255, 255, 0.45);
+      clip-path: polygon(40% 0, 54% 0, 62% 100%, 48% 100%);
       transform: translateX(-130%);
       animation: bsShine 1.4s ease-in-out 0.55s both;
       pointer-events: none;
@@ -358,7 +355,7 @@
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      background: var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -423,7 +420,7 @@
     }
 
     .alert-banner {
-      background: linear-gradient(135deg, #FF6B35, #E53935);
+      background: #E53935;
       border-radius: var(--radius);
       padding: 20px 22px;
       display: flex;
@@ -1011,7 +1008,7 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      background: var(--accent);
       color: #fff;
       box-shadow: 0 4px 14px rgba(245, 166, 35, 0.35);
     }
@@ -1022,8 +1019,8 @@
 
     .btn-primary.btn-sent,
     .btn-primary.btn-sent:hover {
-      background: linear-gradient(135deg, var(--success), #1b5e20);
-      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
+  background: var(--success);
+  box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35);
       pointer-events: none;
       transform: none;
     }
@@ -1035,7 +1032,7 @@
     }
 
     .btn-danger {
-      background: linear-gradient(135deg, #E53935, #C62828);
+      background: #E53935;
       color: #fff;
       box-shadow: 0 4px 14px rgba(229, 57, 53, 0.3);
     }
@@ -2108,11 +2105,10 @@
     #incident-mapbox {
       width: 100%;
       flex: 1;
-      min-height: 360px;
-      background: linear-gradient(100deg, var(--surface2) 40%, #FFFFFF 50%, var(--surface2) 60%);
-      background-size: 200% 100%;
-      animation: skelShimmer 2.4s linear infinite;
-    }
+  min-height: 360px;
+  background: var(--surface2);
+  animation: skelPulse 1.6s ease-in-out infinite;
+}
 
     #report-map {
       width: 100%;
@@ -2216,21 +2212,20 @@
 
     /* ── SKELETAL LOADING ──
        Shimmer placeholders shown while async content is loading. */
-    @keyframes skelShimmer {
-      from {
-        background-position: 200% 0;
+    @keyframes skelPulse {
+      0%,
+      100% {
+        opacity: 1;
       }
 
-      to {
-        background-position: -200% 0;
+      50% {
+        opacity: 0.55;
       }
     }
 
     .skel {
       background-color: var(--surface2);
-      background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.9) 50%, transparent 80%);
-      background-size: 200% 100%;
-      animation: skelShimmer 2.4s linear infinite;
+      animation: skelPulse 1.6s ease-in-out infinite;
     }
 
     .skel-list {
@@ -6082,9 +6077,9 @@
       <!-- Preview fills the same area as the viewfinder -->
       <div style="flex:1;position:relative;overflow:hidden;">
         <img id="cam-preview-img" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">
-        <!-- Subtle top gradient with check badge -->
-        <div
-          style="position:absolute;top:0;left:0;right:0;padding:14px 16px;background:linear-gradient(to bottom,rgba(0,0,0,0.55),transparent);display:flex;align-items:center;gap:8px;">
+      <!-- Solid top bar with check badge -->
+      <div
+        style="position:absolute;top:0;left:0;right:0;padding:14px 16px;background:rgba(0,0,0,0.45);display:flex;align-items:center;gap:8px;">
           <div
             style="width:22px;height:22px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3">
@@ -6116,7 +6111,7 @@
       <div
         style="flex-shrink:0;background:var(--primary);padding:18px 20px 28px;display:flex;flex-direction:column;gap:10px;">
         <button onclick="confirmPhoto()"
-          style="width:100%;padding:15px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));border:none;color:#fff;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 16px rgba(245,166,35,0.35);transition:transform 0.1s;"
+          style="width:100%;padding:15px;border-radius:12px;background:var(--accent);border:none;color:#fff;font-size:15px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 16px rgba(245,166,35,0.35);transition:transform 0.1s;"
         onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'"
         ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
