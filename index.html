@@ -65,33 +65,283 @@
       flex-direction: column;
     }
 
+    /* ── BOOT SPLASH (same as admin, scoped inside the phone) ── */
+    #boot-splash {
+      position: absolute;
+      inset: 0;
+      z-index: 1000;
+      background: #1E3A5F;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    #boot-splash.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    #boot-splash .bs-sky {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    #boot-splash .bs-pin {
+      position: absolute;
+      bottom: -30px;
+      opacity: 0;
+      animation: bsRise linear infinite;
+    }
+
+    #boot-splash .bs-pin i {
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      margin: 0 auto;
+    }
+
+    #boot-splash .bs-pin b {
+      display: block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #1E3A5F;
+      margin: -10px auto 0;
+      position: relative;
+    }
+
+    @keyframes bsRise {
+      0% { transform: translateY(0); opacity: 0; }
+      12% { opacity: 0.55; }
+      85% { opacity: 0.35; }
+      100% { transform: translateY(-880px); opacity: 0; }
+    }
+
+    #boot-splash .bs-tw {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: bsTw 3.4s ease-in-out infinite;
+    }
+
+    @keyframes bsTw {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 0.55; transform: scale(1); }
+    }
+
+    #boot-splash .bs-logo-wrap {
+      position: relative;
+      z-index: 3;
+      width: 190px;
+      height: 190px;
+      margin-bottom: 14px;
+      border-radius: 42px;
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+      animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    #boot-splash .bs-logo-wrap img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 42px;
+      display: block;
+    }
+
+    #boot-splash .bs-shine {
+      position: absolute;
+      inset: -20%;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.45);
+      clip-path: polygon(40% 0, 54% 0, 62% 100%, 48% 100%);
+      transform: translateX(-130%);
+      animation: bsShine 1.8s ease-in-out 0.55s both;
+      pointer-events: none;
+    }
+
+    #boot-splash .bs-name {
+      position: relative;
+      z-index: 3;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 0.7s both;
+    }
+
+    #boot-splash .bs-sub {
+      position: relative;
+      z-index: 3;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 15px;
+      font-weight: 600;
+      opacity: 0;
+      animation: bsFadeUp 0.5s ease-out 0.85s both;
+    }
+
+    /* splash roads (balanced top + bottom, build on load) */
+    #boot-splash .bs-road {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.9;
+    }
+
+    #boot-splash .bs-road.top { top: 5%; height: 22%; }
+    #boot-splash .bs-road.bot { bottom: 4%; height: 26%; }
+
+    #boot-splash .bs-road .asphalt { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 30; stroke-linecap: round; }
+    #boot-splash .bs-road .edge { fill: none; stroke: rgba(245,166,35,0.35); stroke-width: 2; }
+    #boot-splash .bs-road .center { fill: none; stroke: #F5A623; stroke-width: 3; stroke-dasharray: 14 16; stroke-linecap: round; }
+
+    #boot-splash .bs-unit {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      z-index: 2;
+    }
+
+    #boot-splash .bs-unit::after {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    @keyframes bsPop {
+      from { transform: scale(0.5); }
+      to { transform: scale(1); }
+    }
+
+    @keyframes bsShine {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
+    @keyframes bsFadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
     .login-header {
       background: var(--primary);
-      padding: 24px 20px 26px;
+      padding: 30px 24px 26px;
       flex-shrink: 0;
       position: relative;
       overflow: hidden;
+    }
+
+    .login-header::after {
+      content: '';
+      position: absolute;
+      top: -40%;
+      left: -30%;
+      width: 60%;
+      height: 180%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,0.14), transparent);
+      transform: rotate(8deg);
+      animation: headerShine 5.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes headerShine {
+      0%, 60% { left: -30%; }
+      100% { left: 130%; }
+    }
+
+    .login-sky {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .login-pin {
+      position: absolute;
+      bottom: -30px;
+      opacity: 0;
+      animation: riseInApp linear infinite;
+    }
+
+    .login-pin i {
+      display: block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      margin: 0 auto;
+    }
+
+    .login-pin b {
+      display: block;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #1E3A5F;
+      margin: -9px auto 0;
+      position: relative;
+    }
+
+    @keyframes riseInApp {
+      0% { transform: translateY(0); opacity: 0; }
+      12% { opacity: 0.55; }
+      85% { opacity: 0.35; }
+      100% { transform: translateY(-260px); opacity: 0; }
+    }
+
+    .login-tw {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: headerTw 3.4s ease-in-out infinite;
+    }
+
+    @keyframes headerTw {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 0.55; transform: scale(1); }
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 22px;
+      margin-bottom: 14px;
       position: relative;
       z-index: 1;
     }
 
     .brand-logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 13px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.22);
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.35);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
     }
 
     .brand-logo svg {
@@ -103,22 +353,32 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 13px;
+      border-radius: 16px;
       display: block;
     }
 
     .brand-name {
-      font-size: 18px;
+      font-size: 26px;
       font-weight: 800;
       color: #fff;
       letter-spacing: -0.02em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-name em {
+      font-style: normal;
+      color: var(--accent);
     }
 
     .brand-sub {
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.65);
-      font-weight: 600;
-      margin-top: 2px;
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, 0.72);
+      font-weight: 400;
+      line-height: 1.6;
+      margin-top: 8px;
+      position: relative;
+      z-index: 1;
     }
 
     .login-header h1 {
@@ -127,15 +387,11 @@
       font-weight: 800;
       position: relative;
       z-index: 1;
+      display: none;
     }
 
     .login-header p {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 13px;
-      margin-top: 4px;
-      line-height: 1.6;
-      position: relative;
-      z-index: 1;
+      display: none;
     }
 
     .login-content {
@@ -150,24 +406,36 @@
     }
 
     .login-card {
-      background: var(--card);
+      background: #FFFFFF;
       border-radius: var(--radius);
-      padding: 22px 18px;
+      padding: 26px 24px;
       box-shadow: var(--shadow);
       margin-bottom: 16px;
     }
 
+    .welcome-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f1a2b;
+      margin-top: 4px;
+    }
+
+    .welcome-sub {
+      font-size: 12.5px;
+      color: #5b6b82;
+      margin-bottom: 6px;
+    }
+
     .role-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #E3F2FD;
-      color: #1565C0;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 5px 12px;
+      display: inline-block;
+      background: #EAF0FB;
+      color: #1E3A5F;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
       border-radius: 20px;
-      margin-bottom: 18px;
+      margin-bottom: 4px;
     }
 
     .form-group {
@@ -196,8 +464,8 @@
 
     .form-group input:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
       background: var(--card);
     }
 
@@ -354,12 +622,12 @@
 
     .role-switch {
       display: flex;
-      background: var(--bg);
+      background: #f1f4f9;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 4px;
       gap: 4px;
-      margin-bottom: 16px;
+      margin: 6px 0 16px;
     }
 
     .role-switch button {
@@ -393,7 +661,7 @@
     /* ── Sign-in / register tabs ── */
     .auth-tabs {
       display: flex;
-      background: var(--bg);
+      background: #f1f4f9;
       border-radius: var(--radius-sm);
       padding: 4px;
       margin-bottom: 18px;
@@ -434,14 +702,14 @@
       padding: 0;
       font: inherit;
       font-size: 12.5px;
-      font-weight: 700;
-      color: var(--primary);
+      font-weight: 800;
+      color: var(--accent-dark);
       cursor: pointer;
-      text-decoration: underline;
+      text-decoration: none;
     }
 
     .link-btn:hover {
-      color: var(--primary-dark, var(--primary));
+      color: var(--accent-dark);
     }
 
     .auth-note {
@@ -613,26 +881,48 @@
 </head>
 <body>
   <div id="app-shell">
+    <!-- BOOT SPLASH (tap to skip) -->
+    <div id="boot-splash" onclick="hideBootSplash(true)">
+      <div class="bs-sky"></div>
+      <svg class="bs-road top" viewBox="0 0 1000 260" preserveAspectRatio="none">
+        <path class="asphalt draw" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
+        <path class="edge draw" d="M-20,46 C220,26 320,166 540,136 C760,106 800,46 1020,76"/>
+        <path class="edge draw" d="M-20,74 C220,54 320,194 540,164 C760,134 800,74 1020,104"/>
+        <path class="center" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
+      </svg>
+      <svg class="bs-road bot" viewBox="0 0 1000 300" preserveAspectRatio="none">
+        <path class="asphalt draw" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
+        <path class="edge draw" d="M-20,226 C220,206 320,106 540,136 C760,166 800,226 1020,186"/>
+        <path class="edge draw" d="M-20,254 C220,234 320,134 540,164 C760,194 800,254 1020,214"/>
+        <path class="center" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
+      </svg>
+      <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
+      <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
+      <div class="bs-logo-wrap">
+        <img src="calye-safe-logo.png" alt="Calye Safe logo">
+        <span class="bs-shine"></span>
+      </div>
+      <div class="bs-name">Calye Safe</div>
+      <div class="bs-sub">Barangay Community App</div>
+    </div>
     <div class="login-header">
+      <div class="login-sky"></div>
       <div class="brand">
         <div class="brand-logo" onclick="location.reload()" title="Reload app" style="cursor:pointer;">
           <img src="calye-safe-logo.png" alt="Calye Safe logo">
         </div>
-        <div>
-          <div class="brand-name">Calye-Safe</div>
-          <div class="brand-sub">Barangay Community App</div>
-        </div>
       </div>
+      <div class="brand-name">Calye-Safe <em>Resident</em></div>
+      <div class="brand-sub">Report incidents, track live status, and receive barangay alerts.</div>
       <h1>Resident Sign In</h1>
       <p>Sign in to report incidents, track their live status, and receive barangay alerts.</p>
     </div>
 
     <div class="login-content">
       <div class="login-card" id="auth-card">
-        <div class="role-chip">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
-          Resident account
-        </div>
+        <div><span class="role-chip">RESIDENT</span></div>
+        <div class="welcome-title">Welcome back</div>
+        <div class="welcome-sub">Sign in with your resident account</div>
 
         <div class="role-switch-label">Log in as</div>
         <div class="role-switch" role="tablist" aria-label="Choose your role">
@@ -1119,6 +1409,107 @@
         showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
       }
     });
+
+    // ── BOOT SPLASH (hide after the logo animation plays, tap to skip) ──
+    let bootSplashDone = false;
+    function hideBootSplash(now) {
+      if (bootSplashDone) return;
+      bootSplashDone = true;
+      const s = document.getElementById('boot-splash');
+      if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
+    }
+    // Splash sky: same rising pins + twinkles as the login header
+    (function initBootSky() {
+      var sky = document.querySelector('#boot-splash .bs-sky');
+      if (!sky) return;
+      var colors = ['#F5A623', '#5B9BF5', '#66BB6A', '#FF8A80'];
+      for (var i = 0; i < 8; i++) {
+        var p = document.createElement('div');
+        p.className = 'bs-pin';
+        p.style.left = (6 + Math.random() * 88) + '%';
+        p.style.animationDuration = (6 + Math.random() * 6) + 's';
+        p.style.animationDelay = (Math.random() * 6) + 's';
+        p.innerHTML = '<i style="background:' + colors[i % colors.length] + '"></i><b></b>';
+        sky.appendChild(p);
+      }
+      for (var j = 0; j < 22; j++) {
+        var t = document.createElement('div');
+        t.className = 'bs-tw';
+        var sz = (Math.random() * 2 + 1) + 'px';
+        t.style.width = sz; t.style.height = sz;
+        t.style.left = (Math.random() * 100) + '%';
+        t.style.top = (Math.random() * 100) + '%';
+        t.style.animationDelay = (Math.random() * 3.4) + 's';
+        sky.appendChild(t);
+      }
+    })();
+    // Splash roads: top builds left→right, bottom builds right→left
+    (function initSplashRoads() {
+      var splash = document.getElementById('boot-splash');
+      if (!splash) return;
+      function buildRoad(svg, unit, reverse) {
+        if (!svg || !unit) return;
+        var draws = svg.querySelectorAll('.draw');
+        var main = svg.querySelector('.asphalt');
+        if (!main) return;
+        draws.forEach(function (p) {
+          var L = p.getTotalLength();
+          p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+        });
+        var t0 = performance.now(), dur = 1500;
+        function frame(t) {
+          if (!document.getElementById('boot-splash')) return;
+          var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 2);
+          draws.forEach(function (pth) {
+            var L = pth.getTotalLength();
+            pth.style.strokeDashoffset = reverse ? -(L * (1 - e)) : L * (1 - e);
+          });
+          var L2 = main.getTotalLength(), d = reverse ? 1 - e : e;
+          var pt = main.getPointAtLength(L2 * d);
+          var vb = svg.viewBox.baseVal;
+          var sr = svg.getBoundingClientRect();
+          var spr = splash.getBoundingClientRect();
+          var fx = pt.x / vb.width, fy = pt.y / vb.height;
+          unit.style.left = (sr.left - spr.left + fx * sr.width - 8) + 'px';
+          unit.style.top = (sr.top - spr.top + fy * sr.height - 8) + 'px';
+          if (p < 1) requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      }
+      try {
+        buildRoad(splash.querySelector('.bs-road.top'), document.getElementById('bs-unit-top'), false);
+        buildRoad(splash.querySelector('.bs-road.bot'), document.getElementById('bs-unit-bot'), true);
+      } catch (e) { }
+    })();
+    try {
+      const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
+    } catch (e) { setTimeout(hideBootSplash, 1700); }
+
+    // In-app animated sky inside the navy header (pins + twinkles)
+    (function initLoginSky() {      var sky = document.querySelector('.login-sky');
+      if (!sky) return;
+      var colors = ['#F5A623', '#5B9BF5', '#66BB6A', '#FF8A80'];
+      for (var i = 0; i < 7; i++) {
+        var p = document.createElement('div');
+        p.className = 'login-pin';
+        p.style.left = (8 + Math.random() * 84) + '%';
+        p.style.animationDuration = (6 + Math.random() * 6) + 's';
+        p.style.animationDelay = (Math.random() * 6) + 's';
+        p.innerHTML = '<i style="background:' + colors[i % colors.length] + '"></i><b></b>';
+        sky.appendChild(p);
+      }
+      for (var j = 0; j < 16; j++) {
+        var t = document.createElement('div');
+        t.className = 'login-tw';
+        var s = (Math.random() * 2 + 1) + 'px';
+        t.style.width = s; t.style.height = s;
+        t.style.left = (Math.random() * 100) + '%';
+        t.style.top = (Math.random() * 100) + '%';
+        t.style.animationDelay = (Math.random() * 3.4) + 's';
+        sky.appendChild(t);
+      }
+    })();
   </script>
 </body>
 </html>

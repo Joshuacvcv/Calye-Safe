@@ -264,6 +264,7 @@
       justify-content: center;
       gap: 6px;
       cursor: pointer;
+      overflow: hidden;
     }
 
     #boot-splash.hide {
@@ -272,14 +273,67 @@
       transition: opacity 0.3s;
     }
 
+    #boot-splash .bs-sky {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    #boot-splash .bs-pin {
+      position: absolute;
+      bottom: -60px;
+      opacity: 0;
+      animation: bsRise linear infinite;
+    }
+
+    #boot-splash .bs-pin i {
+      display: block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      margin: 0 auto;
+    }
+
+    #boot-splash .bs-pin b {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1E3A5F;
+      margin: -16px auto 0;
+      position: relative;
+    }
+
+    @keyframes bsRise {
+      0% { transform: translateY(0); opacity: 0; }
+      12% { opacity: 0.5; }
+      85% { opacity: 0.35; }
+      100% { transform: translateY(-110vh); opacity: 0; }
+    }
+
+    #boot-splash .bs-tw {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: bsTw 3.4s ease-in-out infinite;
+    }
+
+    @keyframes bsTw {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 0.5; transform: scale(1); }
+    }
+
     #boot-splash .bs-logo-wrap {
       position: relative;
-      width: 150px;
-      height: 150px;
+      z-index: 3;
+      width: 190px;
+      height: 190px;
       margin-bottom: 14px;
-      border-radius: 32px;
+      border-radius: 42px;
       overflow: hidden;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
       animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
 
@@ -288,7 +342,7 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      border-radius: 32px;
+      border-radius: 42px;
       display: block;
     }
 
@@ -299,26 +353,65 @@
       background: rgba(255, 255, 255, 0.45);
       clip-path: polygon(40% 0, 54% 0, 62% 100%, 48% 100%);
       transform: translateX(-130%);
-      animation: bsShine 1.4s ease-in-out 0.55s both;
+      animation: bsShine 1.8s ease-in-out 0.55s both;
       pointer-events: none;
     }
 
     #boot-splash .bs-name {
+      position: relative;
+      z-index: 3;
       color: #fff;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 22px;
+      font-size: 32px;
       font-weight: 900;
       letter-spacing: -0.02em;
       opacity: 0;
-      animation: bsFadeUp 0.5s ease-out 1.1s both;
+      animation: bsFadeUp 0.5s ease-out 0.7s both;
     }
 
     #boot-splash .bs-sub {
-      color: rgba(255, 255, 255, 0.65);
-      font-size: 12px;
+      position: relative;
+      z-index: 3;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 15px;
       font-weight: 600;
       opacity: 0;
-      animation: bsFadeUp 0.5s ease-out 1.25s both;
+      animation: bsFadeUp 0.5s ease-out 0.85s both;
+    }
+
+    /* splash roads (balanced top + bottom, build on load) */
+    #boot-splash .bs-road {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.9;
+    }
+
+    #boot-splash .bs-road.top { top: 5%; height: 22%; }
+    #boot-splash .bs-road.bot { bottom: 4%; height: 26%; }
+
+    #boot-splash .bs-road .asphalt { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 30; stroke-linecap: round; }
+    #boot-splash .bs-road .edge { fill: none; stroke: rgba(245,166,35,0.35); stroke-width: 2; }
+    #boot-splash .bs-road .center { fill: none; stroke: #F5A623; stroke-width: 3; stroke-dasharray: 14 16; stroke-linecap: round; }
+
+    #boot-splash .bs-unit {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      z-index: 2;
+    }
+
+    #boot-splash .bs-unit::after {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border-radius: 50%;
+      background: #fff;
     }
 
     @keyframes bsPop {
@@ -1829,21 +1922,99 @@
     #perf-main-layout {
       grid-template-columns: minmax(0, 1fr) 380px;
     }
+    /* Analytic KPI cards (follow reference: one hero + four support cards,
+       same theme colors as before — sizes scale with column width). */
     #perf-stat-grid {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: 1.6fr 1fr 1fr;
+      grid-template-areas:
+        "hero k2 k3"
+        "hero k4 k5";
+      gap: 18px;
     }
-
-    /* KPI hierarchy: the two headline cards lead, the rest support. */
+    #perf-stat-grid .stat-card {
+      min-height: 0;
+    }
+    #perf-stat-grid .stat-card:nth-child(1) { grid-area: hero; }
+    #perf-stat-grid .stat-card:nth-child(2) { grid-area: k2; }
+    #perf-stat-grid .stat-card:nth-child(3) { grid-area: k3; }
+    #perf-stat-grid .stat-card:nth-child(4) { grid-area: k4; }
+    #perf-stat-grid .stat-card:nth-child(5) { grid-area: k5; }
+    /* Hero = most important metric (Avg. Response Time): bigger type + icon,
+       top-aligned like the support cards. */
+    #perf-stat-grid .stat-card.featured {
+      justify-content: flex-start;
+      padding: 34px 30px;
+      min-height: 260px;
+      border-radius: 18px;
+    }
+    #perf-stat-grid .stat-card.featured .top {
+      margin-bottom: 20px;
+    }
+    #perf-stat-grid .stat-card.featured .icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 18px;
+    }
+    #perf-stat-grid .stat-card.featured .icon svg {
+      width: 32px;
+      height: 32px;
+      stroke-width: 2;
+    }
     #perf-stat-grid .stat-card.featured .val {
-      font-size: 38px;
+      font-size: 64px;
+      letter-spacing: -0.04em;
     }
-
+    #perf-stat-grid .stat-card.featured .lbl {
+      font-size: 17px;
+      margin-top: 10px;
+    }
+    #perf-stat-grid .stat-card.featured .sub {
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    #perf-stat-grid .stat-card.featured .trend {
+      font-size: 12.5px;
+      padding: 6px 13px;
+    }
+    /* Support cards: compact type + icon, proportional to narrower columns. */
+    #perf-stat-grid .stat-card:not(.featured) {
+      justify-content: flex-start;
+      padding: 22px 20px;
+      min-height: 150px;
+      border-radius: 16px;
+    }
+    #perf-stat-grid .stat-card:not(.featured) .top {
+      margin-bottom: 14px;
+    }
+    #perf-stat-grid .stat-card:not(.featured) .icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+    }
+    #perf-stat-grid .stat-card:not(.featured) .icon svg {
+      width: 22px;
+      height: 22px;
+    }
     #perf-stat-grid .stat-card:not(.featured) .val {
-      font-size: 26px;
+      font-size: 34px;
     }
-
     #perf-stat-grid .stat-card:not(.featured) .lbl {
-      font-size: 12px;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+    #perf-stat-grid .stat-card:not(.featured) .sub {
+      font-size: 11.5px;
+      margin-top: 5px;
+    }
+    #perf-stat-grid .stat-card:not(.featured) .trend {
+      font-size: 11.5px;
+      padding: 5px 11px;
+    }
+    #perf-stat-grid .stat-card .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
     #perf-main-layout > * {
       min-width: 0;
@@ -1860,7 +2031,11 @@
     }
     @media (max-width: 1366px) {
       #perf-stat-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "hero hero"
+          "k2 k3"
+          "k4 k5";
       }
       #perf-main-layout {
         grid-template-columns: minmax(0, 1fr) 340px;
@@ -1868,7 +2043,13 @@
     }
     @media (max-width: 1100px) {
       #perf-stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "hero"
+          "k2"
+          "k3"
+          "k4"
+          "k5";
       }
       #perf-main-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -3047,16 +3228,20 @@
 
     .id-photo {
       width: 100%;
+      max-width: 1920px;
+      aspect-ratio: 16 / 9;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--surface2);
       object-fit: cover;
-      max-height: 300px;
     }
 
     .id-photo-placeholder {
       width: 100%;
-      height: 180px;
+      max-width: 1920px;
+      aspect-ratio: 16 / 9;
+      height: auto;
+      min-height: 180px;
       border-radius: var(--radius-sm);
       background: var(--surface2);
       border: 2px dashed var(--border);
@@ -3302,7 +3487,10 @@
       overflow-y: auto;
     }
     #admin-gate.hidden { display: none; }
-    .gate-sky { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+    #gate-map { position: fixed; inset: 0; z-index: 0; opacity: .45; filter: saturate(.95) brightness(1.12); }
+    #gate-map .leaflet-container { background: #1b2a44; }
+    #gate-veil { position: fixed; inset: 0; z-index: 1; background: rgba(27,42,68,.62); pointer-events: none; }
+    .gate-sky { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
     .gate-pin { position: absolute; bottom: -60px; opacity: 0; animation: gateRise linear infinite; }
     .gate-pin i { display: block; width: 22px; height: 22px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); margin: 0 auto; }
     .gate-pin b { display: block; width: 8px; height: 8px; border-radius: 50%; background: #1b2a44; margin: -16px auto 0; position: relative; }
@@ -3314,11 +3502,11 @@
     }
     .gate-tw { position: absolute; border-radius: 50%; background: #fff; animation: gateTwinkle 3.4s ease-in-out infinite; }
     @keyframes gateTwinkle { 0%, 100% { opacity: 0; transform: scale(.5); } 50% { opacity: .5; transform: scale(1); } }
-    .gate-ticker { background: #E53935; overflow: hidden; white-space: nowrap; padding: 9px 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #fff; flex-shrink: 0; }
+    .gate-ticker { position: relative; z-index: 3; background: #E53935; overflow: hidden; white-space: nowrap; padding: 9px 0; font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #fff; flex-shrink: 0; }
     .gate-ticker span { display: inline-block; padding-left: 100%; animation: gateTick 24s linear infinite; }
     .gate-ticker:hover span { animation-play-state: paused; }
     @keyframes gateTick { to { transform: translateX(-100%); } }
-    .gate-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 36px; }
+    .gate-stage { position: relative; z-index: 4; flex: 1; display: flex; align-items: center; justify-content: center; padding: 36px; }
     .gate-card {
       display: flex; width: 960px; max-width: 96vw;
       border-radius: 20px; overflow: hidden;
@@ -3413,6 +3601,21 @@
 
   <!-- BOOT SPLASH (logo pops, then a shine sweeps across — tap to skip) -->
   <div id="boot-splash" onclick="hideBootSplash(true)">
+    <div class="bs-sky"></div>
+    <svg class="bs-road top" viewBox="0 0 1000 260" preserveAspectRatio="none">
+      <path class="asphalt draw" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
+      <path class="edge draw" d="M-20,46 C220,26 320,166 540,136 C760,106 800,46 1020,76"/>
+      <path class="edge draw" d="M-20,74 C220,54 320,194 540,164 C760,134 800,74 1020,104"/>
+      <path class="center" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
+    </svg>
+    <svg class="bs-road bot" viewBox="0 0 1000 300" preserveAspectRatio="none">
+      <path class="asphalt draw" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
+      <path class="edge draw" d="M-20,226 C220,206 320,106 540,136 C760,166 800,226 1020,186"/>
+      <path class="edge draw" d="M-20,254 C220,234 320,134 540,164 C760,194 800,254 1020,214"/>
+      <path class="center" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
+    </svg>
+    <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
+    <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
     <div class="bs-logo-wrap">
       <img src="calye-safe-logo.png" alt="Calye Safe logo">
       <span class="bs-shine"></span>
@@ -3423,6 +3626,8 @@
 
   <!-- ── AUTH GATE (admin dashboard is session-protected) ── -->
   <div id="admin-gate">
+    <div id="gate-map"></div>
+    <div id="gate-veil"></div>
     <div class="gate-sky" id="gate-sky"></div>
     <div class="gate-ticker"><span>● LIVE: Flooding — Mercado Village &nbsp;&nbsp; ● QRT-3 en route, ETA 6 min &nbsp;&nbsp; ● 16 open reports &nbsp;&nbsp; ● Road Hazard — Dita, resolved &nbsp;&nbsp;</span></div>
     <div class="gate-stage">
@@ -4625,10 +4830,10 @@
               </div>
             </div>
 
-            <!-- GENERAL PREFERENCES -->
+            <!-- PREFERENCES -->
             <div class="panel">
               <div class="panel-header">
-                <div class="sec-title">General Preferences</div>
+                <div class="sec-title">Preferences</div>
               </div>
               <div class="panel-body">
                 <div class="settings-row">
@@ -4818,6 +5023,25 @@
         <button class="modal-btn danger-confirm" id="del-confirm-btn" onclick="confirmDeleteUser()" disabled>
           Permanently delete account
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER DETAIL (registration credentials) -->
+  <div class="modal-overlay" id="modal-user-detail">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-head">
+        <h3>Account details</h3>
+        <button class="modal-close" onclick="closeModal('modal-user-detail')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="user-detail-body" style="max-height:70vh;overflow:auto;"></div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-user-detail')">Close</button>
       </div>
     </div>
   </div>
@@ -6711,33 +6935,61 @@ const pageTitles = {
 
       const fmtMin = m => m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
 
+      // Pills mirror the reference design (top-right delta chip).
+      // Values are computed from the current window — no fake deltas.
+      const respTarget = 10;
+      const respPill = avgResponse <= 0
+        ? { t: 'No data', c: 'up' }
+        : avgResponse <= respTarget
+          ? { t: '✓ On target', c: 'up' }
+          : { t: '▲ +' + Math.round((avgResponse - respTarget) / respTarget * 100) + '% vs target', c: 'down' };
+      const resPill = { t: resolutionRate + '% resolved', c: resolutionRate >= 90 ? 'up' : resolutionRate >= 70 ? 'up' : 'down' };
+      const jobsPill = { t: activeCount + ' active units', c: 'up' };
+      const dutyPill = { t: onDutyCount + ' / ' + performers.length, c: onDutyCount > 0 ? 'up' : 'down' };
+      const escPill = totalEscalated === 0 ? { t: 'None', c: 'up' } : { t: totalEscalated + ' cases', c: 'down' };
+
       grid.innerHTML = `
         <div class="stat-card featured" style="border-top:3px solid var(--primary);">
-          <div class="icon" style="background:var(--info-light);"><svg viewBox="0 0 24 24" style="stroke:var(--primary-text);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="top">
+            <div class="icon" style="background:var(--info-light);"><svg viewBox="0 0 24 24" style="stroke:var(--primary-text);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span class="trend ${respPill.c}">${respPill.t}</span>
+          </div>
           <div class="val">${fmtMin(avgResponse)}</div>
           <div class="lbl">Avg. Response Time</div>
-          <div class="sub">Assigned → En Route</div>
+          <div class="sub">Assigned → En Route · most important</div>
         </div>
-        <div class="stat-card featured" style="border-top:3px solid var(--success);">
-          <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="stat-card" style="border-top:3px solid var(--success);">
+          <div class="top">
+            <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <span class="trend ${resPill.c}">${resPill.t}</span>
+          </div>
           <div class="val">${resolutionRate}%</div>
           <div class="lbl">Resolution Rate</div>
           <div class="sub">Resolved vs. escalated</div>
         </div>
         <div class="stat-card">
-          <div class="icon" style="background:var(--accent-light);"><svg viewBox="0 0 24 24" style="stroke:var(--accent-dark);"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="top">
+            <div class="icon" style="background:var(--accent-light);"><svg viewBox="0 0 24 24" style="stroke:var(--accent-dark);"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <span class="trend ${jobsPill.c}">${jobsPill.t}</span>
+          </div>
           <div class="val">${totalAssigned}</div>
           <div class="lbl">Jobs This Month</div>
           <div class="sub">Across ${activeCount} active units</div>
         </div>
         <div class="stat-card">
-          <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49"/></svg></div>
+          <div class="top">
+            <div class="icon" style="background:var(--success-light);"><svg viewBox="0 0 24 24" style="stroke:var(--success);"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49"/></svg></div>
+            <span class="trend ${dutyPill.c}">${dutyPill.t}</span>
+          </div>
           <div class="val">${onDutyCount} / ${performers.length}</div>
           <div class="lbl">On Duty Now</div>
           <div class="sub">${performers.length - onDutyCount} off-shift</div>
         </div>
         <div class="stat-card">
-          <div class="icon" style="background:var(--danger-light);"><svg viewBox="0 0 24 24" style="stroke:var(--danger);"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="top">
+            <div class="icon" style="background:var(--danger-light);"><svg viewBox="0 0 24 24" style="stroke:var(--danger);"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <span class="trend ${escPill.c}">${escPill.t}</span>
+          </div>
           <div class="val">${totalEscalated}</div>
           <div class="lbl">Escalations</div>
           <div class="sub">This month</div>
@@ -8181,7 +8433,7 @@ const pageTitles = {
       const statusLabel = status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Pending';
       const statusColor = status === 'approved' ? '#178a5a' : status === 'rejected' ? '#e5484d' : '#f59e0b';
       const roleLabel = u.role === 'responder' ? 'Responder' : 'Resident';
-      return `<div style="display:flex;align-items:center;gap:14px;padding:15px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:11px;background:var(--bg-card);">
+      return `<div onclick="openUserDetail('${u.id}')" title="Click to view registration details" style="display:flex;align-items:center;gap:14px;padding:15px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:11px;background:var(--bg-card);cursor:pointer;">
         <div style="width:42px;height:42px;border-radius:50%;background:#eef2f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#64748b;flex-shrink:0;">${((u.full_name || '?')[0] || '?').toUpperCase()}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.full_name || 'Unnamed'}</div>
@@ -8191,10 +8443,79 @@ const pageTitles = {
           <div style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;">${roleLabel}</div>
           <div style="font-size:12px;color:${statusColor};font-weight:800;margin-top:2px;">${statusLabel}</div>
         </div>
-        ${status !== 'approved' ? '' : `<button class="verify-btn delete" onclick="openDeleteUser('${u.id}')" title="Permanently delete account">
+        ${status !== 'approved' ? '' : `<button class="verify-btn delete" onclick="event.stopPropagation();openDeleteUser('${u.id}')" title="Permanently delete account">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>`}
       </div>`;
+    }
+
+    // ── USER DETAIL: show the credentials the account registered with ──
+    function openUserDetail(userId) {
+      const u = allUsers.find(x => x.id === userId);
+      if (!u) return;
+      const status = u.verification_status || 'pending';
+      const statusLabel = status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Pending';
+      const roleLabel = u.role === 'responder' ? 'Responder' : u.role === 'resident' ? 'Resident' : (u.role || '—');
+      const memberSince = u.created_at ? fmtDateTime(u.created_at) : '—';
+      document.getElementById('user-detail-body').innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:#eef2f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#64748b;flex-shrink:0;">${((u.full_name || '?')[0] || '?').toUpperCase()}</div>
+          <div style="min-width:0;">
+            <div style="font-size:16px;font-weight:800;color:var(--text);">${u.full_name || 'Unnamed'}</div>
+            <div style="font-size:12px;color:var(--text3);font-weight:600;margin-top:2px;">${u.email || ''}</div>
+          </div>
+        </div>
+        ${verifyField('Role', roleLabel)}
+        ${verifyField('Email', u.email)}
+        ${verifyField('Verification status', statusLabel)}
+        ${verifyField('Address', u.address)}
+        ${verifyField('Barangay', u.barangay)}
+        ${verifyField('Member since', memberSince)}
+        <div class="verify-detail-label" id="user-id-label">Valid ID</div>
+        <div style="margin-bottom:4px;">
+          <img class="id-photo" id="user-id-photo" src="" alt="Uploaded ID" title="Click to expand" style="display:none;cursor:zoom-in;" onclick="openIdPhotoLightbox(this)" onerror="this.style.display='none';document.getElementById('user-id-fallback').style.display='flex';">
+          <div class="id-photo-placeholder" id="user-id-fallback" style="display:flex;">Loading ID…</div>
+        </div>`;
+      document.getElementById('modal-user-detail').classList.add('open');
+      // Find this account's verification request (in-memory first, then DB)
+      // so the uploaded ID photo + its ID type label can be shown.
+      const paintUserId = function (req) {
+        const label = document.getElementById('user-id-label');
+        const img = document.getElementById('user-id-photo');
+        const fb = document.getElementById('user-id-fallback');
+        if (!label || !img || !fb) return;
+        if (!req || !req.id_doc_url) {
+          label.textContent = 'Valid ID';
+          fb.textContent = 'No ID photo uploaded';
+          return;
+        }
+        label.textContent = 'Valid ID · ' + (req.id_type || 'ID');
+        const path = CalyeDB.bucketPath('verification-ids', req.id_doc_url);
+        if (!path) { fb.textContent = 'Photo unavailable'; return; }
+        CalyeDB.signedUrl('verification-ids', path, 3600).then(function (signed) {
+          const i2 = document.getElementById('user-id-photo');
+          const f2 = document.getElementById('user-id-fallback');
+          if (!i2 || !f2) return;
+          if (signed) {
+            i2.src = signed;
+            i2.style.display = '';
+            f2.style.display = 'none';
+          } else {
+            f2.textContent = 'Photo unavailable';
+          }
+        });
+      };
+      const known = (verifyRequests || []).find(r => r.user_id === userId);
+      if (known) {
+        paintUserId(known);
+      } else if (CalyeDB.isOnline()) {
+        CalyeDB.fetch('verification_requests', { filters: [['user_id', 'eq', userId]], limit: 5 }).then(
+          rows => paintUserId((rows || [])[0]),
+          () => paintUserId(null)
+        );
+      } else {
+        paintUserId(null);
+      }
     }
 
     function openDeleteUser(userId) {
@@ -8228,8 +8549,7 @@ const pageTitles = {
     }
     function bootAdmin(gs) {
       if (adminBooted) return;
-      adminBooted = true;
-      // Pin the identity this dashboard session claims, so privileged actions
+      adminBooted = true;      // Pin the identity this dashboard session claims, so privileged actions
       // can later detect when another tab overwrites the shared auth token.
       adminSessionUid = (gs && gs.session && gs.session.user && gs.session.user.id) || null;
       // Reflect whichever staff/admin account signed in (email, name, chip).
@@ -8249,6 +8569,7 @@ const pageTitles = {
         if (chipRole && prof.role) chipRole.textContent = prof.role === 'admin' ? 'Administrator' : 'Staff';
       } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
+      showDashboardSplash();
       loadDefaultMap();
       syncFromSupabase();
       loadVerifyQueue();
@@ -8336,6 +8657,76 @@ const pageTitles = {
         }
       } catch (e) { }
     })();
+    // Splash roads: top builds left→right, bottom builds right→left.
+    function buildSplashRoads(root) {
+      try {
+        var splash = root || document;
+        var top = splash.querySelector('#boot-splash .bs-road.top');
+        var bot = splash.querySelector('.bs-road.bot');
+        if (!top) top = splash.querySelector('#boot-splash .bs-road.top');
+        function build(svg, unitId, reverse) {
+          if (!svg) return;
+          var unit = (root || document).querySelector('#' + unitId) || document.getElementById(unitId);
+          if (!unit) return;
+          var draws = svg.querySelectorAll('.draw');
+          var main = svg.querySelector('.asphalt');
+          if (!main) return;
+          draws.forEach(function (p) {
+            var L = p.getTotalLength();
+            p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+          });
+          var t0 = performance.now(), dur = 1900;
+          function frame(t) {
+            if (!document.getElementById('boot-splash')) return;
+            var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 2);
+            draws.forEach(function (pth) {
+              var L = pth.getTotalLength();
+              pth.style.strokeDashoffset = reverse ? -(L * (1 - e)) : L * (1 - e);
+            });
+            var L2 = main.getTotalLength(), d = reverse ? 1 - e : e;
+            var pt = main.getPointAtLength(L2 * d);
+            var vb = svg.viewBox.baseVal;
+            var sEl = document.getElementById('boot-splash');
+            var sr = svg.getBoundingClientRect();
+            var spr = sEl ? sEl.getBoundingClientRect() : { left: 0, top: 0 };
+            unit.style.left = (sr.left - spr.left + pt.x / vb.width * sr.width - 9) + 'px';
+            unit.style.top = (sr.top - spr.top + pt.y / vb.height * sr.height - 9) + 'px';
+            if (p < 1) requestAnimationFrame(frame);
+          }
+          requestAnimationFrame(frame);
+        }
+        var scope = (root && root.querySelector) ? root : document;
+        build(scope.querySelector('#boot-splash .bs-road.top'), 'bs-unit-top', false);
+        build(scope.querySelector('#boot-splash .bs-road.bot'), 'bs-unit-bot', true);
+      } catch (e) { }
+    }
+    // Gate map: low-opacity Santa Rosa backdrop behind the login card.
+    (function initGateMap() {
+      try {
+        if (typeof L === 'undefined') return;
+        var el = document.getElementById('gate-map');
+        if (!el || el.dataset.done) return;
+        el.dataset.done = '1';
+        var map = L.map('gate-map', { zoomControl: false, attributionControl: false });
+        map.setView([14.312, 121.111], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        try {
+          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(map);
+          }
+        } catch (e) { }
+        var pts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
+        var cols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
+        pts.forEach(function (p, i) {
+          L.circleMarker(p, { radius: 8, color: cols[i], weight: 2, fillColor: cols[i], fillOpacity: 0.85 }).addTo(map);
+        });
+        map.dragging.disable();
+        if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
+        if (map.doubleClickZoom) map.doubleClickZoom.disable();
+        if (map.boxZoom) map.boxZoom.disable();
+        if (map.keyboard) map.keyboard.disable();
+      } catch (e) { }
+    })();
     function toggleGatePw() {
       const input = document.getElementById('gate-pass');
       const btn = document.querySelector('#admin-gate .pw-toggle');
@@ -8398,10 +8789,64 @@ const pageTitles = {
       const s = document.getElementById('boot-splash');
       if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
     }
+    // Post-login splash: replay the same loading screen over the dashboard
+    // right after an admin signs in (the initial splash is already removed).
+    function initBootSky(root) {
+      try {
+        var sky = (root || document).querySelector('#boot-splash .bs-sky');
+        if (!sky || sky.dataset.done) return;
+        sky.dataset.done = '1';
+        var colors = ['#F5A623', '#E53935', '#2E7D32', '#5B9BF5'];
+        for (var i = 0; i < 14; i++) {
+          var p = document.createElement('div');
+          p.className = 'bs-pin';
+          p.style.left = (4 + Math.random() * 92) + '%';
+          p.style.animationDuration = (9 + Math.random() * 9) + 's';
+          p.style.animationDelay = (-Math.random() * 10) + 's';
+          p.innerHTML = '<i style="background:' + colors[i % colors.length] + ';"></i><b></b>';
+          sky.appendChild(p);
+        }
+        for (var k = 0; k < 30; k++) {
+          var t = document.createElement('div');
+          t.className = 'bs-tw';
+          var s = (2 + Math.random() * 2) + 'px';
+          t.style.width = s; t.style.height = s;
+          t.style.left = (Math.random() * 100) + '%';
+          t.style.top = (Math.random() * 100) + '%';
+          t.style.animationDelay = (-Math.random() * 3.4) + 's';
+          sky.appendChild(t);
+        }
+      } catch (e) { }
+    }
+    function showDashboardSplash() {
+      try {
+        let s = document.getElementById('boot-splash');
+        if (!s) {
+          s = document.createElement('div');
+          s.id = 'boot-splash';
+          s.innerHTML = '<div class="bs-sky"></div>'
+            + '<svg class="bs-road top" viewBox="0 0 1000 260" preserveAspectRatio="none"><path class="asphalt draw" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/><path class="edge draw" d="M-20,46 C220,26 320,166 540,136 C760,106 800,46 1020,76"/><path class="edge draw" d="M-20,74 C220,54 320,194 540,164 C760,134 800,74 1020,104"/><path class="center" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/></svg>'
+            + '<svg class="bs-road bot" viewBox="0 0 1000 300" preserveAspectRatio="none"><path class="asphalt draw" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/><path class="edge draw" d="M-20,226 C220,206 320,106 540,136 C760,166 800,226 1020,186"/><path class="edge draw" d="M-20,254 C220,234 320,134 540,164 C760,194 800,254 1020,214"/><path class="center" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/></svg>'
+            + '<div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div><div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>'
+            + '<div class="bs-logo-wrap"><img src="calye-safe-logo.png" alt="Calye Safe logo"><span class="bs-shine"></span></div><div class="bs-name">Calye Safe</div><div class="bs-sub">Admin Console · Barangay Calye</div>';
+          s.onclick = function () { s.classList.add('hide'); setTimeout(() => s.remove(), 350); };
+          document.body.appendChild(s);
+          void s.offsetWidth;
+        } else {
+          s.classList.remove('hide');
+        }
+        initBootSky(document);
+        buildSplashRoads(document);
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setTimeout(() => { const el = document.getElementById('boot-splash'); if (el) { el.classList.add('hide'); setTimeout(() => el.remove(), 350); } }, reduced ? 300 : 1400);
+      } catch (e) { }
+    }
+    initBootSky(document);
+    buildSplashRoads(document);
     try {
       const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      setTimeout(hideBootSplash, bootReduced ? 300 : 2300);
-    } catch (e) { setTimeout(hideBootSplash, 2300); }
+      setTimeout(hideBootSplash, bootReduced ? 300 : 2100);
+    } catch (e) { setTimeout(hideBootSplash, 2100); }
 
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();
