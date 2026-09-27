@@ -1415,6 +1415,7 @@
     function hideBootSplash(now) {
       if (bootSplashDone) return;
       bootSplashDone = true;
+      try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) { }
       const s = document.getElementById('boot-splash');
       if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
     }
@@ -1485,6 +1486,19 @@
       const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
     } catch (e) { setTimeout(hideBootSplash, 1700); }
+
+    // Keep the phone keyboard down on launch: some WebViews restore focus
+    // to the last-used field (or focus one on load), which pops the keyboard
+    // over the splash. Drop any focus now, and refuse field focus until the
+    // splash is gone. Taps still work normally once it hides.
+    try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) { }
+    document.addEventListener('focusin', function (e) {
+      if (bootSplashDone) return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) {
+        try { t.blur(); } catch (err) { }
+      }
+    });
 
     // In-app animated sky inside the navy header (pins + twinkles)
     (function initLoginSky() {      var sky = document.querySelector('.login-sky');
