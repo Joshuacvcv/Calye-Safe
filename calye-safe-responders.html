@@ -604,6 +604,162 @@
             letter-spacing: 0;
         }
 
+        /* ── MAJOR INCIDENT ALERTS (all reported majors, dispatched or not) ── */
+        .major-alert {
+            background: #E53935;
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #fff;
+            margin-bottom: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(229, 57, 53, 0.35);
+        }
+
+        .major-alert:active {
+            transform: scale(0.98);
+        }
+
+        .major-alert svg {
+            width: 26px;
+            height: 26px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .major-alert .t {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .major-alert .s {
+            font-size: 12px;
+            opacity: 0.92;
+            margin-top: 2px;
+            line-height: 1.5;
+        }
+
+        /* ── QUICK SERVICES (mirrors resident app) ── */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            align-items: stretch;
+        }
+
+        .service-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            padding: 12px 2px 10px;
+            border-radius: var(--radius-sm);
+            transition: background 0.2s;
+            min-width: 0;
+        }
+
+        .service-item:active {
+            background: var(--bg);
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .service-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .service-item span {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text2);
+            text-align: center;
+            line-height: 1.35;
+            min-height: 27px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        /* ── INFO CARDS (hotlines / tips / weather rows) ── */
+        .hotline-item {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+        }
+
+        .hotline-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .hotline-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .hotline-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .hotline-item .info h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .hotline-item .info p {
+            font-size: 12px;
+            color: var(--text3);
+            margin-top: 2px;
+            line-height: 1.5;
+        }
+
+        /* ── INCIDENT MAP ── */
+        #screen-map.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #resp-incident-map {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            z-index: 0;
+        }
+
+        .user-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #1565C0;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.25);
+        }
+
         /* ── DUTY CARD (floating card, resident card language) ── */
         .duty-card {
             background: var(--card);
@@ -2455,8 +2611,8 @@
                     <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                         <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:42px;height:42px;border-radius:12px;display:block;cursor:pointer;flex-shrink:0;">
                         <div style="min-width:0;flex:1;">
-                            <h2 id="home-greeting" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Good morning, Mark</h2>
-                            <p style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Santa Rosa, Laguna · Quick Response Team</p>
+                            <h2 id="home-greeting" style="font-size:21px;line-height:1.2;">Good morning, Mark</h2>
+                            <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:3px;">Barangay Calye</p>
                         </div>
                     </div>
                     <button class="head-icon-btn" onclick="openNotifCenter()" title="Notifications">
@@ -2485,6 +2641,8 @@
 
             <div class="scroll-content" style="padding-top:16px;">
 
+                <div id="home-major-alerts"></div>
+
                 <div id="home-active-slot"></div>
 
                 <div class="section-label">Today</div>
@@ -2500,6 +2658,50 @@
                     <div class="stat-mini">
                         <div class="val" id="stat-avg-response">0m</div>
                         <div class="lbl">Avg.<br>Response</div>
+                    </div>
+                </div>
+
+                <div class="section-label">Quick Services</div>
+                <div class="card" style="padding:6px 10px 10px;">
+                    <div class="services-grid">
+                        <div class="service-item" onclick="switchScreen('hotlines')">
+                            <div class="service-icon" style="background:#FFEBEE;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="1.8">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                                </svg>
+                            </div>
+                            <span>Hotlines</span>
+                        </div>
+                        <div class="service-item" onclick="switchScreen('map')">
+                            <div class="service-icon" style="background:#E3F2FD;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.8">
+                                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                                    <line x1="8" y1="2" x2="8" y2="18" />
+                                    <line x1="16" y1="6" x2="16" y2="22" />
+                                </svg>
+                            </div>
+                            <span>Incident Map</span>
+                        </div>
+                        <div class="service-item" onclick="switchScreen('safetytips')">
+                            <div class="service-icon" style="background:#E8F5E9;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="1.8">
+                                    <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" />
+                                </svg>
+                            </div>
+                            <span>Safety Tips</span>
+                        </div>
+                        <div class="service-item" onclick="switchScreen('weather')">
+                            <div class="service-icon" style="background:#E3F2FD;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.8">
+                                    <path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" />
+                                    <line x1="8" y1="15" x2="8" y2="19" />
+                                    <line x1="12" y1="17" x2="12" y2="21" />
+                                    <line x1="16" y1="15" x2="16" y2="19" />
+                                </svg>
+                            </div>
+                            <span>Weather</span>
+                        </div>
                     </div>
                 </div>
 
@@ -2709,6 +2911,304 @@
                     </svg>
                     Log Out
                 </button>
+                <div style="height:16px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== HOTLINES ===== -->
+        <div class="screen" id="screen-hotlines">
+            <div class="screen-header" style="display:flex;align-items:center;gap:12px;">
+                <button onclick="switchScreen('home')"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div>
+                    <h2>Emergency Hotlines</h2>
+                    <p>Quick access to emergency services</p>
+                </div>
+            </div>
+            <div class="scroll-content">
+                <div class="hotline-item">
+                    <div class="hotline-icon" style="background:#FFEBEE;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#C62828" stroke-width="1.8">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Santa Rosa CDRRMO</h4>
+                        <p>Globe 0995-650-1943</p>
+                        <p>Smart 0999-873-5431</p>
+                    </div>
+                </div>
+                <div class="hotline-item">
+                    <div class="hotline-icon" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#F57C00" stroke-width="1.8">
+                            <path
+                                d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Bureau of Fire Protection</h4>
+                        <p>(049) 534-1291 / 502-5410</p>
+                        <p>0922-780-7570</p>
+                    </div>
+                </div>
+                <div class="hotline-item">
+                    <div class="hotline-icon" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#1565C0" stroke-width="1.8">
+                            <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Philippine National Police</h4>
+                        <p>0905-550-5288</p>
+                        <p>0998-598-5629</p>
+                    </div>
+                </div>
+                <div class="hotline-item">
+                    <div class="hotline-icon" style="background:#E8F5E9;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#2E7D32" stroke-width="1.8">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Public Order and Safety Office</h4>
+                        <p>0961-722-1414</p>
+                    </div>
+                </div>
+                <div class="hotline-item">
+                    <div class="hotline-icon" style="background:#F3E5F5;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#7B1FA2" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v4l3 3" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>National Emergency</h4>
+                        <p>911</p>
+                    </div>
+                </div>
+                <div style="height:16px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== INCIDENT MAP ===== -->
+        <div class="screen" id="screen-map">
+            <div class="screen-header" style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+                <button onclick="switchScreen('home')"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div>
+                    <h2>Incident Map</h2>
+                    <p>Live incidents near you — tap a pin to open the job</p>
+                </div>
+            </div>
+            <div style="padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;overflow-x:auto;">
+                <div class="filter-tab active" onclick="respMapFilter(this,'all')" style="padding:6px 12px;white-space:nowrap;">All</div>
+                <div class="filter-tab" onclick="respMapFilter(this,'flood')" style="padding:6px 12px;white-space:nowrap;">Flood</div>
+                <div class="filter-tab" onclick="respMapFilter(this,'fire')" style="padding:6px 12px;white-space:nowrap;">Fire</div>
+                <div class="filter-tab" onclick="respMapFilter(this,'crime')" style="padding:6px 12px;white-space:nowrap;">Crime</div>
+                <div class="filter-tab" onclick="respMapFilter(this,'accident')" style="padding:6px 12px;white-space:nowrap;">Accidents</div>
+                <div class="filter-tab" onclick="respMapFilter(this,'medical')" style="padding:6px 12px;white-space:nowrap;">Medical</div>
+            </div>
+            <div style="padding:8px 14px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                <span style="font-size:12px;font-weight:700;color:var(--text2);">Heatmap</span>
+                <label class="toggle"><input type="checkbox" id="resp-heat-toggle" onchange="toggleRespHeat(this)"><span class="toggle-slider"></span></label>
+                <span style="font-size:10.5px;color:var(--text3);font-weight:600;">Hotspot overlay</span>
+            </div>
+            <div id="resp-incident-map"></div>
+            <div style="padding:10px 16px;background:var(--card);border-top:1px solid var(--border);flex-shrink:0;max-height:38%;overflow-y:auto;">
+                <div
+                    style="font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--danger);margin-bottom:6px;">
+                    Major Incidents</div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#6A1B9A;"></div><span
+                            style="font-size:10px;color:var(--text2);">Crime</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#E53935;"></div><span
+                            style="font-size:10px;color:var(--text2);">Fire</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#0D47A1;"></div><span
+                            style="font-size:10px;color:var(--text2);">Flooding</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#D84315;"></div><span
+                            style="font-size:10px;color:var(--text2);">Accidents</span>
+                    </div>
+                </div>
+                <div
+                    style="font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--info);margin-bottom:6px;">
+                    Minor Incidents</div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#F9A825;"></div><span
+                            style="font-size:10px;color:var(--text2);">Road Hazards</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#2E7D32;"></div><span
+                            style="font-size:10px;color:var(--text2);">Garbage &amp; Sanitation</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#00838F;"></div><span
+                            style="font-size:10px;color:var(--text2);">Disturbances</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#5D4037;"></div><span
+                            style="font-size:10px;color:var(--text2);">Utilities</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;">
+                        <div style="width:10px;height:10px;border-radius:50%;background:#AD1457;"></div><span
+                            style="font-size:10px;color:var(--text2);">Health Concerns</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SAFETY TIPS ===== -->
+        <div class="screen" id="screen-safetytips">
+            <div class="screen-header" style="display:flex;align-items:center;gap:12px;">
+                <button onclick="switchScreen('home')"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div>
+                    <h2>Safety Tips</h2>
+                    <p>Quick guides that work offline</p>
+                </div>
+            </div>
+            <div class="scroll-content">
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#1565C0" stroke-width="1.8">
+                            <path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" />
+                            <line x1="8" y1="15" x2="8" y2="19" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                            <line x1="16" y1="15" x2="16" y2="19" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Flood</h4>
+                        <p>Move to higher ground early; never wade through floodwater.</p>
+                        <p>Switch off main power if water enters the house.</p>
+                        <p>Keep a go-bag with documents, water, and medicine.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#F57C00" stroke-width="1.8">
+                            <path
+                                d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Fire</h4>
+                        <p>Call the Bureau of Fire Protection immediately.</p>
+                        <p>Never use elevators; stay low under smoke and cover your nose.</p>
+                        <p>Feel doors before opening — heat means fire on the other side.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#F3E5F5;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#7B1FA2" stroke-width="1.8">
+                            <path d="M12 3v18" />
+                            <path d="M5 8l7-5 7 5" />
+                            <path d="M5 16l7 5 7-5" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Earthquake</h4>
+                        <p>Duck, cover, and hold under sturdy furniture.</p>
+                        <p>Stay away from glass windows and hanging objects.</p>
+                        <p>After shaking stops, move to an open area and check for injuries.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#FFEBEE;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#C62828" stroke-width="1.8">
+                            <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>First Aid Basics</h4>
+                        <p>Bleeding: press firmly with clean cloth; call 911.</p>
+                        <p>Burns: cool with running water for 10 minutes, no toothpaste.</p>
+                        <p>Choking: 5 back blows, then abdominal thrusts if needed.</p>
+                    </div>
+                </div>
+                <div style="height:16px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== WEATHER ===== -->
+        <div class="screen" id="screen-weather">
+            <div class="screen-header" style="display:flex;align-items:center;gap:12px;">
+                <button onclick="switchScreen('home')"
+                    style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div>
+                    <h2>Weather</h2>
+                    <p>Rainfall warnings for Santa Rosa</p>
+                </div>
+            </div>
+            <div class="scroll-content">
+                <div id="weather-live"></div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#FFFDE7;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#F9A825" stroke-width="1.8">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Yellow Rainfall Warning</h4>
+                        <p>Heavy rain expected. Flooding is possible in low-lying areas — stay alert.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#F57C00" stroke-width="1.8">
+                            <path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" />
+                            <line x1="8" y1="15" x2="8" y2="19" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                            <line x1="16" y1="15" x2="16" y2="19" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Orange Rainfall Warning</h4>
+                        <p>Flooding is threatening. Avoid low-lying streets and be ready to evacuate.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;">
+                    <div class="hotline-icon" style="background:#FFEBEE;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#C62828" stroke-width="1.8">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Red Rainfall Warning</h4>
+                        <p>Serious flooding expected. Evacuate if told to do so and call the hotlines for rescue.</p>
+                    </div>
+                </div>
+                <div class="hotline-item" style="align-items:flex-start;cursor:pointer;" onclick="openNotifCenter()">
+                    <div class="hotline-icon" style="background:#E8F5E9;"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="#2E7D32" stroke-width="1.8">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                            <path d="M13.73 21a2 2 0 01-3.46 0" />
+                        </svg></div>
+                    <div class="info">
+                        <h4>Live Dispatch Alerts</h4>
+                        <p>Tap to view your current notifications →</p>
+                    </div>
+                </div>
                 <div style="height:16px;"></div>
             </div>
         </div>
@@ -3205,6 +3705,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     <script src="santarosa-boundary.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3357,7 +3858,176 @@
             if (name === 'home') renderHome();
             if (name === 'queue') renderQueue();
             if (name === 'history') renderHistory();
+            if (name === 'weather') loadWeather();
+            if (name === 'map') {
+                setTimeout(() => {
+                    if (!respMap) initRespMap();
+                    else { respMap.invalidateSize(); paintRespPins(); }
+                }, 120);
+            }
             try { if (typeof initChipsScroll === 'function') requestAnimationFrame(() => initChipsScroll()); } catch (e) { /* ignore */ }
+        }
+
+        // ══════════ INCIDENT MAP (Quick Services — same pins as resident map) ══════════
+        let respMap = null;
+        let respMarkers = [];
+        let respMapFilterState = 'all';
+        let respHeatLayer = null;
+        let respHeatOn = false;
+        const RESP_CAT_COLORS = {
+            flood: '#0D47A1', flooding: '#0D47A1', fire: '#E53935', crime: '#6A1B9A',
+            accident: '#D84315', medical: '#C2185B', road: '#F9A825', garbage: '#2E7D32',
+            disturbance: '#00838F', utility: '#5D4037', health: '#AD1457',
+            structural: '#455A64', other: '#546E7A'
+        };
+        const RESP_HEAT_MAJOR = { flood: 1, flooding: 1, fire: 1, crime: 1, accident: 1, medical: 1 };
+        function respCatKey(j) {
+            return ((j && j.cat) || 'other').toLowerCase();
+        }
+        function respCatColor(cat) {
+            return RESP_CAT_COLORS[(cat || 'other').toLowerCase()] || RESP_CAT_COLORS.other;
+        }
+        function respPinIcon(color, size) {
+            size = size || 30;
+            const h = Math.round(size * 1.18);
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + h + '" viewBox="0 0 32 38">'
+                + '<path d="M16 0C7.163 0 0 7.163 0 16c0 10.314 14.25 21.286 15.25 22.057a1.25 1.25 0 001.5 0C17.75 37.286 32 26.314 32 16 32 7.163 24.837 0 16 0z" fill="' + color + '"/>'
+                + '<circle cx="16" cy="16" r="7" fill="white" opacity="0.9"/></svg>';
+            return L.divIcon({ html: svg, className: '', iconSize: [size, h], iconAnchor: [size / 2, h], popupAnchor: [0, -h] });
+        }
+        function respUserDotIcon() {
+            return L.divIcon({ html: '<div class="user-dot"></div>', className: '', iconSize: [16, 16], iconAnchor: [8, 8] });
+        }
+        function initRespMap() {
+            try {
+                respMap = L.map('resp-incident-map', { zoomControl: false, attributionControl: false });
+                respMap.setView([RESPONDER_BASE.lat, RESPONDER_BASE.lng], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(respMap);
+                try {
+                    if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+                        L.polygon(SANTA_ROSA_BOUNDARY, { color: '#E53935', weight: 2, opacity: 0.8, fill: false, dashArray: '6 6' }).addTo(respMap);
+                    }
+                } catch (e) { /* ignore */ }
+                L.control.zoom({ position: 'bottomright' }).addTo(respMap);
+                paintRespPins();
+                // GPS: show the responder's own location like the resident map.
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        try {
+                            const latlng = [pos.coords.latitude, pos.coords.longitude];
+                            respMap.panTo(latlng);
+                            L.marker(latlng, { icon: respUserDotIcon(), zIndexOffset: 999 })
+                                .addTo(respMap)
+                                .bindPopup('📍 Your location');
+                        } catch (e) { /* ignore */ }
+                    }, () => { }, { enableHighAccuracy: true, timeout: 8000 });
+                }
+            } catch (e) { /* ignore */ }
+        }
+        function respLiveJobs() {
+            return (typeof jobs !== 'undefined' ? jobs : [])
+                .filter(j => j.status !== 'resolved' && j.status !== 'declined')
+                .filter(j => respMapFilterState === 'all' || respCatKey(j) === respMapFilterState || (respMapFilterState === 'flood' && respCatKey(j) === 'flooding'))
+                .filter(j => j.lat != null && j.lng != null);
+        }
+        function paintRespPins() {
+            if (!respMap) return;
+            try {
+                respMarkers.forEach(m => { try { respMap.removeLayer(m); } catch (e) { /* ignore */ } });
+                respMarkers = [];
+                respLiveJobs().forEach(j => {
+                    const c = respCatColor(respCatKey(j));
+                    const m = L.marker([j.lat, j.lng], { icon: respPinIcon(c) }).addTo(respMap);
+                    m.bindPopup('<b>' + (j.type || 'Incident') + '</b><br>' + (j.loc || '') + '<br><span style="font-size:11px;">' + (j.status || '').replace('_', ' ') + '</span><br><button onclick="openJob(\'' + j.id + '\')" style="margin-top:6px;background:#1E3A5F;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Open job</button>');
+                    respMarkers.push(m);
+                });
+                refreshRespHeat();
+                if (respMarkers.length) {
+                    respMap.fitBounds(L.featureGroup(respMarkers).getBounds().pad(0.2));
+                }
+            } catch (e) { /* ignore */ }
+        }
+        function refreshRespHeat() {
+            if (!respMap) return;
+            try {
+                if (respHeatLayer) { respMap.removeLayer(respHeatLayer); respHeatLayer = null; }
+                if (!respHeatOn) return;
+                const pts = respLiveJobs()
+                    .filter(j => typeof j.lat === 'number' && typeof j.lng === 'number')
+                    .map(j => [j.lat, j.lng, RESP_HEAT_MAJOR[respCatKey(j)] ? 1 : 0.55]);
+                if (pts.length && typeof L.heatLayer === 'function') {
+                    respHeatLayer = L.heatLayer(pts, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(respMap);
+                }
+            } catch (e) { /* ignore */ }
+        }
+        function toggleRespHeat(cb) {
+            respHeatOn = !!(cb && cb.checked);
+            refreshRespHeat();
+        }
+        function respMapFilter(tab, cat) {
+            document.querySelectorAll('#screen-map .filter-tab').forEach(b => b.classList.remove('active'));
+            if (tab) tab.classList.add('active');
+            respMapFilterState = cat;
+            paintRespPins();
+        }
+
+        // ══════════ LIVE WEATHER (Santa Rosa City, Laguna via Open-Meteo) ══════════
+        let weatherCache = null;
+        let weatherCacheAt = 0;
+        function wmoLabel(code) {
+            if (code === 0) return 'Clear sky';
+            if (code <= 3) return ['', 'Mainly clear', 'Partly cloudy', 'Overcast'][code];
+            if (code === 45 || code === 48) return 'Foggy';
+            if (code <= 57) return 'Drizzle';
+            if (code <= 67) return 'Rain';
+            if (code <= 77) return 'Snow grains';
+            if (code <= 82) return 'Rain showers';
+            if (code <= 86) return 'Snow showers';
+            return 'Thunderstorm';
+        }
+        function loadWeather() {
+            const box = document.getElementById('weather-live');
+            if (!box) return;
+            if (weatherCache && Date.now() - weatherCacheAt < 600000) { renderWeather(weatherCache); return; }
+            box.innerHTML = '<div class="hotline-item"><div class="info"><h4>Loading live sky…</h4><p>Fetching Santa Rosa conditions.</p></div></div>';
+            fetch('https://api.open-meteo.com/v1/forecast?latitude=14.312&longitude=121.111&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FManila&forecast_days=3')
+                .then(r => r.json())
+                .then(d => { weatherCache = d; weatherCacheAt = Date.now(); renderWeather(d); })
+                .catch(() => {
+                    box.innerHTML = '<div class="hotline-item"><div class="info"><h4>Offline</h4><p>Live sky unavailable — check your connection. Guides below still apply.</p></div></div>';
+                });
+        }
+        function renderWeather(d) {
+            const box = document.getElementById('weather-live');
+            if (!box || !d || !d.current) return;
+            const c = d.current;
+            const today = d.daily.precipitation_probability_max[0] ?? 0;
+            const alert = today >= 70
+                ? { t: 'High rain chance — flooding possible', bg: '#FFEBEE', fg: '#C62828' }
+                : today >= 40
+                    ? { t: 'Moderate rain chance — stay alert', bg: '#FFF3E0', fg: '#F57C00' }
+                    : { t: 'Low rain risk right now', bg: '#E8F5E9', fg: '#2E7D32' };
+            const dayName = iso => new Date(iso + 'T12:00:00').toLocaleDateString('en-PH', { weekday: 'short' });
+            const days = d.daily.time.map((t, i) =>
+                '<div style="flex:1;text-align:center;background:var(--bg);border-radius:10px;padding:10px 4px;">'
+                + '<div style="font-size:11px;font-weight:800;color:var(--text3);">' + (i === 0 ? 'Today' : dayName(t)) + '</div>'
+                + '<div style="font-size:13px;font-weight:800;color:var(--text);margin-top:4px;">' + Math.round(d.daily.temperature_2m_max[i]) + '°/' + Math.round(d.daily.temperature_2m_min[i]) + '°</div>'
+                + '<div style="font-size:10.5px;font-weight:600;color:var(--text3);margin-top:2px;">' + wmoLabel(d.daily.weather_code[i]) + '</div>'
+                + '<div style="font-size:10.5px;font-weight:800;color:#1565C0;margin-top:2px;">☂ ' + (d.daily.precipitation_probability_max[i] ?? 0) + '%</div>'
+                + '</div>').join('');
+            box.innerHTML =
+                '<div class="hotline-item" style="align-items:flex-start;">'
+                + '<div class="hotline-icon" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="1.8">'
+                + '<path d="M20 16.58A5 5 0 0018 7h-1.26A8 8 0 104 15.25" />'
+                + '<line x1="8" y1="15" x2="8" y2="19" /><line x1="12" y1="17" x2="12" y2="21" /><line x1="16" y1="15" x2="16" y2="19" />'
+                + '</svg></div>'
+                + '<div class="info">'
+                + '<h4>Santa Rosa Right Now · ' + Math.round(c.temperature_2m) + '°C</h4>'
+                + '<p>' + wmoLabel(c.weather_code) + ' · feels like ' + Math.round(c.apparent_temperature) + '°C</p>'
+                + '<p>Humidity ' + c.relative_humidity_2m + '% · wind ' + Math.round(c.wind_speed_10m) + ' km/h</p>'
+                + '<p style="margin-top:6px;"><span style="display:inline-block;background:' + alert.bg + ';color:' + alert.fg + ';font-weight:800;font-size:11px;padding:4px 10px;border-radius:20px;">' + alert.t + ' (' + today + '% rain)</span></p>'
+                + '</div></div>'
+                + '<div style="display:flex;gap:8px;margin-bottom:10px;">' + days + '</div>';
         }
 
         // Active tab: open the incident the responder is currently resolving.
@@ -3387,6 +4057,21 @@
         }
 
         // ══════════════════════════ HOME ══════════════════════════
+        // Major-incident alerts: only severity-major reports, whether or not
+        // they were dispatched to this unit.
+        let majorAlerts = [];
+        function renderMajorAlerts() {
+            const box = document.getElementById('home-major-alerts');
+            if (!box) return;
+            box.innerHTML = majorAlerts.map(a => `
+                <div class="major-alert" onclick="switchScreen('map')">
+                    <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2L1 21h22L12 2z"/></svg>
+                    <div style="min-width:0;">
+                        <div class="t">${a.type || 'Major incident'}</div>
+                        <div class="s">${a.loc || ''}</div>
+                    </div>
+                </div>`).join('');
+        }
         function timeGreeting() {
             const h = new Date().getHours();
             if (h >= 5 && h < 12) return 'Good morning';
@@ -3400,6 +4085,7 @@
                 const first = (rProfile.name || '').split(' ')[0] || 'there';
                 greetEl.textContent = timeGreeting() + ', ' + first;
             }
+            renderMajorAlerts();
             const slot = document.getElementById('home-active-slot');
             const active = jobs.find(j => j.status === 'en_route' || j.status === 'on_site');
             if (active && onDuty) {
@@ -4655,6 +5341,16 @@
                 }
             });
             CalyeDB.fetch('reports', { limit: 100 }).then(dbReports => {
+                // Major-incident alerts for home: only severity-major reports
+                // that are still open, dispatched to this unit or not.
+                try {
+                    majorAlerts = (dbReports || [])
+                        .filter(r => r.status !== 'resolved' && r.status !== 'declined')
+                        .filter(r => r.severity === 'major')
+                        .slice(0, 5)
+                        .map(r => ({ type: r.type || 'Major incident', loc: r.location || 'Barangay Calye' }));
+                    renderMajorAlerts();
+                } catch (e) { /* ignore */ }
                 CalyeDB.fetch('assignments', { limit: 100 }).then(dbAssignments => {
                     if (!dbReports || !dbReports.length || !dbAssignments || !dbAssignments.length) return;
                     const reportById = dbReports.reduce((m, r) => { m[r.id] = r; return m; }, {});
