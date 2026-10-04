@@ -28,6 +28,21 @@ window.CalyeDB = (function () {
 
   // ---- low-level helpers ---------------------------------------------------
 
+  // Guarantees a promise settles: a stalled network request resolves with
+  // `fallback` instead of hanging the UI forever (e.g. endless "Signing in").
+  var NET_TIMEOUT_MS = 25000;
+  function withTimeout(p, fallback) {
+    return new Promise(function (resolve) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (!done) { done = true; resolve(fallback); }
+      }, NET_TIMEOUT_MS);
+      Promise.resolve(p).then(function (v) {
+        if (!done) { done = true; clearTimeout(timer); resolve(v); }
+      });
+    });
+  }
+
   function buildQuery(table, opts) {
     var c = client();
     if (!c) return null;
@@ -48,25 +63,25 @@ window.CalyeDB = (function () {
 
   function fetch(table, opts) {
     opts = opts || {};
-    return new Promise(function (resolve) {
+    return withTimeout(new Promise(function (resolve) {
       var q = buildQuery(table, opts);
       if (!q) { resolve(null); return; }
       q.then(function (res) {
         if (res.error) { resolve(null); return; }
         resolve(res.data || []);
       }).catch(function () { resolve(null); });
-    });
+    }), null);
   }
 
   function fetchOne(table, filters) {
-    return new Promise(function (resolve) {
+    return withTimeout(new Promise(function (resolve) {
       var q = buildQuery(table, { filters: filters, limit: 1 });
       if (!q) { resolve(null); return; }
       q.then(function (res) {
         if (res.error || !res.data || !res.data.length) { resolve(null); return; }
         resolve(res.data[0]);
       }).catch(function () { resolve(null); });
-    });
+    }), null);
   }
 
   function insert(table, rows) {

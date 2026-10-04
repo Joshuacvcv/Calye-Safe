@@ -124,27 +124,33 @@ window.CalyeAuth = (function () {
    */
   function signIn(email, password) {
     return new Promise(function (resolve) {
+      var done = false;
+      function fin(r) { if (!done) { done = true; resolve(r); } }
+      // Never spin forever: a stalled request reports a timeout instead.
+      setTimeout(function () {
+        fin({ error: 'Sign-in is taking too long. Check your connection and try again.' });
+      }, 30000);
       var c = getClient();
-      if (!c) { resolve({ error: 'Database not reachable' }); return; }
+      if (!c) { fin({ error: 'Database not reachable' }); return; }
       c.auth.signInWithPassword({ email: email, password: password })
         .then(function (res) {
-          if (res.error) { resolve({ error: res.error.message }); return; }
+          if (res.error) { fin({ error: res.error.message }); return; }
           var session = res.data && res.data.session ? res.data.session : null;
           var user = res.data && res.data.user ? res.data.user : null;
           lastSession = session;
           passwordFingerprint(password).then(function (fp) {
-            if (!fp || !user) { resolve({ session: session, user: user, error: null }); return; }
+            if (!fp || !user) { fin({ session: session, user: user, error: null }); return; }
             var hist = historyFromUser(user);
             if (hist.indexOf(fp) !== -1) {
-              resolve({ session: session, user: user, error: null });
+              fin({ session: session, user: user, error: null });
               return;
             }
             hist = [fp].concat(hist).slice(0, 8);
             c.auth.updateUser({ data: metaWithHistory(user, hist) })
-              .then(function () { resolve({ session: session, user: user, error: null }); })
-              .catch(function () { resolve({ session: session, user: user, error: null }); });
+              .then(function () { fin({ session: session, user: user, error: null }); })
+              .catch(function () { fin({ session: session, user: user, error: null }); });
           });
-        }).catch(function (e) { resolve({ error: e.message || 'Sign-in failed' }); });
+        }).catch(function (e) { fin({ error: e.message || 'Sign-in failed' }); });
     });
   }
 
