@@ -279,13 +279,22 @@
       50% { opacity: 0.55; transform: scale(1); }
     }
 
+    #boot-splash .bs-logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      z-index: 3;
+    }
+
     #boot-splash .bs-logo-wrap {
       position: relative;
       z-index: 3;
-      width: 190px;
-      height: 190px;
+      width: 110px;
+      height: 110px;
       margin-bottom: 14px;
-      border-radius: 42px;
+      border-radius: 26px;
       overflow: hidden;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
       animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -296,7 +305,29 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      border-radius: 42px;
+      border-radius: 26px;
+      display: block;
+    }
+
+    #boot-splash .bs-seal {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+      margin-bottom: 14px;
+      animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both;
+    }
+
+    #boot-splash .bs-seal img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
       display: block;
     }
 
@@ -2068,14 +2099,63 @@
       height: 100%;
       background: var(--bg);
       z-index: 160;
-      transform: translateY(-100%);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-14px);
+      transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
     }
 
     .search-overlay.open {
+      visibility: visible;
+      opacity: 1;
       transform: translateY(0);
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .recent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 4px;
+      cursor: pointer;
+    }
+
+    .recent-row:active {
+      background: var(--bg);
+      border-radius: 8px;
+    }
+
+    .recent-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .recent-row .recent-text {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.35;
+    }
+
+    .recent-clear {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary-text);
+      cursor: pointer;
+      padding: 4px 2px;
     }
 
     .search-overlay-header {
@@ -2548,9 +2628,15 @@
       </svg>
       <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
       <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
-      <div class="bs-logo-wrap">
-        <img src="calye-safe-logo.png" alt="Calye Safe logo">
-        <span class="bs-shine"></span>
+      <div class="bs-logo-row">
+        <div class="bs-logo-wrap">
+          <img src="calye-safe-logo.png" alt="Calye Safe logo">
+          <span class="bs-shine"></span>
+        </div>
+        <div class="bs-seal">
+          <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal">
+          <span class="bs-shine"></span>
+        </div>
       </div>
       <div class="bs-name">Calye Safe</div>
       <div class="bs-sub">Barangay Calye · Santa Rosa</div>
@@ -2560,9 +2646,10 @@
     <div class="screen active" id="screen-home">
       <div class="screen-header" style="padding-bottom:36px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-            <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:42px;height:42px;border-radius:12px;display:block;cursor:pointer;flex-shrink:0;">
-            <div style="min-width:0;">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:34px;height:34px;border-radius:10px;display:block;cursor:pointer;flex-shrink:0;">
+              <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal" title="City of Santa Rosa, Laguna" style="width:34px;height:34px;border-radius:50%;background:#fff;display:block;flex-shrink:0;">
+              <div style="min-width:0;">
               <h2 style="font-size:21px;line-height:1.2;">Good morning, Juan</h2>
               <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:3px;">Barangay Calye</p>
             </div>
@@ -3626,6 +3713,7 @@
           <p style="font-size:13px;color:var(--text3);text-align:center;">Search for incidents,<br>alerts, or
             announcements</p>
         </div>
+        <div id="search-recent" style="display:none;"></div>
         <div id="search-result-list" style="display:none;"></div>
       </div>
     </div>
@@ -5411,22 +5499,93 @@
       return idx;
     }
 
+    const SEARCH_RECENT_KEY = 'calye_safe_search_recent';
+    function getRecentSearches() {
+      try {
+        const raw = localStorage.getItem(SEARCH_RECENT_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).slice(0, 8) : [];
+      } catch (e) { return []; }
+    }
+    function saveRecentSearch(q) {
+      q = (q || '').trim();
+      if (!q) return;
+      try {
+        const arr = getRecentSearches().filter(x => x.toLowerCase() !== q.toLowerCase());
+        arr.unshift(q);
+        localStorage.setItem(SEARCH_RECENT_KEY, JSON.stringify(arr.slice(0, 8)));
+      } catch (e) { /* ignore */ }
+    }
+    function removeRecentSearch(i) {
+      try {
+        const arr = getRecentSearches();
+        arr.splice(i, 1);
+        localStorage.setItem(SEARCH_RECENT_KEY, JSON.stringify(arr));
+      } catch (e) { /* ignore */ }
+      renderRecentSearches();
+    }
+    function clearRecentSearches() {
+      try { localStorage.removeItem(SEARCH_RECENT_KEY); } catch (e) { /* ignore */ }
+      renderRecentSearches();
+    }
+    function escAttr(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    let recentEditMode = false;
+    function renderRecentSearches() {
+      const box = document.getElementById('search-recent');
+      const placeholder = document.getElementById('search-placeholder');
+      const resList = document.getElementById('search-result-list');
+      if (!box) return;
+      const arr = getRecentSearches();
+      resList.style.display = 'none';
+      if (!arr.length) { recentEditMode = false; box.style.display = 'none'; placeholder.style.display = 'flex'; return; }
+      placeholder.style.display = 'none';
+      box.style.display = 'block';
+      box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:15px;font-weight:800;color:var(--text);">Recent</span>
+          <span class="recent-clear" onclick="toggleRecentEdit()">${recentEditMode ? 'Done' : 'Edit'}</span>
+        </div>` + arr.map((q, i) => `
+        <div class="recent-row" onclick="${recentEditMode ? `removeRecentSearch(${i})` : `applyRecentSearch(${i})`}">
+          <div class="recent-avatar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+          </div>
+          <span class="recent-text">${escAttr(q)}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" onclick="event.stopPropagation();removeRecentSearch(${i})"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </div>`).join('');
+    }
+    function toggleRecentEdit() {
+      recentEditMode = !recentEditMode;
+      renderRecentSearches();
+    }
+    function applyRecentSearch(i) {
+      const q = getRecentSearches()[i];
+      if (q == null) return;
+      document.getElementById('search-input').value = q;
+      doSearch(q);
+    }
     function openSearch() {
       document.getElementById('search-overlay').classList.add('open');
-      setTimeout(() => document.getElementById('search-input').focus(), 300);
+      document.getElementById('search-input').value = '';
+      recentEditMode = false;
+      renderRecentSearches();
+      setTimeout(() => document.getElementById('search-input').focus(), 50);
     }
     function closeSearch() {
       document.getElementById('search-overlay').classList.remove('open');
       document.getElementById('search-input').value = '';
       document.getElementById('search-placeholder').style.display = 'flex';
+      document.getElementById('search-recent').style.display = 'none';
       document.getElementById('search-result-list').style.display = 'none';
     }
     function doSearch(val) {
       const q = val.trim().toLowerCase();
       const placeholder = document.getElementById('search-placeholder');
+      const recent = document.getElementById('search-recent');
       const resList = document.getElementById('search-result-list');
-      if (!q) { placeholder.style.display = 'flex'; resList.style.display = 'none'; return; }
+      if (!q) { renderRecentSearches(); return; }
       placeholder.style.display = 'none';
+      recent.style.display = 'none';
       resList.style.display = 'block';
       const results = buildSearchIndex().filter(d => d.title.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q));
       if (!results.length) {
@@ -5434,7 +5593,7 @@
         return;
       }
       resList.innerHTML = results.map(r => `
-    <div class="search-result-item" onclick="closeSearch();switchScreen('${r.screen}')">
+    <div class="search-result-item" onclick="pickSearchResult('${r.screen}')">
       <div class="search-result-icon" style="background:${r.tagColor};">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${r.tagText}" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       </div>
@@ -5445,6 +5604,13 @@
       <span class="search-tag" style="background:${r.tagColor};color:${r.tagText};">${r.tag}</span>
     </div>
   `).join('');
+    }
+
+    // Tapping a result saves the query to recents, then jumps to it.
+    function pickSearchResult(screen) {
+      try { saveRecentSearch(document.getElementById('search-input').value); } catch (e) { /* ignore */ }
+      closeSearch();
+      switchScreen(screen);
     }
 
     // ========== ALL ALERTS MODAL ==========

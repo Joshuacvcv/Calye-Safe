@@ -232,13 +232,22 @@
             50% { opacity: 0.55; transform: scale(1); }
         }
 
+        #boot-splash .bs-logo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            z-index: 3;
+        }
+
         #boot-splash .bs-logo-wrap {
             position: relative;
             z-index: 3;
-            width: 190px;
-            height: 190px;
+            width: 110px;
+            height: 110px;
             margin-bottom: 14px;
-            border-radius: 42px;
+            border-radius: 26px;
             overflow: hidden;
             box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
             animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -249,7 +258,29 @@
             z-index: 1;
             width: 100%;
             height: 100%;
-            border-radius: 42px;
+            border-radius: 26px;
+            display: block;
+        }
+
+        #boot-splash .bs-seal {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+            margin-bottom: 14px;
+            animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both;
+        }
+
+        #boot-splash .bs-seal img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
             display: block;
         }
 
@@ -2596,9 +2627,15 @@
             </svg>
             <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
             <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
-            <div class="bs-logo-wrap">
-                <img src="calye-safe-logo.png" alt="Calye Safe logo">
-                <span class="bs-shine"></span>
+            <div class="bs-logo-row">
+                <div class="bs-logo-wrap">
+                    <img src="calye-safe-logo.png" alt="Calye Safe logo">
+                    <span class="bs-shine"></span>
+                </div>
+                <div class="bs-seal">
+                    <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal">
+                    <span class="bs-shine"></span>
+                </div>
             </div>
             <div class="bs-name">Calye Safe</div>
             <div class="bs-sub">Barangay Calye · Santa Rosa</div>
@@ -2609,7 +2646,8 @@
             <div class="screen-header">
                 <div class="head-row">
                     <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:42px;height:42px;border-radius:12px;display:block;cursor:pointer;flex-shrink:0;">
+                        <img src="calye-safe-logo.png" alt="Calye Safe logo" title="Reload app" onclick="location.reload()" style="width:34px;height:34px;border-radius:10px;display:block;cursor:pointer;flex-shrink:0;">
+                        <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal" title="City of Santa Rosa, Laguna" style="width:34px;height:34px;border-radius:50%;background:#fff;display:block;flex-shrink:0;">
                         <div style="min-width:0;flex:1;">
                             <h2 id="home-greeting" style="font-size:21px;line-height:1.2;">Good morning, Mark</h2>
                             <p style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:3px;">Barangay Calye</p>

@@ -325,13 +325,22 @@
       50% { opacity: 0.5; transform: scale(1); }
     }
 
+    #boot-splash .bs-logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      position: relative;
+      z-index: 3;
+    }
+
     #boot-splash .bs-logo-wrap {
       position: relative;
       z-index: 3;
-      width: 190px;
-      height: 190px;
+      width: 160px;
+      height: 160px;
       margin-bottom: 14px;
-      border-radius: 42px;
+      border-radius: 36px;
       overflow: hidden;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
       animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -342,7 +351,29 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      border-radius: 42px;
+      border-radius: 36px;
+      display: block;
+    }
+
+    #boot-splash .bs-seal {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+      margin-bottom: 14px;
+      animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both;
+    }
+
+    #boot-splash .bs-seal img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
       display: block;
     }
 
@@ -478,9 +509,9 @@
     }
 
     .sidebar-logo .icon-wrap {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       background: var(--primary);
       display: flex;
       align-items: center;
@@ -507,10 +538,11 @@
     .sidebar-logo .brand {
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-weight: 900;
-      font-size: 20px;
+      font-size: 16px;
       line-height: 1.25;
       color: #FFFFFF;
       letter-spacing: -0.03em;
+      white-space: nowrap;
     }
 
     .sidebar-logo .sub {
@@ -730,6 +762,7 @@
       cursor: text;
       transition: border 0.2s;
       width: 240px;
+      position: relative;
     }
 
     .topbar-search:focus-within {
@@ -758,6 +791,68 @@
 
     .topbar-search input::placeholder {
       color: var(--text3);
+    }
+
+    /* Recent searches dropdown (Facebook-style). */
+    #admin-search-recents {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      padding: 10px 12px;
+      z-index: 200;
+    }
+
+    #admin-search-recents.open {
+      display: block;
+    }
+
+    #admin-search-recents .recent-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 4px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    #admin-search-recents .recent-row:hover {
+      background: var(--surface2);
+    }
+
+    #admin-search-recents .recent-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    #admin-search-recents .recent-text {
+      flex: 1;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #admin-search-recents .recent-edit {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--primary-text);
+      cursor: pointer;
+      padding: 4px 2px;
     }
 
     .topbar-btn {
@@ -3644,9 +3739,15 @@
     </svg>
     <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
     <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
-    <div class="bs-logo-wrap">
-      <img src="calye-safe-logo.png" alt="Calye Safe logo">
-      <span class="bs-shine"></span>
+    <div class="bs-logo-row">
+      <div class="bs-logo-wrap">
+        <img src="calye-safe-logo.png" alt="Calye Safe logo">
+        <span class="bs-shine"></span>
+      </div>
+      <div class="bs-seal">
+        <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal">
+        <span class="bs-shine"></span>
+      </div>
     </div>
     <div class="bs-name">Calye Safe</div>
     <div class="bs-sub">Admin Console · Barangay Calye</div>
@@ -3657,11 +3758,14 @@
     <div id="gate-map"></div>
     <div id="gate-veil"></div>
     <div class="gate-sky" id="gate-sky"></div>
-    <div class="gate-ticker"><span>● LIVE: Flooding — Mercado Village &nbsp;&nbsp; ● QRT-3 en route, ETA 6 min &nbsp;&nbsp; ● 16 open reports &nbsp;&nbsp; ● Road Hazard — Dita, resolved &nbsp;&nbsp;</span></div>
+    <div class="gate-ticker"><span id="gate-ticker-text">● LIVE: Flooding — Mercado Village &nbsp;&nbsp; ● QRT-3 en route, ETA 6 min &nbsp;&nbsp; ● 16 open reports &nbsp;&nbsp; ● Road Hazard — Dita, resolved &nbsp;&nbsp;</span></div>
     <div class="gate-stage">
     <div class="gate-card" id="gate-card">
       <div class="gate-left">
-        <div class="gate-logo" onclick="location.reload()" title="Reload page" style="cursor:pointer;"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="gate-logo" onclick="location.reload()" title="Reload page" style="cursor:pointer;"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
+          <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal" title="City of Santa Rosa, Laguna" style="width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 8px 22px rgba(0,0,0,0.35);flex-shrink:0;">
+        </div>
         <div class="gate-title">Calye-Safe <em>Admin</em></div>
         <div class="gate-sub">Command center for Barangay Calye — dispatch responders, verify residents, and track every incident live.</div>
         <div class="gate-flow" id="gate-flow">
@@ -3707,9 +3811,9 @@
           <div class="icon-wrap" onclick="location.reload()" title="Reload dashboard" style="cursor:pointer;">
             <img src="calye-safe-logo.png" alt="Calye Safe logo">
           </div>
+          <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal" title="City of Santa Rosa, Laguna" style="width:36px;height:36px;border-radius:50%;background:#fff;flex-shrink:0;">
           <div>
             <div class="brand">Calye Safe</div>
-            <div class="sub">Admin Console</div>
           </div>
         </div>
       </div>
@@ -3820,7 +3924,8 @@
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            <input placeholder="Search reports…" oninput="searchReports(this.value)">
+            <input id="topbar-search-input" placeholder="Search reports…" oninput="searchReports(this.value)" onfocus="renderAdminRecents()" onblur="setTimeout(hideAdminRecents,150)" onkeydown="if(event.key==='Enter')pickAdminSearch(this.value)">
+            <div id="admin-search-recents"></div>
           </div>
           <div class="topbar-btn" id="notif-btn" onclick="toggleNotifPanel()">
             <svg viewBox="0 0 24 24">
@@ -5358,6 +5463,119 @@
     function searchReports(val) {
       currentSearch = val.toLowerCase();
       renderTable(getFilteredData());
+      renderAdminPredictions(val);
+    }
+
+    // ── TOPBAR RECENT SEARCHES (Facebook-style) ──
+    const ADMIN_RECENT_KEY = 'calye_safe_admin_search_recent';
+    let adminRecentEdit = false;
+    function getAdminRecents() {
+      try {
+        const arr = JSON.parse(localStorage.getItem(ADMIN_RECENT_KEY) || '[]');
+        return Array.isArray(arr) ? arr.filter(x => typeof x === 'string' && x.trim()).slice(0, 8) : [];
+      } catch (e) { return []; }
+    }
+    function saveAdminRecent(q) {
+      q = (q || '').trim();
+      if (!q) return;
+      try {
+        const arr = getAdminRecents().filter(x => x.toLowerCase() !== q.toLowerCase());
+        arr.unshift(q);
+        localStorage.setItem(ADMIN_RECENT_KEY, JSON.stringify(arr.slice(0, 8)));
+      } catch (e) { /* ignore */ }
+    }
+    function escAdminAttr(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function renderAdminRecents() {
+      const dd = document.getElementById('admin-search-recents');
+      const input = document.getElementById('topbar-search-input');
+      if (!dd || !input) return;
+      if (input.value.trim()) { renderAdminPredictions(input.value); return; }
+      const arr = getAdminRecents();
+      if (!arr.length) { dd.classList.remove('open'); return; }
+      dd.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:14px;font-weight:800;color:var(--text);">Recent</span>
+          <span class="recent-edit" onclick="toggleAdminRecentEdit()">${adminRecentEdit ? 'Done' : 'Edit'}</span>
+        </div>` + arr.map((q, i) => `
+        <div class="recent-row" onmousedown="event.preventDefault();${adminRecentEdit ? `removeAdminRecent(${i})` : `applyAdminRecent(${i})`}">
+          <div class="recent-avatar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></svg>
+          </div>
+          <span class="recent-text">${escAdminAttr(q)}</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" onmousedown="event.stopPropagation();removeAdminRecent(${i})"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+        </div>`).join('');
+      dd.classList.add('open');
+    }
+    function toggleAdminRecentEdit() {
+      adminRecentEdit = !adminRecentEdit;
+      renderAdminRecents();
+      document.getElementById('topbar-search-input').focus();
+    }
+    function applyAdminRecent(i) {
+      const q = getAdminRecents()[i];
+      if (q == null) return;
+      const input = document.getElementById('topbar-search-input');
+      input.value = q;
+      searchReports(q);
+      document.getElementById('admin-search-recents').classList.remove('open');
+      input.focus();
+    }
+    function removeAdminRecent(i) {
+      try {
+        const arr = getAdminRecents();
+        arr.splice(i, 1);
+        localStorage.setItem(ADMIN_RECENT_KEY, JSON.stringify(arr));
+      } catch (e) { /* ignore */ }
+      renderAdminRecents();
+      document.getElementById('topbar-search-input').focus();
+    }
+    function pickAdminSearch(val) {
+      saveAdminRecent(val);
+      searchReports(val);
+      document.getElementById('admin-search-recents').classList.remove('open');
+    }
+    function hideAdminRecents() {
+      const dd = document.getElementById('admin-search-recents');
+      if (dd) dd.classList.remove('open');
+      adminRecentEdit = false;
+    }
+
+    // ── LIVE PREDICTIONS: matching reports as you type; tap jumps to it ──
+    function renderAdminPredictions(val) {
+      const dd = document.getElementById('admin-search-recents');
+      const input = document.getElementById('topbar-search-input');
+      if (!dd || !input) return;
+      const q = (val || '').trim().toLowerCase();
+      if (!q) { renderAdminRecents(); return; }
+      const hits = (typeof reports !== 'undefined' ? reports : [])
+        .filter(r => (r.type || '').toLowerCase().includes(q)
+          || (r.loc || '').toLowerCase().includes(q)
+          || (r.id || '').toLowerCase().includes(q))
+        .slice(0, 6);
+      if (!hits.length) {
+        dd.innerHTML = `<div style="padding:10px 4px;font-size:12.5px;font-weight:600;color:var(--text3);">No matches for "${escAdminAttr(val.trim())}"</div>`;
+        dd.classList.add('open');
+        return;
+      }
+      dd.innerHTML = hits.map(r => `
+        <div class="recent-row" onmousedown="event.preventDefault();pickAdminReport('${r.dbId || ''}')">
+          <div class="recent-avatar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="recent-text">${escAdminAttr(r.type || 'Report')}</div>
+            <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escAdminAttr(r.loc || '')} · ${escAdminAttr(r.id || '')}</div>
+          </div>
+        </div>`).join('');
+      dd.classList.add('open');
+    }
+    function pickAdminReport(dbId) {
+      const input = document.getElementById('topbar-search-input');
+      if (input && input.value.trim()) saveAdminRecent(input.value);
+      document.getElementById('admin-search-recents').classList.remove('open');
+      if (input) input.blur();
+      openReportDetail(dbId);
     }
 
     renderTable(reports);
@@ -7787,7 +8005,6 @@ const pageTitles = {
     function togglePageMapHeat(cb) {
       pageMapHeatOn = !!(cb && cb.checked);
       refreshPageMapHeat();
-      showToastMsg(pageMapHeatOn ? 'Hotspot heat layer on' : 'Hotspot heat layer off', 'info');
     }
 
     // Analytics "View Full Map" lands here WITH the heat layer on, so the
@@ -8730,6 +8947,37 @@ const pageTitles = {
         hint.style.display = 'none';
       }
     }
+    // Gate ticker: most recent major reports still needing a response.
+    // Updates are cheap and non-disruptive: skipped while the tab is hidden,
+    // and the DOM is only touched when the text actually changed (so the
+    // scroll animation never restarts for no reason). Falls back to the
+    // static line when offline or when reads are denied.
+    let gateTickerLast = '';
+    function refreshGateTicker() {
+      var el = document.getElementById('gate-ticker-text');
+      if (!el) return;
+      try {
+        if (!CalyeDB.isOnline()) return;
+        if (typeof document !== 'undefined' && document.hidden) return;
+        CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 100 }).then(function (rows) {
+          var box = document.getElementById('gate-ticker-text');
+          if (!box) return;
+          var majors = (rows || [])
+            .filter(function (r) { return r.severity === 'major' && r.status !== 'resolved' && r.status !== 'declined'; })
+            .slice(0, 6);
+          var html = majors.length
+            ? majors.map(function (r) {
+              var t = (r.type || 'Major incident').replace(/</g, '&lt;');
+              var l = (r.location || 'Barangay Calye').replace(/</g, '&lt;');
+              return '● LIVE: ' + t + ' — ' + l + ' &nbsp;&nbsp;';
+            }).join('')
+            : '● All clear — no major incidents awaiting response &nbsp;&nbsp;';
+          if (html === gateTickerLast) return;
+          gateTickerLast = html;
+          box.innerHTML = html;
+        }).catch(function () { /* keep static line */ });
+      } catch (e) { /* keep static line */ }
+    }
     // Gate ambience: floating pins, twinkles, clickable steps, card tilt.
     (function gateAmbience() {
       try {
@@ -8764,11 +9012,18 @@ const pageTitles = {
         });
         const card = document.getElementById('gate-card');
         if (card) {
+          let tiltQueued = false;
           document.getElementById('admin-gate').addEventListener('mousemove', function (e) {
-            const x = (e.clientX / window.innerWidth - 0.5) * 6;
-            const y = (e.clientY / window.innerHeight - 0.5) * -6;
-            card.style.transform = 'perspective(1200px) rotateY(' + x + 'deg) rotateX(' + y + 'deg)';
-          });
+            if (tiltQueued) return;
+            tiltQueued = true;
+            const cx = e.clientX, cy = e.clientY;
+            requestAnimationFrame(function () {
+              tiltQueued = false;
+              const x = (cx / window.innerWidth - 0.5) * 6;
+              const y = (cy / window.innerHeight - 0.5) * -6;
+              card.style.transform = 'perspective(1200px) rotateY(' + x + 'deg) rotateX(' + y + 'deg)';
+            });
+          }, { passive: true });
         }
       } catch (e) { }
     })();
@@ -8816,13 +9071,23 @@ const pageTitles = {
       } catch (e) { }
     }
     // Gate map: low-opacity Santa Rosa backdrop behind the login card.
-    (function initGateMap() {
+    // Deferred until after first paint + canvas-rendered so the login
+    // itself stays snappy; the map never animates or takes input.
+    function initGateMap() {
       try {
         if (typeof L === 'undefined') return;
         var el = document.getElementById('gate-map');
         if (!el || el.dataset.done) return;
         el.dataset.done = '1';
-        var map = L.map('gate-map', { zoomControl: false, attributionControl: false });
+        var map = L.map('gate-map', {
+          zoomControl: false,
+          attributionControl: false,
+          preferCanvas: true,
+          zoomAnimation: false,
+          fadeAnimation: false,
+          markerZoomAnimation: false,
+          trackResize: false
+        });
         map.setView([14.312, 121.111], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         try {
@@ -8841,7 +9106,11 @@ const pageTitles = {
         if (map.boxZoom) map.boxZoom.disable();
         if (map.keyboard) map.keyboard.disable();
       } catch (e) { }
-    })();
+    }
+    setTimeout(initGateMap, 400);
+    // First live ticker refresh waits until the splash is gone so the
+    // initial paint + login stay instant; steady 60s rhythm after that.
+    setTimeout(refreshGateTicker, 3000);
     function toggleGatePw() {
       const input = document.getElementById('gate-pass');
       const btn = document.querySelector('#admin-gate .pw-toggle');
@@ -9155,7 +9424,7 @@ const pageTitles = {
             + '<svg class="bs-road top" viewBox="0 0 1000 260" preserveAspectRatio="none"><path class="asphalt draw" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/><path class="edge draw" d="M-20,46 C220,26 320,166 540,136 C760,106 800,46 1020,76"/><path class="edge draw" d="M-20,74 C220,54 320,194 540,164 C760,134 800,74 1020,104"/><path class="center" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/></svg>'
             + '<svg class="bs-road bot" viewBox="0 0 1000 300" preserveAspectRatio="none"><path class="asphalt draw" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/><path class="edge draw" d="M-20,226 C220,206 320,106 540,136 C760,166 800,226 1020,186"/><path class="edge draw" d="M-20,254 C220,234 320,134 540,164 C760,194 800,254 1020,214"/><path class="center" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/></svg>'
             + '<div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div><div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>'
-            + '<div class="bs-logo-wrap"><img src="calye-safe-logo.png" alt="Calye Safe logo"><span class="bs-shine"></span></div><div class="bs-name">Calye Safe</div><div class="bs-sub">Admin Console · Barangay Calye</div>';
+            + '<div class="bs-logo-row"><div class="bs-logo-wrap"><img src="calye-safe-logo.png" alt="Calye Safe logo"><span class="bs-shine"></span></div><div class="bs-seal"><img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal"><span class="bs-shine"></span></div></div><div class="bs-name">Calye Safe</div><div class="bs-sub">Admin Console · Barangay Calye</div>';
           s.onclick = function () { s.classList.add('hide'); setTimeout(() => s.remove(), 350); };
           document.body.appendChild(s);
           void s.offsetWidth;
@@ -9224,6 +9493,7 @@ const pageTitles = {
 
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();
+    setInterval(refreshGateTicker, 60000);
 
     // ── CLOCK ──
     (function tick() {
