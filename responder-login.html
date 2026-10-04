@@ -1035,6 +1035,13 @@
             <input id="reg-subdivision" type="text" placeholder="e.g. Sunrise Subdivision" oninput="pendingAddr.subdivision = this.value">
           </div>
 
+          <div class="form-group">
+            <label style="display:flex;gap:9px;align-items:flex-start;font-weight:600;cursor:pointer;">
+              <input id="reg-consent" type="checkbox" style="width:auto;flex-shrink:0;margin-top:2px;accent-color:#1E3A5F;">
+              <span style="font-size:12px;line-height:1.55;">I agree to the <a href="privacy.html" style="color:var(--accent-dark);font-weight:800;">Privacy Notice</a> and consent to the processing of my details for verification and incident response.</span>
+            </label>
+          </div>
+
           <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
             Create Account
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
@@ -1385,6 +1392,10 @@
       if (!barangay) flagReg('reg-barangay', 'reg-barangay-err', 'Please select your barangay.');
       if (!house) flagReg('reg-house', 'reg-house-err', 'Please enter your house / unit / street address.');
       if (firstBad) { document.getElementById(firstBad).focus(); return; }
+      if (!document.getElementById('reg-consent').checked) {
+        showErr('reg-error', 'Please accept the Privacy Notice to create an account.');
+        return;
+      }
 
       pendingAddr = { barangay: barangay, house: house, subdivision: subdivision };
       const address = composeAddress(barangay, house, subdivision);
@@ -1498,6 +1509,35 @@
       const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
     } catch (e) { setTimeout(hideBootSplash, 1700); }
+
+    // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-typing ──
+    (function idleTimeout() {
+      var LIMIT = 30 * 60 * 1000, timer = null;
+      function busy() {
+        try {
+          var ae = document.activeElement;
+          if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return true;
+        } catch (e) { }
+        return false;
+      }
+      function arm() {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(onIdle, LIMIT);
+      }
+      function onIdle() {
+        if (busy()) { arm(); return; }
+        try {
+          CalyeAuth.getStatus().then(function (st) {
+            if (!st || !st.session) return;
+            CalyeAuth.signOut().then(function () { location.reload(); });
+          });
+        } catch (e) { }
+      }
+      ['touchstart', 'mousedown', 'keydown', 'wheel'].forEach(function (ev) {
+        document.addEventListener(ev, arm, { passive: true });
+      });
+      arm();
+    })();
 
     // Keep the phone keyboard down on launch: some WebViews restore focus
     // to the last-used field (or focus one on load), which pops the keyboard

@@ -11,6 +11,7 @@ const PUBLIC_FILES: Record<string, string> = {
   "calye-safe-community.html": "text/html; charset=utf-8",
   "calye-safe-responders.html": "text/html; charset=utf-8",
   "responder-login.html": "text/html; charset=utf-8",
+  "privacy.html": "text/html; charset=utf-8",
   "supabase-config.js": "text/javascript; charset=utf-8",
   "supabase-auth.js": "text/javascript; charset=utf-8",
   "supabase-data.js": "text/javascript; charset=utf-8",

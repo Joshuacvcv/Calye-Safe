@@ -4805,6 +4805,13 @@
                 <div class="settings-save-row">
                   <button class="settings-save-btn" onclick="saveAccountSettings()">Save Account</button>
                 </div>
+                <div class="settings-row">
+                  <div>
+                    <div class="srow-label">Two-factor authentication <span id="mfa-settings-status" style="font-weight:800;">—</span></div>
+                    <div class="srow-sub">Authenticator-app codes for this staff sign-in (optional until enforcement is switched on)</div>
+                  </div>
+                  <button class="settings-save-btn" onclick="openMfaManage()">Manage</button>
+                </div>
               </div>
             </div>
 
@@ -5052,6 +5059,23 @@
           Permanently delete account
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- MFA (two-factor authentication) -->
+  <div class="modal-overlay" id="modal-mfa">
+    <div class="modal-box" style="max-width:440px;">
+      <div class="modal-head">
+        <h3 id="mfa-title">Two-factor authentication</h3>
+        <button class="modal-close" onclick="closeMfaModal()">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" id="mfa-body" style="max-height:70vh;overflow:auto;"></div>
+      <div class="modal-footer" id="mfa-footer"></div>
     </div>
   </div>
 
@@ -8660,6 +8684,7 @@ const pageTitles = {
       } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
       showDashboardSplash();
+      try { refreshMfaSettings(); } catch (e) { }
       loadDefaultMap();
       syncFromSupabase();
       loadVerifyQueue();
@@ -8828,6 +8853,217 @@ const pageTitles = {
       if (btn) { btn.innerHTML = show ? open : off; btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); }
       input.focus();
     }
+    // ── STAFF MFA (TOTP, opt-in) ──────────────────────────────────────────
+    // Enroll is offered after staff login and from Settings; nothing is
+    // enforced unless the profile's `mfa_enforced` flag is set (see
+    // supabase-mfa.sql). Until then every prompt is skippable and the
+    // dashboard behaves exactly as before.
+    let mfaPendingGs = null;
+    let mfaPendingMode = null;
+    let mfaFactorId = null;
+    let mfaChallengeId = null;
+
+    function mfaSessionClear() {
+      try { sessionStorage.removeItem('mfa_ok'); sessionStorage.removeItem('mfa_skip'); } catch (e) { }
+    }
+
+    function maybeMfa(gs) {
+      try {
+        CalyeAuth.mfaStatus().then(function (ms) {
+          var enforced = !!(gs.profile && gs.profile.mfa_enforced);
+          if (ms.enrolled && enforced) {
+            try { if (sessionStorage.getItem('mfa_ok') === '1') { bootAdmin(gs); return; } } catch (e) { }
+            openMfaChallenge(gs, ms);
+            return;
+          }
+          if (!ms.enrolled) {
+            try { if (sessionStorage.getItem('mfa_skip') === '1') { bootAdmin(gs); return; } } catch (e) { }
+            openMfaEnroll(gs, true);
+            return;
+          }
+          bootAdmin(gs);
+        }).catch(function () { bootAdmin(gs); });
+      } catch (e) { bootAdmin(gs); }
+    }
+
+    function mfaQrHtml(qr, secret, uri) {
+      var out = '';
+      if (qr && qr.indexOf('data:') === 0) {
+        out += '<div style="text-align:center;margin-bottom:12px;"><img src="' + qr + '" alt="Authenticator QR code" style="width:180px;height:180px;border-radius:8px;border:1px solid var(--border);"></div>';
+      } else if (qr && qr.trim().charAt(0) === '<') {
+        out += '<div style="text-align:center;margin-bottom:12px;"><div style="display:inline-block;width:180px;height:180px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;">' + qr + '</div></div>';
+      }
+      if (secret) {
+        out += '<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Manual entry key</div>'
+          + '<div style="font-family:monospace;font-size:14px;font-weight:700;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;word-break:break-all;margin-bottom:4px;">' + secret + '</div>';
+      }
+      if (uri) {
+        out += '<div style="font-size:11px;color:var(--text3);margin-bottom:12px;word-break:break-all;">App link: ' + uri + '</div>';
+      }
+      return out;
+    }
+
+    function mfaSetFooter(html) {
+      document.getElementById('mfa-footer').innerHTML = html;
+    }
+
+    function openMfaEnroll(gs, skippable) {
+      mfaPendingGs = gs || null;
+      mfaPendingMode = 'enroll';
+      mfaFactorId = null;
+      document.getElementById('mfa-title').textContent = 'Protect your staff account';
+      document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.6;">Add two-factor authentication with any authenticator app (Google Authenticator, Authy, 1Password). ' + (skippable ? 'You can skip this for now.' : '') + '</div>'
+        + '<div style="text-align:center;padding:18px;color:var(--text3);font-size:12px;font-weight:600;">Generating your setup code…</div>';
+      mfaSetFooter(skippable
+        ? '<button class="modal-btn cancel" onclick="mfaSkipEnroll()">Skip for now</button>'
+        : '<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>');
+      document.getElementById('modal-mfa').classList.add('open');
+      CalyeAuth.mfaEnroll('Calye-Safe Admin').then(function (res) {
+        if (res.error || !res.factorId) {
+          document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--danger);font-weight:700;">Could not start setup: ' + (res.error || 'unknown error') + '</div>';
+          return;
+        }
+        mfaFactorId = res.factorId;
+        document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px;">Scan the code with your authenticator app, then enter the 6-digit code below.</div>'
+          + mfaQrHtml(res.qr, res.secret, res.uri)
+          + '<div class="modal-form-group"><div class="modal-label">6-digit code</div>'
+          + '<input type="text" class="modal-input" id="mfa-code" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="8" onkeydown="if(event.key===\'Enter\')doMfaVerifyEnroll()"></div>'
+          + '<div class="err-msg" id="mfa-error" style="display:none;"></div>';
+        mfaSetFooter((skippable ? '<button class="modal-btn cancel" onclick="mfaSkipEnroll()">Skip for now</button>' : '<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>')
+          + '<button class="modal-btn confirm" id="mfa-verify-btn" onclick="doMfaVerifyEnroll()">Verify &amp; Enable</button>');
+        setTimeout(function () { var i = document.getElementById('mfa-code'); if (i) i.focus(); }, 100);
+      });
+    }
+
+    function mfaSkipEnroll() {
+      try { sessionStorage.setItem('mfa_skip', '1'); } catch (e) { }
+      document.getElementById('modal-mfa').classList.remove('open');
+      var gs = mfaPendingGs; mfaPendingGs = null; mfaPendingMode = null;
+      if (gs && !adminBooted) bootAdmin(gs);
+    }
+
+    function mfaShowError(msg) {
+      var el = document.getElementById('mfa-error');
+      if (el) { el.textContent = msg; el.style.display = 'block'; }
+    }
+
+    function doMfaVerifyEnroll() {
+      var code = (document.getElementById('mfa-code') || {}).value || '';
+      if (!code.trim()) { mfaShowError('Enter the 6-digit code from your app.'); return; }
+      var btn = document.getElementById('mfa-verify-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+      CalyeAuth.mfaVerifyEnroll(mfaFactorId, code).then(function (res) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Verify & Enable'; }
+        if (res.error) { mfaShowError(res.error); return; }
+        try { sessionStorage.setItem('mfa_ok', '1'); } catch (e) { }
+        document.getElementById('modal-mfa').classList.remove('open');
+        refreshMfaSettings();
+        var gs = mfaPendingGs; mfaPendingGs = null; mfaPendingMode = null;
+        if (gs && !adminBooted) bootAdmin(gs);
+      });
+    }
+
+    function openMfaChallenge(gs, ms) {
+      mfaPendingGs = gs;
+      mfaPendingMode = 'challenge';
+      var factors = (ms && ms.factors) || [];
+      mfaFactorId = factors.length ? factors[0].id : null;
+      mfaChallengeId = null;
+      document.getElementById('mfa-title').textContent = 'Check your authenticator app';
+      document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.6;">This staff account has two-factor authentication. Enter the current 6-digit code to continue.</div>'
+        + '<div class="modal-form-group" style="margin-top:12px;"><div class="modal-label">6-digit code</div>'
+        + '<input type="text" class="modal-input" id="mfa-code" placeholder="123456" inputmode="numeric" autocomplete="one-time-code" maxlength="8" onkeydown="if(event.key===\'Enter\')doMfaVerify()"></div>'
+        + '<div class="err-msg" id="mfa-error" style="display:none;"></div>';
+      mfaSetFooter('<button class="modal-btn cancel" onclick="mfaChallengeSignOut()">Sign out</button>'
+        + '<button class="modal-btn confirm" id="mfa-verify-btn" onclick="doMfaVerify()">Verify</button>');
+      document.getElementById('modal-mfa').classList.add('open');
+      CalyeAuth.mfaChallenge(mfaFactorId).then(function (res) {
+        if (res.error || !res.challengeId) { mfaShowError(res.error || 'Could not start verification.'); return; }
+        mfaChallengeId = res.challengeId;
+        setTimeout(function () { var i = document.getElementById('mfa-code'); if (i) i.focus(); }, 100);
+      });
+    }
+
+    function doMfaVerify() {
+      var code = (document.getElementById('mfa-code') || {}).value || '';
+      if (!code.trim()) { mfaShowError('Enter the 6-digit code from your app.'); return; }
+      var btn = document.getElementById('mfa-verify-btn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+      CalyeAuth.mfaVerify(mfaFactorId, mfaChallengeId, code).then(function (res) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
+        if (res.error) { mfaShowError(res.error); return; }
+        try { sessionStorage.setItem('mfa_ok', '1'); } catch (e) { }
+        document.getElementById('modal-mfa').classList.remove('open');
+        var gs = mfaPendingGs; mfaPendingGs = null; mfaPendingMode = null;
+        if (gs && !adminBooted) bootAdmin(gs);
+      });
+    }
+
+    function mfaChallengeSignOut() {
+      document.getElementById('modal-mfa').classList.remove('open');
+      mfaPendingGs = null; mfaPendingMode = null;
+      CalyeAuth.signOut().then(function () { mfaSessionClear(); location.reload(); });
+    }
+
+    function closeMfaModal() {
+      document.getElementById('modal-mfa').classList.remove('open');
+      // Never slip into the dashboard past an unpassed challenge.
+      if (mfaPendingMode === 'challenge' && mfaPendingGs && !adminBooted) {
+        mfaChallengeSignOut();
+        return;
+      }
+      if (mfaPendingMode === 'enroll' && mfaPendingGs && !adminBooted) {
+        mfaSkipEnroll();
+        return;
+      }
+      mfaPendingMode = null;
+    }
+
+    function openMfaManage() {
+      mfaPendingGs = null;
+      mfaPendingMode = 'manage';
+      document.getElementById('mfa-title').textContent = 'Two-factor authentication';
+      document.getElementById('mfa-body').innerHTML = '<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px;font-weight:600;">Checking…</div>';
+      mfaSetFooter('<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>');
+      document.getElementById('modal-mfa').classList.add('open');
+      CalyeAuth.mfaStatus().then(function (ms) {
+        if (ms.error && !ms.enrolled && ms.error !== 'MFA unavailable') {
+          document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--danger);font-weight:700;">' + ms.error + '</div>';
+          return;
+        }
+        if (ms.enrolled) {
+          mfaFactorId = (ms.factors[0] || {}).id || null;
+          document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.6;"><strong style="color:var(--success);">Enabled</strong> — your account asks for an authenticator code on new sign-ins (once enforcement is switched on).</div>';
+          mfaSetFooter('<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>'
+            + '<button class="modal-btn danger-confirm" onclick="doMfaUnenroll()">Remove</button>');
+        } else {
+          openMfaEnroll(null, false);
+        }
+        refreshMfaSettings();
+      });
+    }
+
+    function doMfaUnenroll() {
+      if (!mfaFactorId) return;
+      CalyeAuth.mfaUnenroll(mfaFactorId).then(function (res) {
+        if (res.error) { mfaShowError(res.error); return; }
+        mfaFactorId = null;
+        openMfaManage();
+      });
+    }
+
+    function refreshMfaSettings() {
+      var el = document.getElementById('mfa-settings-status');
+      if (!el) return;
+      el.textContent = 'Checking…';
+      CalyeAuth.mfaStatus().then(function (ms) {
+        var s = document.getElementById('mfa-settings-status');
+        if (!s) return;
+        s.textContent = ms.enrolled ? 'On' : 'Off';
+        s.style.color = ms.enrolled ? 'var(--success)' : 'var(--text3)';
+      });
+    }
+
     function adminGateLogin() {
       const email = document.getElementById('gate-email').value.trim();
       const pass = document.getElementById('gate-pass').value;
@@ -8837,7 +9073,7 @@ const pageTitles = {
         if (res.error) { gateLoading(false); gateMsg(res.error, false); return; }
         CalyeAuth.getStatus().then(gs => {
           if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
-            bootAdmin(gs);
+            maybeMfa(gs);
           } else {
             gateLoading(false);
             showAccessDenied(gs);
@@ -8847,6 +9083,7 @@ const pageTitles = {
     }
     function adminGateOut() {
       CalyeAuth.signOut().then(() => {
+        mfaSessionClear();
         adminBooted = false;
         adminSessionUid = null;
         document.getElementById('admin-gate').classList.remove('hidden');
@@ -8862,7 +9099,7 @@ const pageTitles = {
     function adminGate() {
       CalyeAuth.getStatus().then(gs => {
         if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
-          bootAdmin(gs);
+          maybeMfa(gs);
         } else if (gs.session) {
           showAccessDenied(gs);
         } else {
@@ -8937,6 +9174,53 @@ const pageTitles = {
       const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       setTimeout(hideBootSplash, bootReduced ? 300 : 2100);
     } catch (e) { setTimeout(hideBootSplash, 2100); }
+
+    // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-task ──
+    // Passive listeners only (no per-keystroke work); one status check per
+    // idle window. Overlays and focused fields defer the countdown.
+    (function idleTimeout() {
+      var LIMIT = 30 * 60 * 1000, timer = null;
+      function idleNote(m) {
+        try {
+          if (typeof showToastMsg === 'function') { showToastMsg(m, 'info'); return; }
+          if (typeof showToast === 'function') { showToast(m); }
+        } catch (e) { }
+      }
+      function busy() {
+        try {
+          if (document.querySelector('.modal-overlay.open')) return true;
+          var ae = document.activeElement;
+          if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return true;
+        } catch (e) { }
+        return false;
+      }
+      function arm() {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(onIdle, LIMIT);
+      }
+      function onIdle() {
+        if (busy()) { arm(); return; }
+        try {
+          CalyeAuth.getStatus().then(function (st) {
+            if (!st || !st.session) return;
+            CalyeAuth.signOut().then(function () {
+              try { sessionStorage.setItem('idle_logout', '1'); } catch (e) { }
+              location.reload();
+            });
+          });
+        } catch (e) { }
+      }
+      ['touchstart', 'mousedown', 'keydown', 'wheel'].forEach(function (ev) {
+        document.addEventListener(ev, arm, { passive: true });
+      });
+      try {
+        if (sessionStorage.getItem('idle_logout') === '1') {
+          sessionStorage.removeItem('idle_logout');
+          setTimeout(function () { idleNote('Signed out after 30 minutes of inactivity.'); }, 2500);
+        }
+      } catch (e) { }
+      arm();
+    })();
 
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();

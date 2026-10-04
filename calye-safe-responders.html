@@ -4263,7 +4263,7 @@
             </div>
 
             <div class="info-grid">
-              <div class="info-item"><div class="il">Reported By</div><div class="iv">${j.reportedBy}</div></div>
+              <div class="info-item"><div class="il">Reported By</div><div class="iv">${maskName(j.reportedBy)}</div></div>
               <div class="info-item"><div class="il">Reported</div><div class="iv">${j.reportedTime}</div></div>
             </div>
 
@@ -5057,6 +5057,17 @@
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
+        // Privacy: responders need the incident + location, not the reporter's
+        // identity. Display initials only (e.g. "Mark Anthony Reyes" → "M.A.R.").
+        function maskName(name) {
+            try {
+                const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+                if (!parts.length) return 'Resident';
+                if (/anonymous/i.test(String(name))) return 'Resident';
+                return parts.map(p => (p[0] || '').toUpperCase() + '.').join('');
+            } catch (e) { return 'Resident'; }
+        }
+
         // Ownership guard: a job/history row belongs to someone else when both
         // sides have an id and they differ. Unclaimed rows (null responderId)
         // are a shared pool — visible to all on-duty units. Legacy local rows
@@ -5546,6 +5557,54 @@
             var bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
         } catch (e) { setTimeout(hideBootSplash, 1700); }
+
+        // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-task ──
+        // Passive listeners only; one status check per idle window. Sheets,
+        // navigation, the proof camera, and focused fields defer the countdown.
+        (function idleTimeout() {
+            var LIMIT = 30 * 60 * 1000, timer = null;
+            function idleNote(m) {
+                try { if (typeof showToast === 'function') { showToast(m); } } catch (e) { }
+            }
+            function busy() {
+                try {
+                    if (document.querySelector('.sheet-overlay.show')) return true;
+                    var nav = document.getElementById('nav-overlay');
+                    if (nav && nav.classList.contains('show')) return true;
+                    var pc = document.getElementById('proof-cam-modal');
+                    if (pc && pc.style.display === 'flex') return true;
+                    var ae = document.activeElement;
+                    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')) return true;
+                } catch (e) { }
+                return false;
+            }
+            function arm() {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(onIdle, LIMIT);
+            }
+            function onIdle() {
+                if (busy()) { arm(); return; }
+                try {
+                    CalyeAuth.getStatus().then(function (st) {
+                        if (!st || !st.session) return;
+                        CalyeAuth.signOut().then(function () {
+                            try { sessionStorage.setItem('idle_logout', '1'); } catch (e) { }
+                            location.reload();
+                        });
+                    });
+                } catch (e) { }
+            }
+            ['touchstart', 'mousedown', 'keydown', 'wheel'].forEach(function (ev) {
+                document.addEventListener(ev, arm, { passive: true });
+            });
+            try {
+                if (sessionStorage.getItem('idle_logout') === '1') {
+                    sessionStorage.removeItem('idle_logout');
+                    setTimeout(function () { idleNote('Signed out after 30 minutes of inactivity.'); }, 2500);
+                }
+            } catch (e) { }
+            arm();
+        })();
 
         // Keep the phone keyboard down on launch: some WebViews restore focus
         // to a field on load, which pops the keyboard over the splash.

@@ -476,6 +476,101 @@ window.CalyeAuth = (function () {
     return { ok: true, strength: strength };
   }
 
+  // ── TOTP MFA (opt-in; enforced per-account only when the
+  // `mfa_enforced` profile flag is set — see supabase-mfa.sql) ─────────────
+  // All helpers resolve (never reject) and return { error, ... }.
+  function mfaClient() {
+    var c = getClient();
+    return (c && c.auth && c.auth.mfa) ? c.auth.mfa : null;
+  }
+
+  // { error, enrolled } — true when at least one verified TOTP factor exists.
+  function mfaStatus() {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa) { resolve({ error: 'Database not reachable', enrolled: false }); return; }
+      mfa.listFactors().then(function (res) {
+        if (res.error) { resolve({ error: res.error.message, enrolled: false }); return; }
+        var all = (res.data && (res.data.all || res.data.totp)) || [];
+        var verified = all.filter(function (f) {
+          return f && (f.status === 'verified' || f.verified_at);
+        });
+        resolve({ error: null, enrolled: verified.length > 0, factors: verified });
+      }).catch(function (e) { resolve({ error: e.message || 'MFA unavailable', enrolled: false }); });
+    });
+  }
+
+  // Start TOTP enrollment. Returns { error, factorId, qr, secret, uri }.
+  // `qr` is passed through untouched: it may be a data-URL (use <img>) or
+  // raw SVG markup (inject as HTML) depending on the gotrue version.
+  function mfaEnroll(label) {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa) { resolve({ error: 'Database not reachable' }); return; }
+      mfa.enroll({ factorType: 'totp', friendlyName: label || 'Calye-Safe Admin' }).then(function (res) {
+        if (res.error) { resolve({ error: res.error.message }); return; }
+        var totp = (res.data && res.data.totp) || {};
+        resolve({
+          error: null,
+          factorId: res.data && res.data.id,
+          qr: totp.qr_code || '',
+          secret: totp.secret || '',
+          uri: totp.uri || ''
+        });
+      }).catch(function (e) { resolve({ error: e.message || 'Enrollment failed' }); });
+    });
+  }
+
+  // Verify a code against a freshly enrolled factor (completes enrollment).
+  function mfaVerifyEnroll(factorId, code) {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa || !factorId) { resolve({ error: 'Nothing to verify' }); return; }
+      mfa.challenge({ factorId: factorId }).then(function (ch) {
+        if (ch.error) { resolve({ error: ch.error.message }); return; }
+        var challengeId = ch.data && ch.data.id;
+        mfa.verify({ factorId: factorId, challengeId: challengeId, code: String(code || '').trim() }).then(function (res) {
+          if (res.error) { resolve({ error: res.error.message }); return; }
+          resolve({ error: null });
+        }).catch(function (e) { resolve({ error: e.message || 'Verification failed' }); });
+      }).catch(function (e) { resolve({ error: e.message || 'Verification failed' }); });
+    });
+  }
+
+  // Challenge an already-enrolled factor, then verify the code with mfaVerify.
+  function mfaChallenge(factorId) {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa || !factorId) { resolve({ error: 'No enrolled factor' }); return; }
+      mfa.challenge({ factorId: factorId }).then(function (res) {
+        if (res.error) { resolve({ error: res.error.message }); return; }
+        resolve({ error: null, challengeId: res.data && res.data.id });
+      }).catch(function (e) { resolve({ error: e.message || 'Challenge failed' }); });
+    });
+  }
+
+  function mfaVerify(factorId, challengeId, code) {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa) { resolve({ error: 'Database not reachable' }); return; }
+      mfa.verify({ factorId: factorId, challengeId: challengeId, code: String(code || '').trim() }).then(function (res) {
+        if (res.error) { resolve({ error: res.error.message }); return; }
+        resolve({ error: null });
+      }).catch(function (e) { resolve({ error: e.message || 'Verification failed' }); });
+    });
+  }
+
+  function mfaUnenroll(factorId) {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa || !factorId) { resolve({ error: 'Nothing to remove' }); return; }
+      mfa.unenroll({ factorId: factorId }).then(function (res) {
+        if (res.error) { resolve({ error: res.error.message }); return; }
+        resolve({ error: null });
+      }).catch(function (e) { resolve({ error: e.message || 'Removal failed' }); });
+    });
+  }
+
   return {
     init: init,
     isOnline: isOnline,
@@ -489,6 +584,12 @@ window.CalyeAuth = (function () {
     uploadId: uploadId,
     submitVerification: submitVerification,
     getStatus: getStatus,
-    passwordPolicy: evalPasswordPolicy
+    passwordPolicy: evalPasswordPolicy,
+    mfaStatus: mfaStatus,
+    mfaEnroll: mfaEnroll,
+    mfaVerifyEnroll: mfaVerifyEnroll,
+    mfaChallenge: mfaChallenge,
+    mfaVerify: mfaVerify,
+    mfaUnenroll: mfaUnenroll
   };
 })();

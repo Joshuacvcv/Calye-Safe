@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Calye-Safe — Privacy Notice</title>
+  <link rel="icon" type="image/png" href="calye-safe-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --primary: #1E3A5F;
+      --accent: #F5A623;
+      --accent-dark: #D4841A;
+      --bg: #F4F6FA;
+      --card: #FFFFFF;
+      --text: #000000;
+      --text2: #1A1A1A;
+      --text3: #333333;
+      --border: #E2E8F4;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 2px 12px rgba(30, 58, 95, 0.10);
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: #1A2332;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text);
+    }
+
+    #app-shell {
+      width: 360px;
+      height: 800px;
+      background: var(--bg);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .login-header {
+      background: var(--primary);
+      padding: 24px 20px 26px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #fff;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.65);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .login-header h1 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    .login-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .login-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .login-card h2 {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      margin: 16px 0 6px;
+    }
+
+    .login-card h2:first-child {
+      margin-top: 0;
+    }
+
+    .login-card p, .login-card li {
+      font-size: 12.5px;
+      color: var(--text2);
+      line-height: 1.65;
+    }
+
+    .login-card ul {
+      padding-left: 18px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(245, 166, 35, 0.35);
+    }
+
+    .foot-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.7;
+      padding: 0 8px 8px;
+    }
+
+    .foot-note b {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-shell">
+    <div class="login-header">
+      <div class="brand">
+        <div class="brand-logo" onclick="history.back()" title="Go back" style="cursor:pointer;">
+          <img src="calye-safe-logo.png" alt="Calye Safe logo">
+        </div>
+        <div>
+          <div class="brand-name">Calye-Safe</div>
+          <div class="brand-sub">Privacy Notice</div>
+        </div>
+      </div>
+      <h1>Your data, your rights</h1>
+      <p>Short version of how Barangay Calye handles your information under RA 10173 (Data Privacy Act of 2012).</p>
+    </div>
+
+    <div class="login-content">
+      <div class="login-card">
+        <h2>What we collect</h2>
+        <ul>
+          <li>Account details: full name, email, address/barangay.</li>
+          <li>Verification: ID type and a photo of your valid ID.</li>
+          <li>Reports: incident details, photos, and GPS location.</li>
+        </ul>
+        <h2>Why we use it</h2>
+        <ul>
+          <li>To verify you are a real resident or responder.</li>
+          <li>To dispatch responders and track incidents.</li>
+          <li>To send barangay safety alerts.</li>
+        </ul>
+        <h2>Who sees it</h2>
+        <ul>
+          <li>Barangay staff and administrators (verification, dispatch, analytics).</li>
+          <li>Assigned responders see the incident and its location; reporter names are masked.</li>
+          <li>Map tiles, weather data, and app libraries technically receive connection details (like your IP address) — this is normal for any app and is not sold or shared further.</li>
+        </ul>
+        <h2>How long we keep it</h2>
+        <ul>
+          <li>Rejected ID photos are deleted after 30 days.</li>
+          <li>Old resolved reports are anonymized; accounts are deleted only on request or for cause.</li>
+        </ul>
+        <h2>Your rights</h2>
+        <p>You may ask to see, correct, or delete your data, or withdraw consent, through the Barangay Hall or our Data Protection Officer: <strong>[DPO name, contact]</strong>. Security incidents affecting your data will be communicated as required by law.</p>
+        <div style="height:14px;"></div>
+        <button class="btn" onclick="history.back()">I Understand</button>
+      </div>
+
+      <div class="foot-note">
+        Resident? <b onclick="location.href='index.html'">Sign in as Resident</b>
+        &nbsp;·&nbsp;
+        Responder? <b onclick="location.href='responder-login.html'">Sign in as Responder</b>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
