@@ -2333,6 +2333,12 @@
       animation: modalIn 0.24s var(--ease-out) both;
     }
 
+    /* MFA runs while the fullscreen gate is still up, so it must stack
+       above #admin-gate (99999) and #boot-splash (100000). */
+    #modal-mfa {
+      z-index: 100001;
+    }
+
     .modal-box {
       background: var(--surface);
       border: 1px solid var(--border2);
