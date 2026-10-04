@@ -9137,20 +9137,24 @@ const pageTitles = {
     }
 
     function maybeMfa(gs) {
+      // Fail-open by design: MFA must NEVER block a staff login. The enroll
+      // offer and the challenge only run when the status check positively
+      // succeeds; any error (MFA switched off, network hiccup) boots
+      // straight into the dashboard.
       try {
         CalyeAuth.mfaStatus().then(function (ms) {
-          // Project has MFA switched off: enter silently, never prompt.
-          if (ms.unsupported) { bootAdmin(gs); return; }
-          var enforced = !!(gs.profile && gs.profile.mfa_enforced);
-          if (ms.enrolled && enforced) {
-            try { if (sessionStorage.getItem('mfa_ok') === '1') { bootAdmin(gs); return; } } catch (e) { }
-            openMfaChallenge(gs, ms);
-            return;
-          }
-          if (!ms.enrolled) {
+          if (!ms.error && !ms.enrolled) {
             try { if (sessionStorage.getItem('mfa_skip') === '1') { bootAdmin(gs); return; } } catch (e) { }
             openMfaEnroll(gs, true);
             return;
+          }
+          if (!ms.error && ms.enrolled) {
+            var enforced = !!(gs.profile && gs.profile.mfa_enforced);
+            if (enforced) {
+              try { if (sessionStorage.getItem('mfa_ok') === '1') { bootAdmin(gs); return; } } catch (e) { }
+              openMfaChallenge(gs, ms);
+              return;
+            }
           }
           bootAdmin(gs);
         }).catch(function () { bootAdmin(gs); });
