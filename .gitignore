@@ -14,3 +14,5 @@ next-env.d.ts
 # Capacitor (generated — rebuilt via `npm run build:www` / `npx cap add android`)
 www/
 android/app/build/
+
+.vercel

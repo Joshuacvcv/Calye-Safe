@@ -4,21 +4,17 @@ import { NextResponse } from "next/server";
 
 // Serves the existing static Calye Safe pages/assets under /app/* so the
 // repo works as a Next.js app without moving or duplicating files.
-// Resident + responder apps only — the admin console stays web-only.
-// Strict allowlist: nothing else on disk (e.g. database backups) is served.
+// ADMIN CONSOLE ONLY — resident/responder apps are excluded on purpose
+// (they ship as the APK). Strict allowlist: nothing else on disk
+// (e.g. database backups) is served.
 const PUBLIC_FILES: Record<string, string> = {
-  "index.html": "text/html; charset=utf-8",
-  "calye-safe-community.html": "text/html; charset=utf-8",
-  "calye-safe-responders.html": "text/html; charset=utf-8",
-  "responder-login.html": "text/html; charset=utf-8",
-  "reset-password.html": "text/html; charset=utf-8",
-  "privacy.html": "text/html; charset=utf-8",
-  "Santa Rosa Logo.png": "image/png",
+  "calye-safe-admins.html": "text/html; charset=utf-8",
   "supabase-config.js": "text/javascript; charset=utf-8",
   "supabase-auth.js": "text/javascript; charset=utf-8",
   "supabase-data.js": "text/javascript; charset=utf-8",
   "santarosa-boundary.js": "text/javascript; charset=utf-8",
   "calye-safe-logo.png": "image/png",
+  "Santa Rosa Logo.png": "image/png",
 };
 
 export async function GET(
