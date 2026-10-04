@@ -9139,6 +9139,8 @@ const pageTitles = {
     function maybeMfa(gs) {
       try {
         CalyeAuth.mfaStatus().then(function (ms) {
+          // Project has MFA switched off: enter silently, never prompt.
+          if (ms.unsupported) { bootAdmin(gs); return; }
           var enforced = !!(gs.profile && gs.profile.mfa_enforced);
           if (ms.enrolled && enforced) {
             try { if (sessionStorage.getItem('mfa_ok') === '1') { bootAdmin(gs); return; } } catch (e) { }
@@ -9296,6 +9298,10 @@ const pageTitles = {
       mfaSetFooter('<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>');
       document.getElementById('modal-mfa').classList.add('open');
       CalyeAuth.mfaStatus().then(function (ms) {
+        if (ms.unsupported) {
+          document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--text2);line-height:1.6;">Two-factor authentication is switched off for this project. An owner can enable it under Supabase → Authentication → Multi-Factor Authentication.</div>';
+          return;
+        }
         if (ms.error && !ms.enrolled && ms.error !== 'MFA unavailable') {
           document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--danger);font-weight:700;">' + ms.error + '</div>';
           return;
@@ -9328,6 +9334,7 @@ const pageTitles = {
       CalyeAuth.mfaStatus().then(function (ms) {
         var s = document.getElementById('mfa-settings-status');
         if (!s) return;
+        if (ms.unsupported) { s.textContent = 'N/A'; s.style.color = 'var(--text3)'; return; }
         s.textContent = ms.enrolled ? 'On' : 'Off';
         s.style.color = ms.enrolled ? 'var(--success)' : 'var(--text3)';
       });

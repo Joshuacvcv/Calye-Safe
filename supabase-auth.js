@@ -490,13 +490,25 @@ window.CalyeAuth = (function () {
     return (c && c.auth && c.auth.mfa) ? c.auth.mfa : null;
   }
 
-  // { error, enrolled } — true when at least one verified TOTP factor exists.
+  // { error, enrolled, unsupported } — true when at least one verified TOTP
+  // factor exists. `unsupported` means the project has MFA switched off
+  // (factors endpoints answer 422); callers must skip MFA silently then.
+  function mfaDisabled(err) {
+    if (!err) return false;
+    if (err.status === 422 || err.code === 422 || err.code === 'mfa_disabled') return true;
+    var msg = String((err && err.message) || err);
+    return /multi.factor|[^a-z]mfa[^a-z]|factor/i.test(' ' + msg.toLowerCase() + ' ');
+  }
+
   function mfaStatus() {
     return new Promise(function (resolve) {
       var mfa = mfaClient();
       if (!mfa) { resolve({ error: 'Database not reachable', enrolled: false }); return; }
       mfa.listFactors().then(function (res) {
-        if (res.error) { resolve({ error: res.error.message, enrolled: false }); return; }
+        if (res.error) {
+          resolve({ error: res.error.message, enrolled: false, unsupported: mfaDisabled(res.error) });
+          return;
+        }
         var all = (res.data && (res.data.all || res.data.totp)) || [];
         var verified = all.filter(function (f) {
           return f && (f.status === 'verified' || f.verified_at);
