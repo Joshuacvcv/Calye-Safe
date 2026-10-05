@@ -249,6 +249,14 @@
     }
 
     /* ── MOBILE / TABLET: off-canvas drawer + proportioned chrome ── */
+    #side-backdrop {
+      display: none;
+    }
+
+    #side-close {
+      display: none;
+    }
+
     @media (max-width: 900px) {
       #sidebar {
         position: fixed;
@@ -256,7 +264,7 @@
         left: 0;
         bottom: 0;
         z-index: 60;
-        width: 248px !important;
+        width: min(300px, 84vw) !important;
         transform: translateX(-105%);
         transition: transform 0.25s ease;
         box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
@@ -267,6 +275,7 @@
       }
 
       #side-backdrop {
+        display: block;
         position: fixed;
         inset: 0;
         background: rgba(10, 16, 28, 0.5);
@@ -281,10 +290,34 @@
         pointer-events: auto;
       }
 
+      #side-close {
+        display: flex;
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+      }
+
       #topbar { padding: 0 14px; }
       .page-title { font-size: 17px; }
       .breadcrumb { display: none; }
       .topbar-search { width: 150px; padding: 8px 12px; }
+
+      @media (max-width: 600px) {
+        /* Topbar must fit hamburger + title + actions on one row. */
+        .topbar-search { display: none; }
+        .page-title { font-size: 15px; }
+        #topbar { gap: 8px; }
+      }
       .table-scroll { overflow-x: auto; }
       .report-table { min-width: 640px; }
       #perf-stat-grid .stat-card.featured { min-height: 0; }
@@ -3907,6 +3940,9 @@
 
     <!-- ── SIDEBAR ── -->
     <aside id="sidebar">
+      <button id="side-close" onclick="toggleSidebar()" aria-label="Close menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+      </button>
       <div class="sidebar-logo">
         <div class="badge-logo">
           <div class="icon-wrap" onclick="location.reload()" title="Reload dashboard" style="cursor:pointer;">
