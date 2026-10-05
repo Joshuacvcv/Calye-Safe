@@ -9676,7 +9676,11 @@ const pageTitles = {
       if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
     }
     try {
-      if (localStorage.getItem('calye_sidebar') === '1') {
+      // Small screens always boot with the drawer closed and full-width
+      // content — no tap required. Desktop restores the saved rail choice.
+      if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) {
+        document.body.classList.remove('side-open', 'side-collapsed');
+      } else if (localStorage.getItem('calye_sidebar') === '1') {
         document.body.classList.add('side-collapsed');
       }
     } catch (e) { }
