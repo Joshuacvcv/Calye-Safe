@@ -410,6 +410,53 @@
 
     body.mobi #content {
       padding: 12px 12px 92px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Phones: one natural page scroll — kill every nested fixed-height
+       scroller that traps content (dashboard, reports, announcements). */
+    body.mobi .page-panel {
+      overflow: visible;
+    }
+
+    body.mobi .col-left,
+    body.mobi .col-right {
+      overflow: visible !important;
+      max-height: none !important;
+    }
+
+    body.mobi .ann-list-scroll {
+      overflow: visible;
+      max-height: none;
+    }
+
+    body.mobi .ann-list-col .panel {
+      overflow: visible;
+    }
+
+    /* Map filter pills: one swipeable row instead of a stacked wall. */
+    body.mobi .map-ftabs {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    body.mobi .map-ftabs .ftab {
+      flex-shrink: 0;
+    }
+
+    /* Map legend: one subtle swipe strip. */
+    body.mobi .map-legend-rows {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      padding-left: 0 !important;
+    }
+
+    body.mobi .map-legend-rows > div,
+    body.mobi .map-legend-rows > span {
+      flex-shrink: 0;
     }
 
     /* Mobi layout fixes (JS-applied, no media queries needed). */
@@ -4715,7 +4762,7 @@
                 Reset
               </button>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <div class="map-ftabs" style="display:flex;gap:6px;flex-wrap:wrap;">
               <button class="ftab active" id="mf-all" onclick="pageMapFilter('all',this)">All</button>
               <button class="ftab" id="mf-major" onclick="pageMapFilter('major',this)"
                 style="border-color:rgba(229,57,53,0.35);">Major Incidents</button>
@@ -4770,7 +4817,7 @@
           <!-- Legend -->
           <div
             style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;">
+            <div class="map-legend-rows" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;">
             <span
               style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
             <span
@@ -4800,7 +4847,7 @@
                 style="font-size:12px;color:var(--text2);font-weight:600;">Structural</span>
             </div>
             </div>
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
+            <div class="map-legend-rows" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
             <span
               style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
