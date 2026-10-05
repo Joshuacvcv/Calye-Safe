@@ -326,6 +326,92 @@
       #topbar { gap: 8px; }
     }
 
+    /* ── MOBILE BOTTOM NAV ──
+       JS-applied (body.mobi), NOT media-query driven, so phones that
+       mis-evaluate media queries still get a usable layout. */
+    #mobile-nav {
+      display: none;
+    }
+
+    body.mobi #sidebar {
+      display: none;
+    }
+
+    body.mobi.side-open #sidebar {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 60;
+      width: min(300px, 84vw);
+      box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
+    }
+
+    body.mobi #side-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 16, 28, 0.5);
+      z-index: 55;
+    }
+
+    body.mobi.side-open #side-backdrop {
+      display: block;
+    }
+
+    body.mobi #mobile-nav {
+      display: flex;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 70;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    }
+
+    body.mobi #mobile-nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      cursor: pointer;
+      padding: 6px 0;
+      min-width: 0;
+    }
+
+    body.mobi #mobile-nav button.active {
+      color: var(--primary-text);
+    }
+
+    body.mobi #mobile-nav svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    body.mobi #mobile-nav button span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    body.mobi #content {
+      padding: 12px 12px 92px;
+    }
+
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
     #boot-splash {
       position: fixed;
@@ -4051,6 +4137,26 @@
     </aside>
     <div id="side-backdrop" onclick="toggleSidebar()"></div>
 
+    <!-- ── MOBILE BOTTOM NAV (JS-driven: works even where media queries fail) ── -->
+    <nav id="mobile-nav">
+      <button data-p="dashboard" class="active" onclick="navTo('dashboard',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+        <span>Home</span>
+      </button>
+      <button data-p="reports" onclick="navTo('reports',this)">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+        <span>Reports</span>
+      </button>
+      <button data-p="map" onclick="navTo('map',this); showIncidentMap()">
+        <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" /><line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" /></svg>
+        <span>Map</span>
+      </button>
+      <button data-p="users" onclick="navTo('users',this); loadUsers()">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
+        <span>Users</span>
+      </button>
+    </nav>
+
     <!-- ── MAIN AREA ── -->
     <div id="main">
 
@@ -6043,6 +6149,7 @@ const pageTitles = {
       // Update active nav item
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       if (el) el.classList.add('active');
+      document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.toggle('active', b.getAttribute('data-p') === page));
       // Tuck the mobile drawer away after navigating.
       document.body.classList.remove('side-open');
 
@@ -9660,6 +9767,17 @@ const pageTitles = {
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();
     setInterval(refreshGateTicker, 60000);
+
+    // ── MOBILE MODE (JS width check — independent of media queries) ──
+    function syncMobileMode() {
+      try {
+        var mobi = window.innerWidth <= 900;
+        document.body.classList.toggle('mobi', mobi);
+        if (mobi) document.body.classList.remove('side-open');
+      } catch (e) { }
+    }
+    window.addEventListener('resize', syncMobileMode);
+    syncMobileMode();
 
     // ── COLLAPSIBLE SIDEBAR (flexible on any device) ──
     // Narrow screens get an off-canvas drawer instead of the icon rail.
