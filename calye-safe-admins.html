@@ -245,11 +245,51 @@
 
     @media (max-width: 700px) {
       #perf-stat-grid { grid-template-columns: 1fr; }
-      :root { --sidebar-w: 64px; }
-      .sidebar-logo .brand, .sidebar-logo .sub, .nav-item span, .nav-label, .sidebar-footer { display: none; }
-      .nav-item { justify-content: center; padding: 12px; }
-      .nav-item::before { display: none; }
       #content { padding: 12px; }
+    }
+
+    /* ── MOBILE / TABLET: off-canvas drawer + proportioned chrome ── */
+    @media (max-width: 900px) {
+      #sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 60;
+        width: 248px !important;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+        box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
+      }
+
+      body.side-open #sidebar {
+        transform: translateX(0);
+      }
+
+      #side-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 16, 28, 0.5);
+        z-index: 55;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+
+      body.side-open #side-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #topbar { padding: 0 14px; }
+      .page-title { font-size: 17px; }
+      .breadcrumb { display: none; }
+      .topbar-search { width: 150px; padding: 8px 12px; }
+      .table-scroll { overflow-x: auto; }
+      .report-table { min-width: 640px; }
+      #perf-stat-grid .stat-card.featured { min-height: 0; }
+      #perf-stat-grid .stat-card.featured .val { font-size: 36px; }
+      .modal-box { width: calc(100vw - 24px); }
     }
 
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
@@ -3969,6 +4009,7 @@
         </div>
       </div>
     </aside>
+    <div id="side-backdrop" onclick="toggleSidebar()"></div>
 
     <!-- ── MAIN AREA ── -->
     <div id="main">
@@ -4095,6 +4136,7 @@
                   <button class="ftab" onclick="filterTable('declined',this)">Declined</button>
                 </div>
               </div>
+              <div class="table-scroll">
               <table class="report-table" id="report-table">
                 <thead>
                   <tr>
@@ -4109,6 +4151,7 @@
                 <tbody id="table-body">
                 </tbody>
               </table>
+              </div>
             </div>
 
           </div><!-- /col-left -->
@@ -4321,6 +4364,7 @@
                   Major Incidents — Crime, Fire, Flooding, Accidents
                   <span class="grp-count" id="reports-major-count">6 reports</span>
                 </div>
+                <div class="table-scroll">
                 <table class="report-table">
                   <thead>
                     <tr>
@@ -4334,6 +4378,7 @@
                   </thead>
                   <tbody id="reports-major-body"></tbody>
                 </table>
+                </div>
               </div>
 
               <!-- MINOR INCIDENTS GROUP -->
@@ -4344,6 +4389,7 @@
                   Disturbance, Road Hazards
                   <span class="grp-count" id="reports-minor-count">8 reports</span>
                 </div>
+                <div class="table-scroll">
                 <table class="report-table">
                   <thead>
                     <tr>
@@ -4357,6 +4403,7 @@
                   </thead>
                   <tbody id="reports-minor-body"></tbody>
                 </table>
+                </div>
               </div>
 
             </div>
@@ -5956,6 +6003,8 @@ const pageTitles = {
       // Update active nav item
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       if (el) el.classList.add('active');
+      // Tuck the mobile drawer away after navigating.
+      document.body.classList.remove('side-open');
 
       // Update page title
       const title = pageTitles[page] || 'Dashboard';
@@ -9573,7 +9622,15 @@ const pageTitles = {
     setInterval(refreshGateTicker, 60000);
 
     // ── COLLAPSIBLE SIDEBAR (flexible on any device) ──
+    // Narrow screens get an off-canvas drawer instead of the icon rail.
     function toggleSidebar() {
+      try {
+        if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) {
+          document.body.classList.toggle('side-open');
+          document.body.classList.remove('side-collapsed');
+          return;
+        }
+      } catch (e) { }
       const collapsed = document.body.classList.toggle('side-collapsed');
       try { localStorage.setItem('calye_sidebar', collapsed ? '1' : '0'); } catch (e) { }
       const btn = document.querySelector('.side-toggle');
