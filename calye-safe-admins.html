@@ -480,6 +480,58 @@
       z-index: 10;
       box-shadow: none;
       color: #FFFFFF;
+      transition: width 0.22s ease;
+      overflow: hidden;
+    }
+
+    /* Manual collapse (hamburger): icon rail on any screen size. */
+    body.side-collapsed {
+      --sidebar-w: 64px;
+    }
+
+    body.side-collapsed .sidebar-logo .brand,
+    body.side-collapsed .sidebar-logo .sub,
+    body.side-collapsed .nav-item span,
+    body.side-collapsed .nav-label,
+    body.side-collapsed .sidebar-footer {
+      display: none;
+    }
+
+    body.side-collapsed .nav-item {
+      justify-content: center;
+      padding: 12px;
+    }
+
+    body.side-collapsed .nav-item::before {
+      display: none;
+    }
+
+    .side-toggle {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.16s;
+    }
+
+    .side-toggle:hover {
+      background: var(--border);
+    }
+
+    .side-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
     }
 
     #sidebar::before {
@@ -718,7 +770,10 @@
 
     .topbar-left {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
     }
 
     .topbar-left .page-title {
@@ -3921,8 +3976,13 @@
       <!-- TOPBAR -->
       <div id="topbar">
         <div class="topbar-left">
-          <div class="page-title">Dashboard Overview</div>
-          <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
+          <button class="side-toggle" onclick="toggleSidebar()" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+          </button>
+          <div>
+            <div class="page-title">Dashboard Overview</div>
+            <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
+          </div>
         </div>
         <div class="topbar-right">
           <div class="topbar-search">
@@ -9511,6 +9571,19 @@ const pageTitles = {
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();
     setInterval(refreshGateTicker, 60000);
+
+    // ── COLLAPSIBLE SIDEBAR (flexible on any device) ──
+    function toggleSidebar() {
+      const collapsed = document.body.classList.toggle('side-collapsed');
+      try { localStorage.setItem('calye_sidebar', collapsed ? '1' : '0'); } catch (e) { }
+      const btn = document.querySelector('.side-toggle');
+      if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    }
+    try {
+      if (localStorage.getItem('calye_sidebar') === '1') {
+        document.body.classList.add('side-collapsed');
+      }
+    } catch (e) { }
 
     // ── CLOCK ──
     (function tick() {
