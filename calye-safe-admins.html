@@ -445,6 +445,38 @@
       flex-direction: column;
     }
 
+    /* Phones: every multi-column desktop construct becomes one stacked
+       column. Belt and suspenders (!important) so nothing can overlap. */
+    body.mobi #page-analytics > div,
+    body.mobi .main-layout,
+    body.mobi .donut-flex {
+      display: block !important;
+    }
+
+    body.mobi #page-analytics .col-left,
+    body.mobi #page-analytics .col-right,
+    body.mobi .main-layout .col-left,
+    body.mobi .main-layout .col-right {
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+      margin-bottom: 16px;
+    }
+
+    body.mobi .panel-header {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    body.mobi .priority-meta {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .response-actions {
+      flex-direction: column;
+    }
+
     body.mobi .stat-grid,
     body.mobi #perf-stat-grid {
       grid-template-columns: 1fr;
