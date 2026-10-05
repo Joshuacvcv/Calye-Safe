@@ -28,10 +28,16 @@ export async function GET(
   }
   try {
     const data = await fs.readFile(path.join(process.cwd(), key));
+    // HTML is never edge-cached: the console changes fast and operators
+    // must always get the newest copy (stale admin HTML breaks layouts).
+    // Versioned assets (logos, JS) stay cached for an hour.
+    const cache = contentType.startsWith("text/html")
+      ? "public, max-age=0, must-revalidate"
+      : "public, max-age=3600";
     return new Response(data, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": cache,
       },
     });
   } catch {
