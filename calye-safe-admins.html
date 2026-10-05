@@ -141,6 +141,10 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       color: var(--text);
       overflow: hidden;
+      /* Phones inflate small text and blow fixed-height rows apart
+         (timeline steps spill over cards). Lock authored sizes. */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* ── LIVE PULSE — signals the incident network is actively monitoring ── */
