@@ -311,18 +311,19 @@
       .page-title { font-size: 17px; }
       .breadcrumb { display: none; }
       .topbar-search { width: 150px; padding: 8px 12px; }
-
-      @media (max-width: 600px) {
-        /* Topbar must fit hamburger + title + actions on one row. */
-        .topbar-search { display: none; }
-        .page-title { font-size: 15px; }
-        #topbar { gap: 8px; }
-      }
       .table-scroll { overflow-x: auto; }
       .report-table { min-width: 640px; }
       #perf-stat-grid .stat-card.featured { min-height: 0; }
       #perf-stat-grid .stat-card.featured .val { font-size: 36px; }
       .modal-box { width: calc(100vw - 24px); }
+    }
+
+    /* Topbar must fit hamburger + title + actions on one row. Flat nesting
+       (never nest @media) so older phone browsers keep every rule. */
+    @media (max-width: 600px) {
+      .topbar-search { display: none !important; }
+      .page-title { font-size: 15px !important; }
+      #topbar { gap: 8px; }
     }
 
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
