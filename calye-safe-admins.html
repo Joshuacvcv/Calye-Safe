@@ -496,9 +496,45 @@
       width: 110px;
     }
 
-    body.mobi #page-map .map-row {
-      height: 38vh !important;
-      min-height: 300px;
+    body.mobi #page-map .map-split {
+      flex-direction: column;
+      height: auto !important;
+      overflow: visible;
+      flex: none;
+    }
+
+    body.mobi #page-map .map-split > div:first-child {
+      flex: none !important;
+      height: 320px !important;
+      min-height: 320px;
+    }
+
+    body.mobi #page-map .map-split > div:last-child {
+      width: 100% !important;
+      flex: none !important;
+      overflow: visible;
+    }
+
+    body.mobi .ann-layout {
+      flex-direction: column;
+    }
+
+    body.mobi .ann-composer {
+      width: 100%;
+      flex: none;
+    }
+
+    body.mobi .ann-list-col {
+      width: 100%;
+    }
+
+    body.mobi #page-verify > div {
+      flex-direction: column !important;
+    }
+
+    body.mobi #page-verify .col-left {
+      max-width: none !important;
+      flex: none !important;
     }
 
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
@@ -4650,7 +4686,7 @@
         <div id="page-map" class="page-panel">
 
           <!-- Toolbar row -->
-          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;user-select:none;"
               title="Overlay the Geospatial Hotspot heat layer">
               <span style="font-size:12.5px;font-weight:700;color:var(--text2);white-space:nowrap;">Heatmap</span>
@@ -4697,7 +4733,7 @@
           </div>
 
           <!-- Map + incident list — fixed height based on viewport -->
-          <div style="display:flex;gap:14px;flex:1;min-height:0;height:100%;overflow:hidden;">
+          <div class="map-split" style="display:flex;gap:14px;flex:1;min-height:0;height:100%;overflow:hidden;">
 
             <!-- Map frame -->
             <div
@@ -6241,6 +6277,17 @@ const pageTitles = {
       document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.toggle('active', b.getAttribute('data-p') === page));
       // Tuck the mobile drawer away after navigating.
       document.body.classList.remove('side-open');
+      // Phones: re-seat maps after the layout settles (wrong-size tiles
+      // are what paint those grey half-maps).
+      try {
+        if (document.body.classList.contains('mobi')) {
+          setTimeout(function () {
+            try { if (typeof dashMap !== 'undefined' && dashMap) dashMap.invalidateSize(); } catch (e) { }
+            try { if (typeof pageMap !== 'undefined' && pageMap) pageMap.invalidateSize(); } catch (e) { }
+            try { if (typeof analyticsHeatmap !== 'undefined' && analyticsHeatmap) analyticsHeatmap.invalidateSize(); } catch (e) { }
+          }, 250);
+        }
+      } catch (e) { }
 
       // Update page title
       const title = pageTitles[page] || 'Dashboard';
