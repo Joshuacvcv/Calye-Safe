@@ -412,6 +412,63 @@
       padding: 12px 12px 92px;
     }
 
+    /* Mobi layout fixes (JS-applied, no media queries needed). */
+    body.mobi .breadcrumb,
+    body.mobi .topbar-search {
+      display: none;
+    }
+
+    body.mobi #topbar {
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    body.mobi .page-title {
+      font-size: 16px;
+    }
+
+    body.mobi #content .panel,
+    body.mobi .col-left,
+    body.mobi .col-right,
+    body.mobi .panel-body,
+    body.mobi #page-analytics > div,
+    body.mobi #analytics-insights > div {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    body.mobi #page-dashboard {
+      flex-direction: column;
+    }
+
+    body.mobi #page-analytics > div {
+      flex-direction: column;
+    }
+
+    body.mobi .stat-grid,
+    body.mobi #perf-stat-grid {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .main-layout,
+    body.mobi #perf-main-layout {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .col-right {
+      width: 100%;
+      max-width: none;
+    }
+
+    body.mobi .hbar-label {
+      width: 110px;
+    }
+
+    body.mobi #page-map .map-row {
+      height: 38vh !important;
+      min-height: 300px;
+    }
+
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
     #boot-splash {
       position: fixed;
@@ -6176,6 +6233,9 @@ const pageTitles = {
     }
 
     function resizeMapFrame() {
+      try {
+        if (document.body.classList.contains('mobi')) return;
+      } catch (e) { }
       const topbar = 89;
       const paddingV = 44; // 22px top + 22px bottom
       const toolbar = 52;
