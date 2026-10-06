@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Calye-Safe — Resident Sign In</title>
+  <title>Calye Safe — Resident Sign In</title>
   <link rel="icon" type="image/png" href="calye-safe-logo.png">
   <link rel="preload" as="image" href="calye-safe-logo.png" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,9 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="santarosa-boundary.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="supabase-config.js" defer></script>
   <script src="supabase-data.js" defer></script>
@@ -522,15 +525,16 @@
       gap: 20px;
       position: relative;
       z-index: 3;
+      margin-top: -32px;
     }
 
     #boot-splash .bs-logo-wrap {
       position: relative;
       z-index: 3;
-      width: 110px;
-      height: 110px;
+      width: 96px;
+      height: 96px;
       margin-bottom: 14px;
-      border-radius: 26px;
+      border-radius: 24px;
       overflow: hidden;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
       animation: bsPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -541,14 +545,14 @@
       z-index: 1;
       width: 100%;
       height: 100%;
-      border-radius: 26px;
+      border-radius: 24px;
       display: block;
     }
 
     #boot-splash .bs-seal {
       position: relative;
-      width: 110px;
-      height: 110px;
+      width: 96px;
+      height: 96px;
       border-radius: 50%;
       background: #fff;
       overflow: hidden;
@@ -574,7 +578,7 @@
       background: rgba(255, 255, 255, 0.45);
       clip-path: polygon(40% 0, 54% 0, 62% 100%, 48% 100%);
       transform: translateX(-130%);
-      animation: bsShine 1.8s ease-in-out 0.55s both;
+      animation: bsShine 1.4s ease-in-out 0.55s both;
       pointer-events: none;
     }
 
@@ -582,57 +586,57 @@
       position: relative;
       z-index: 3;
       color: #fff;
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 900;
       letter-spacing: -0.02em;
+      text-align: center;
+      max-width: 82vw;
       opacity: 0;
-      animation: bsFadeUp 0.5s ease-out 0.7s both;
+      animation: bsFadeUp 0.5s ease-out 0.9s both;
     }
 
     #boot-splash .bs-sub {
       position: relative;
       z-index: 3;
       color: rgba(255, 255, 255, 0.7);
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 600;
+      text-align: center;
+      max-width: 82vw;
       opacity: 0;
-      animation: bsFadeUp 0.5s ease-out 0.85s both;
+      animation: bsFadeUp 0.5s ease-out 1.05s both;
     }
 
-    /* splash roads (balanced top + bottom, build on load) */
-    #boot-splash .bs-road {
+    /* scene-build boundary ring (from mockup-welcome intro) */
+    #boot-splash .bs-boundary {
       position: absolute;
-      left: 0;
-      width: 100%;
+      top: 50%;
+      left: 50%;
+      width: 320px;
+      height: 320px;
+      margin: -170px 0 0 -160px;
+      overflow: visible;
+      z-index: 1;
       pointer-events: none;
-      z-index: 2;
-      opacity: 0.9;
     }
 
-    #boot-splash .bs-road.top { top: 5%; height: 22%; }
-    #boot-splash .bs-road.bot { bottom: 4%; height: 26%; }
-
-    #boot-splash .bs-road .asphalt { fill: none; stroke: rgba(255,255,255,0.10); stroke-width: 30; stroke-linecap: round; }
-    #boot-splash .bs-road .edge { fill: none; stroke: rgba(245,166,35,0.35); stroke-width: 2; }
-    #boot-splash .bs-road .center { fill: none; stroke: #F5A623; stroke-width: 3; stroke-dasharray: 14 16; stroke-linecap: round; }
-
-    #boot-splash .bs-unit {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      border-radius: 50% 50% 50% 4px;
-      transform: rotate(-45deg);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-      z-index: 2;
+    #boot-splash .bs-boundary path {
+      fill: none;
+      stroke: #F5A623;
+      stroke-width: 2;
+      stroke-dasharray: 6 8;
+      opacity: 0;
+      animation: bsFade 0.6s ease 0.4s forwards, bsBf 8s linear 1s infinite;
     }
 
-    #boot-splash .bs-unit::after {
-      content: '';
-      position: absolute;
-      inset: 5px;
-      border-radius: 50%;
-      background: #fff;
-    }
+    @keyframes bsBf { to { stroke-dashoffset: -160; } }
+    @keyframes bsFade { to { opacity: 0.55; } }
+
+    /* scene-build pins that pop around the logos (from mockup-welcome intro) */
+    #boot-splash .bs-ipin { position: absolute; opacity: 0; transform: scale(0); animation: bsIpin 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards; z-index: 2; pointer-events: none; }
+    #boot-splash .bs-ipin i { display: block; width: 18px; height: 18px; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); margin: 0 auto; }
+    #boot-splash .bs-ipin b { display: block; width: 6px; height: 6px; border-radius: 50%; background: #1E3A5F; margin: -13px auto 0; position: relative; }
+    @keyframes bsIpin { to { opacity: 1; transform: scale(1); } }
 
     @keyframes bsPop {
       from { transform: scale(0.5); }
@@ -689,6 +693,10 @@
       opacity: 0.4;
       filter: saturate(0.9) brightness(1.1);
       pointer-events: none;
+    }
+
+    .login-map .leaflet-container {
+      background: #1E3A5F;
     }
 
     .login-veil {
@@ -1045,6 +1053,20 @@
       color: var(--primary);
     }
 
+    .login-guest {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: #5b6b82;
+      margin-top: 12px;
+    }
+
+    .login-guest b {
+      color: #1E3A5F;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
     .foot-note {
       text-align: center;
       font-size: 11px;
@@ -1380,26 +1402,12 @@
         </div>
         <p class="w-cap" id="w-flow-cap"><span class="w-cap-dot" aria-hidden="true"></span><span class="w-cap-text">Tap a step to see what happens <span class="w-cap-arrow" aria-hidden="true">→</span></span></p>
         <button class="w-go" onclick="welcomeGo()">Get Started →</button>
-        <span class="w-guest">Just looking around? <b onclick="welcomeGuest()">Continue as guest</b></span>
       </div>
     </div>
-    <!-- BOOT SPLASH (tap to skip) -->
+    <!-- BOOT SPLASH: mockup-welcome scene-build intro (tap to skip) -->
     <div id="boot-splash" onclick="hideBootSplash(true)">
       <div class="bs-sky"></div>
-      <svg class="bs-road top" viewBox="0 0 1000 260" preserveAspectRatio="none">
-        <path class="asphalt draw" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
-        <path class="edge draw" d="M-20,46 C220,26 320,166 540,136 C760,106 800,46 1020,76"/>
-        <path class="edge draw" d="M-20,74 C220,54 320,194 540,164 C760,134 800,74 1020,104"/>
-        <path class="center" d="M-20,60 C220,40 320,180 540,150 C760,120 800,60 1020,90"/>
-      </svg>
-      <svg class="bs-road bot" viewBox="0 0 1000 300" preserveAspectRatio="none">
-        <path class="asphalt draw" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
-        <path class="edge draw" d="M-20,226 C220,206 320,106 540,136 C760,166 800,226 1020,186"/>
-        <path class="edge draw" d="M-20,254 C220,234 320,134 540,164 C760,194 800,254 1020,214"/>
-        <path class="center" d="M-20,240 C220,220 320,120 540,150 C760,180 800,240 1020,200"/>
-      </svg>
-      <div class="bs-unit" id="bs-unit-top" style="background:#2E7D32"></div>
-      <div class="bs-unit" id="bs-unit-bot" style="background:#E53935"></div>
+      <svg class="bs-boundary" viewBox="0 0 300 300"><path d="M150,18 C230,18 282,70 282,150 C282,230 230,282 150,282 C70,282 18,230 18,150 C18,70 70,18 150,18 Z"/></svg>
       <div class="bs-logo-row">
         <div class="bs-logo-wrap">
           <img src="calye-safe-logo.png" alt="Calye Safe logo">
@@ -1433,16 +1441,13 @@
         </div>
         <img src="Santa Rosa Logo.png" alt="City of Santa Rosa seal" title="City of Santa Rosa, Laguna" style="width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 8px 22px rgba(0,0,0,0.35);flex-shrink:0;position:relative;z-index:1;">
       </div>
-      <div class="brand-name">Calye-Safe <em>Resident</em></div>
+      <div class="brand-name">Calye Safe <em>Resident</em></div>
       <div class="brand-sub">Report incidents, track live status, and receive barangay alerts.</div>
       <h1>Resident Sign In</h1>
       <p>Sign in to report incidents, track their live status, and receive barangay alerts.</p>
     </div>
 
     <div class="login-content">
-      <button class="replay-fab" onclick="welcomeReplay()" aria-label="Replay welcome intro" title="Replay welcome intro">
-        <svg viewBox="0 0 24 24"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
-      </button>
       <div class="login-card" id="auth-card">
         <div><span class="role-chip">RESIDENT</span></div>
         <div class="welcome-title">Welcome back</div>
@@ -1494,6 +1499,7 @@
           <div class="demo-hint">
             <span class="pulse"></span> New here? Switch to <b onclick="showPanel('register')" style="cursor:pointer;text-decoration:underline;">Create Account</b>
           </div>
+          <div class="login-guest">Just looking around? <b onclick="welcomeGuest()">Continue as guest</b></div>
         </div>
 
         <!-- ── CREATE ACCOUNT ── -->
@@ -2136,22 +2142,14 @@
       try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (e) { }
       const s = document.getElementById('boot-splash');
       if (s) { s.classList.add('hide'); setTimeout(() => s.remove(), 350); }
+      // Entrance: float the login header + card in as the loader lifts (no added delay).
+      setTimeout(function () { try { if (typeof playLoginIntro === 'function') playLoginIntro(); } catch (e) { } }, 60);
     }
-    // Splash sky: same rising pins + twinkles as the login header
+    // Splash sky: twinkles only (rising-pin drift removed; popping pins carry the motion)
     (function initBootSky() {
       var sky = document.querySelector('#boot-splash .bs-sky');
       if (!sky) return;
       var ambient = landingAmbientOK();
-      var colors = ['#F5A623', '#5B9BF5', '#66BB6A', '#FF8A80'];
-      for (var i = 0; i < (ambient ? 8 : 0); i++) {
-        var p = document.createElement('div');
-        p.className = 'bs-pin';
-        p.style.left = (6 + Math.random() * 88) + '%';
-        p.style.animationDuration = (6 + Math.random() * 6) + 's';
-        p.style.animationDelay = (Math.random() * 6) + 's';
-        p.innerHTML = '<i style="background:' + colors[i % colors.length] + '"></i><b></b>';
-        sky.appendChild(p);
-      }
       for (var j = 0; j < (ambient ? 22 : 0); j++) {
         var t = document.createElement('div');
         t.className = 'bs-tw';
@@ -2163,56 +2161,37 @@
         sky.appendChild(t);
       }
     })();
-    // Splash roads: top builds left→right, bottom builds right→left
-    (function initSplashRoads() {
-      if (!landingAmbientOK()) return;
-      var splash = document.getElementById('boot-splash');
-      if (!splash) return;
-      function buildRoad(svg, unit, reverse) {
-        if (!svg || !unit) return;
-        var draws = svg.querySelectorAll('.draw');
-        var main = svg.querySelector('.asphalt');
-        if (!main) return;
-        draws.forEach(function (p) {
-          var L = p.getTotalLength();
-          p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
-        });
-        var t0 = performance.now(), dur = 1500;
-        function frame(t) {
-          if (!document.getElementById('boot-splash')) return;
-          var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 2);
-          draws.forEach(function (pth) {
-            var L = pth.getTotalLength();
-            pth.style.strokeDashoffset = reverse ? -(L * (1 - e)) : L * (1 - e);
-          });
-          var L2 = main.getTotalLength(), d = reverse ? 1 - e : e;
-          var pt = main.getPointAtLength(L2 * d);
-          var vb = svg.viewBox.baseVal;
-          var sr = svg.getBoundingClientRect();
-          var spr = splash.getBoundingClientRect();
-          var fx = pt.x / vb.width, fy = pt.y / vb.height;
-          unit.style.left = (sr.left - spr.left + fx * sr.width - 8) + 'px';
-          unit.style.top = (sr.top - spr.top + fy * sr.height - 8) + 'px';
-          if (p < 1) requestAnimationFrame(frame);
-        }
-        requestAnimationFrame(frame);
-      }
+    // Splash scene-build (from mockup-welcome intro): pins pop around the logos.
+    (function initSplashPins() {
       try {
-        buildRoad(splash.querySelector('.bs-road.top'), document.getElementById('bs-unit-top'), false);
-        buildRoad(splash.querySelector('.bs-road.bot'), document.getElementById('bs-unit-bot'), true);
+        if (!landingAmbientOK()) return;
+        var splash = document.getElementById('boot-splash');
+        if (!splash) return;
+        var spots = [[22, 38, '#F5A623'], [74, 34, '#E53935'], [30, 66, '#66BB6A'], [70, 68, '#5B9BF5'], [50, 20, '#FF8A80'], [14, 55, '#F5A623'], [86, 55, '#66BB6A'], [40, 80, '#E53935'], [60, 80, '#F5A623'], [12, 30, '#5B9BF5'], [88, 30, '#FF8A80'], [50, 88, '#66BB6A'], [35, 12, '#5B9BF5'], [62, 14, '#F5A623'], [48, 8, '#E53935'], [78, 18, '#66BB6A'], [20, 18, '#FF8A80'], [68, 26, '#F5A623'], [42, 28, '#2E7D32'], [55, 32, '#E53935'], [28, 90, '#F5A623'], [72, 90, '#66BB6A'], [45, 94, '#5B9BF5'], [60, 94, '#E53935']];
+        spots.forEach(function (sp, k) {
+          setTimeout(function () {
+            var s = document.getElementById('boot-splash');
+            if (!s) return;
+            var d = document.createElement('div');
+            d.className = 'bs-ipin';
+            d.style.left = sp[0] + '%'; d.style.top = sp[1] + '%';
+            d.innerHTML = '<i style="background:' + sp[2] + ';"></i><b></b>';
+            s.appendChild(d);
+          }, 250 + k * 50);
+        });
       } catch (e) { }
     })();
     try {
-      // Coming from the other login: skip the splash entirely.
+      // Coming from the other login: show instantly, like a Sign In/Create Account tab switch.
       if (consumeSplashSkip()) {
         bootSplashDone = true;
         var bs0 = document.getElementById('boot-splash');
         if (bs0) bs0.remove();
       } else {
         const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        setTimeout(hideBootSplash, bootReduced ? 300 : 800);
+        setTimeout(hideBootSplash, bootReduced ? 300 : 1600);
       }
-    } catch (e) { setTimeout(hideBootSplash, 800); }
+    } catch (e) { setTimeout(hideBootSplash, 1600); }
 
     // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-typing ──
     (function idleTimeout() {
@@ -2307,6 +2286,7 @@
     function welcomeReplay() {
       var w = document.getElementById('welcome');
       if (!w) return;
+      initWelcomeFlow();
       w.classList.remove('hide');
       w.classList.remove('show');
       w.style.display = 'flex';
@@ -2391,7 +2371,7 @@
       seq.forEach(function (pair) {
         wAnim(pair[0],
           [{ opacity: 0, transform: 'translateY(16px) scale(0.97)' }, { opacity: 1, transform: 'none' }],
-          { duration: 480, delay: pair[1], easing: 'ease', fill: 'both' });
+          { duration: 480, delay: pair[1], easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
       });
     }
     var WELCOME_FLOW_DEFAULT = 'Tap a step to see what happens <span class="w-cap-arrow" aria-hidden="true">→</span>';
@@ -2434,11 +2414,11 @@
     (function initWelcome() {
       var w = document.getElementById('welcome');
       if (!w) return;
+      initWelcomeFlow();
       var seen = false;
       try { seen = localStorage.getItem(WELCOME_KEY) === '1'; } catch (e) { }
       if (seen) { w.style.display = 'none'; return; }
       w.style.display = 'flex';
-      initWelcomeFlow();
       welcomePlayIntro();
       // The welcome hero already contains a lightweight inline SVG map, so this
       // page does not load live Leaflet tiles on startup.
@@ -2468,6 +2448,37 @@
         t.style.animationDelay = (Math.random() * 3.4) + 's';
         sky.appendChild(t);
       }
+    })();
+
+    // Mini live Santa Rosa map behind the blue header (same look as admin login).
+    (function initLoginMap() {
+      try {
+        if (typeof L === 'undefined') {
+          setTimeout(initLoginMap, 600);
+          return;
+        }
+        var el = document.getElementById('login-map');
+        if (!el || el.dataset.done) return;
+        el.dataset.done = '1';
+        var map = L.map('login-map', { zoomControl: false, attributionControl: false });
+        map.setView([14.312, 121.111], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        try {
+          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(map);
+          }
+        } catch (e) { }
+        var pts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
+        var cols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
+        pts.forEach(function (p, i) {
+          L.circleMarker(p, { radius: 7, color: cols[i], weight: 2, fillColor: cols[i], fillOpacity: 0.85 }).addTo(map);
+        });
+        map.dragging.disable();
+        if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
+        if (map.doubleClickZoom) map.doubleClickZoom.disable();
+        if (map.boxZoom) map.boxZoom.disable();
+        if (map.keyboard) map.keyboard.disable();
+      } catch (e) { }
     })();
   </script>
 </body>
