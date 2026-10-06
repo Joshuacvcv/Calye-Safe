@@ -10,6 +10,8 @@ const FILES = [
   "calye-safe-community.html",
   "calye-safe-responders.html",
   "responder-login.html",
+  "reset-password.html",
+  "privacy.html",
   "supabase-config.js",
   "supabase-auth.js",
   "supabase-data.js",
