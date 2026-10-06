@@ -17,6 +17,7 @@ const FILES = [
   "supabase-data.js",
   "santarosa-boundary.js",
   "calye-safe-logo.png",
+  "Santa Rosa Logo.png",
 ];
 
 const root = path.join(__dirname, "..");

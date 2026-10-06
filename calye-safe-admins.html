@@ -141,6 +141,10 @@
       font-family: 'Plus Jakarta Sans', sans-serif;
       color: var(--text);
       overflow: hidden;
+      /* Phones inflate small text and blow fixed-height rows apart
+         (timeline steps spill over cards). Lock authored sizes. */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     /* ── LIVE PULSE — signals the incident network is actively monitoring ── */
@@ -245,11 +249,263 @@
 
     @media (max-width: 700px) {
       #perf-stat-grid { grid-template-columns: 1fr; }
-      :root { --sidebar-w: 64px; }
-      .sidebar-logo .brand, .sidebar-logo .sub, .nav-item span, .nav-label, .sidebar-footer { display: none; }
-      .nav-item { justify-content: center; padding: 12px; }
-      .nav-item::before { display: none; }
       #content { padding: 12px; }
+    }
+
+    /* ── MOBILE / TABLET: proportioned chrome ── */
+    @media (max-width: 900px) {
+      #topbar { padding: 0 14px; }
+      .page-title { font-size: 17px; }
+      .breadcrumb { display: none; }
+      .topbar-search { width: 150px; padding: 8px 12px; }
+      .table-scroll { overflow-x: auto; }
+      .report-table { min-width: 640px; }
+      #perf-stat-grid .stat-card.featured { min-height: 0; }
+      #perf-stat-grid .stat-card.featured .val { font-size: 36px; }
+      .modal-box { width: calc(100vw - 24px); }
+    }
+
+    /* Topbar must fit hamburger + title + actions on one row. Flat nesting
+       (never nest @media) so older phone browsers keep every rule. */
+    @media (max-width: 600px) {
+      .topbar-search { display: none !important; }
+      .page-title { font-size: 15px !important; }
+      #topbar { gap: 8px; }
+    }
+
+    /* ── MOBILE BOTTOM NAV ──
+       JS-applied (body.mobi), NOT media-query driven, so phones that
+       mis-evaluate media queries still get a usable layout. */
+    #mobile-nav {
+      display: none;
+    }
+
+    body.mobi #sidebar {
+      display: none;
+    }
+
+    body.mobi #mobile-nav {
+      display: flex;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 70;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    }
+
+    body.mobi #mobile-nav button {
+      flex: 1;
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      cursor: pointer;
+      padding: 6px 0;
+      min-width: 0;
+    }
+
+    body.mobi #mobile-nav button.active {
+      color: var(--primary-text);
+    }
+
+    body.mobi #mobile-nav svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    body.mobi #mobile-nav button span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    body.mobi #content {
+      padding: 12px 12px 92px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Phones: one natural page scroll — kill every nested fixed-height
+       scroller that traps content (dashboard, reports, announcements). */
+    body.mobi .page-panel {
+      overflow: visible;
+    }
+
+    body.mobi .col-left,
+    body.mobi .col-right {
+      overflow: visible !important;
+      max-height: none !important;
+    }
+
+    body.mobi .ann-list-scroll {
+      overflow: visible;
+      max-height: none;
+    }
+
+    body.mobi .ann-list-col .panel {
+      overflow: visible;
+    }
+
+    /* Map filter pills: one swipeable row instead of a stacked wall. */
+    body.mobi .map-ftabs {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    body.mobi .map-ftabs .ftab {
+      flex-shrink: 0;
+    }
+
+    /* Map legend: one subtle swipe strip. */
+    body.mobi .map-legend-rows {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      padding-left: 0 !important;
+    }
+
+    body.mobi .map-legend-rows > div,
+    body.mobi .map-legend-rows > span {
+      flex-shrink: 0;
+    }
+
+    /* Mobi layout fixes (JS-applied, no media queries needed). */
+    body.mobi .breadcrumb,
+    body.mobi .topbar-search {
+      display: none;
+    }
+
+    body.mobi #topbar {
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    body.mobi .page-title {
+      font-size: 16px;
+    }
+
+    body.mobi #content .panel,
+    body.mobi .col-left,
+    body.mobi .col-right,
+    body.mobi .panel-body,
+    body.mobi #page-analytics > div,
+    body.mobi #analytics-insights > div {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    body.mobi #page-dashboard {
+      flex-direction: column;
+    }
+
+    body.mobi #page-analytics > div {
+      flex-direction: column;
+    }
+
+    /* Phones: every multi-column desktop construct becomes one stacked
+       column. Belt and suspenders (!important) so nothing can overlap. */
+    body.mobi #page-analytics > div,
+    body.mobi .main-layout,
+    body.mobi .donut-flex {
+      display: block !important;
+    }
+
+    body.mobi #page-analytics .col-left,
+    body.mobi #page-analytics .col-right,
+    body.mobi .main-layout .col-left,
+    body.mobi .main-layout .col-right {
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+      margin-bottom: 16px;
+    }
+
+    body.mobi .panel-header {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    body.mobi .priority-meta {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .response-actions {
+      flex-direction: column;
+    }
+
+    body.mobi .stat-grid,
+    body.mobi #perf-stat-grid {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .main-layout,
+    body.mobi #perf-main-layout {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobi .col-right {
+      width: 100%;
+      max-width: none;
+    }
+
+    body.mobi .hbar-label {
+      width: 110px;
+    }
+
+    body.mobi #page-map .map-split {
+      flex-direction: column;
+      height: auto !important;
+      overflow: visible;
+      flex: none;
+    }
+
+    body.mobi #page-map .map-split > div:first-child {
+      flex: none !important;
+      height: 320px !important;
+      min-height: 320px;
+    }
+
+    body.mobi #page-map .map-split > div:last-child {
+      width: 100% !important;
+      flex: none !important;
+      overflow: visible;
+    }
+
+    body.mobi .ann-layout {
+      flex-direction: column;
+    }
+
+    body.mobi .ann-composer {
+      width: 100%;
+      flex: none;
+    }
+
+    body.mobi .ann-list-col {
+      width: 100%;
+    }
+
+    body.mobi #page-verify > div {
+      flex-direction: column !important;
+    }
+
+    body.mobi #page-verify .col-left {
+      max-width: none !important;
+      flex: none !important;
     }
 
     /* ── BOOT SPLASH (logo pops, then a shine sweeps across) ── */
@@ -464,7 +720,10 @@
     #shell {
       display: flex;
       height: 100vh;
-      width: 100vw;
+      height: 100dvh;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: clip;
       background: #1E3A5F;
     }
 
@@ -480,6 +739,8 @@
       z-index: 10;
       box-shadow: none;
       color: #FFFFFF;
+      transition: width 0.22s ease;
+      overflow: hidden;
     }
 
     #sidebar::before {
@@ -718,7 +979,10 @@
 
     .topbar-left {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
     }
 
     .topbar-left .page-title {
@@ -2886,7 +3150,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      height: 1000%;
+      height: 100%;
     }
 
     /* ── INCIDENT MAP PAGE: larger zoom controls + readable popups ── */
@@ -3915,14 +4179,36 @@
       </div>
     </aside>
 
+    <!-- ── MOBILE BOTTOM NAV (kept: phones navigate with this, no hamburger) ── -->
+    <nav id="mobile-nav">
+      <button data-p="dashboard" class="active" onclick="navTo('dashboard',this)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+        <span>Home</span>
+      </button>
+      <button data-p="reports" onclick="navTo('reports',this)">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+        <span>Reports</span>
+      </button>
+      <button data-p="map" onclick="navTo('map',this); showIncidentMap()">
+        <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" /><line x1="8" y1="2" x2="8" y2="18" /><line x1="16" y1="6" x2="16" y2="22" /></svg>
+        <span>Map</span>
+      </button>
+      <button data-p="users" onclick="navTo('users',this); loadUsers()">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></svg>
+        <span>Users</span>
+      </button>
+    </nav>
+
     <!-- ── MAIN AREA ── -->
     <div id="main">
 
       <!-- TOPBAR -->
       <div id="topbar">
         <div class="topbar-left">
-          <div class="page-title">Dashboard Overview</div>
-          <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
+          <div>
+            <div class="page-title">Dashboard Overview</div>
+            <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
+          </div>
         </div>
         <div class="topbar-right">
           <div class="topbar-search">
@@ -4035,6 +4321,7 @@
                   <button class="ftab" onclick="filterTable('declined',this)">Declined</button>
                 </div>
               </div>
+              <div class="table-scroll">
               <table class="report-table" id="report-table">
                 <thead>
                   <tr>
@@ -4049,6 +4336,7 @@
                 <tbody id="table-body">
                 </tbody>
               </table>
+              </div>
             </div>
 
           </div><!-- /col-left -->
@@ -4261,6 +4549,7 @@
                   Major Incidents — Crime, Fire, Flooding, Accidents
                   <span class="grp-count" id="reports-major-count">6 reports</span>
                 </div>
+                <div class="table-scroll">
                 <table class="report-table">
                   <thead>
                     <tr>
@@ -4274,6 +4563,7 @@
                   </thead>
                   <tbody id="reports-major-body"></tbody>
                 </table>
+                </div>
               </div>
 
               <!-- MINOR INCIDENTS GROUP -->
@@ -4284,6 +4574,7 @@
                   Disturbance, Road Hazards
                   <span class="grp-count" id="reports-minor-count">8 reports</span>
                 </div>
+                <div class="table-scroll">
                 <table class="report-table">
                   <thead>
                     <tr>
@@ -4297,6 +4588,7 @@
                   </thead>
                   <tbody id="reports-minor-body"></tbody>
                 </table>
+                </div>
               </div>
 
             </div>
@@ -4308,7 +4600,7 @@
         <div id="page-map" class="page-panel">
 
           <!-- Toolbar row -->
-          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:8px;flex-shrink:0;cursor:pointer;user-select:none;"
               title="Overlay the Geospatial Hotspot heat layer">
               <span style="font-size:12.5px;font-weight:700;color:var(--text2);white-space:nowrap;">Heatmap</span>
@@ -4337,7 +4629,7 @@
                 Reset
               </button>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <div class="map-ftabs" style="display:flex;gap:6px;flex-wrap:wrap;">
               <button class="ftab active" id="mf-all" onclick="pageMapFilter('all',this)">All</button>
               <button class="ftab" id="mf-major" onclick="pageMapFilter('major',this)"
                 style="border-color:rgba(229,57,53,0.35);">Major Incidents</button>
@@ -4355,7 +4647,7 @@
           </div>
 
           <!-- Map + incident list — fixed height based on viewport -->
-          <div style="display:flex;gap:14px;flex:1;min-height:0;height:100%;overflow:hidden;">
+          <div class="map-split" style="display:flex;gap:14px;flex:1;min-height:0;height:100%;overflow:hidden;">
 
             <!-- Map frame -->
             <div
@@ -4392,7 +4684,7 @@
           <!-- Legend -->
           <div
             style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);">
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;">
+            <div class="map-legend-rows" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;">
             <span
               style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;">Legend</span>
             <span
@@ -4422,7 +4714,7 @@
                 style="font-size:12px;color:var(--text2);font-weight:600;">Structural</span>
             </div>
             </div>
-            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
+            <div class="map-legend-rows" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;row-gap:6px;padding-left:62px;">
             <span
               style="font-size:10.5px;font-weight:800;color:var(--warning);text-transform:uppercase;letter-spacing:0.06em;background:var(--warning-light);padding:3px 9px;border-radius:20px;">Minor</span>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -5896,6 +6188,18 @@ const pageTitles = {
       // Update active nav item
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       if (el) el.classList.add('active');
+      document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.toggle('active', b.getAttribute('data-p') === page));
+      // Phones: re-seat maps after the layout settles (wrong-size tiles
+      // are what paint those grey half-maps).
+      try {
+        if (document.body.classList.contains('mobi')) {
+          setTimeout(function () {
+            try { if (typeof dashMap !== 'undefined' && dashMap) dashMap.invalidateSize(); } catch (e) { }
+            try { if (typeof pageMap !== 'undefined' && pageMap) pageMap.invalidateSize(); } catch (e) { }
+            try { if (typeof analyticsHeatmap !== 'undefined' && analyticsHeatmap) analyticsHeatmap.invalidateSize(); } catch (e) { }
+          }, 250);
+        }
+      } catch (e) { }
 
       // Update page title
       const title = pageTitles[page] || 'Dashboard';
@@ -5920,6 +6224,9 @@ const pageTitles = {
     }
 
     function resizeMapFrame() {
+      try {
+        if (document.body.classList.contains('mobi')) return;
+      } catch (e) { }
       const topbar = 89;
       const paddingV = 44; // 22px top + 22px bottom
       const toolbar = 52;
@@ -9524,6 +9831,16 @@ const pageTitles = {
     // Authenticated gate only — the dashboard bootstraps after an admin signs in.
     adminGate();
     setInterval(refreshGateTicker, 60000);
+
+    // ── MOBILE MODE (JS width check — independent of media queries) ──
+    function syncMobileMode() {
+      try {
+        var mobi = window.innerWidth <= 900;
+        document.body.classList.toggle('mobi', mobi);
+      } catch (e) { }
+    }
+    window.addEventListener('resize', syncMobileMode);
+    syncMobileMode();
 
     // ── CLOCK ──
     (function tick() {
