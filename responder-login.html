@@ -1791,27 +1791,40 @@
 
     // ── Password-reset deep link (Android custom scheme) ────────────────────
     // The reset email points at ph.atsu.calyesafe://reset-password so tapping
-    // it opens the installed app instead of a browser. Capacitor delivers the
-    // URL here on cold start and warm, and we forward to the local reset page
-    // keeping everything from the first ? or # (Supabase recovery tokens).
+    // it opens the installed app instead of a browser. We forward to the local
+    // reset page keeping everything from the first ? or # (Supabase tokens).
+    // Both entry points are needed: appUrlOpen fires for warm opens, while a
+    // cold start (app closed) only exposes the URL via getLaunchUrl().
     // Plain browsers never have window.Capacitor: no-op there.
+    function forwardResetDeepLink(url) {
+      try {
+        url = String(url || '');
+        if (/reset-password/i.test(url)) {
+          var tail = '';
+          var m = url.match(/[?#][\s\S]*$/);
+          if (m) tail = m[0];
+          location.href = 'reset-password.html' + tail;
+          return true;
+        }
+      } catch (e) { /* ignore */ }
+      return false;
+    }
     (function handleResetDeepLink() {
       try {
         var cap = window.Capacitor;
         if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
         var App = cap.Plugins && cap.Plugins.App;
-        if (!App || !App.addListener) return;
-        App.addListener('appUrlOpen', function (data) {
-          try {
-            var url = String((data && data.url) || '');
-            if (/reset-password/i.test(url)) {
-              var tail = '';
-              var m = url.match(/[?#][\s\S]*$/);
-              if (m) tail = m[0];
-              location.href = 'reset-password.html' + tail;
-            }
-          } catch (e) { /* ignore */ }
-        });
+        if (!App) return;
+        if (App.addListener) {
+          App.addListener('appUrlOpen', function (data) {
+            forwardResetDeepLink(data && data.url);
+          });
+        }
+        if (App.getLaunchUrl) {
+          App.getLaunchUrl().then(function (res) {
+            if (res && res.url) forwardResetDeepLink(res.url);
+          }).catch(function () { /* ignore */ });
+        }
       } catch (e) { /* ignore */ }
     })();
 
