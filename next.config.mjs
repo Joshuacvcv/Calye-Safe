@@ -11,6 +11,7 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/app/*": [
         "./calye-safe-admins.html",
+        "./reset-password.html",
         "./supabase-config.js",
         "./supabase-auth.js",
         "./supabase-data.js",

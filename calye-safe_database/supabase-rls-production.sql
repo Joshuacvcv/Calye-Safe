@@ -229,12 +229,61 @@ create policy "notifications_staff_insert" on notifications for insert with chec
 -- These functions are SECURITY DEFINER (they bypass RLS) and were granted to
 -- `anon`, so anyone with the anon key could pull aggregate incident stats +
 -- hotspots. Restrict them to signed-in users.
-revoke execute on function fn_incident_summary(timestamptz, timestamptz) from anon;
-revoke execute on function fn_incident_density(timestamptz, timestamptz) from anon;
-revoke execute on function fn_monthly_summary(int, int) from anon;
-grant execute on function fn_incident_summary(timestamptz, timestamptz) to authenticated;
-grant execute on function fn_incident_density(timestamptz, timestamptz) to authenticated;
-grant execute on function fn_monthly_summary(int, int) to authenticated;
+-- Guarded: if the analytics migration was never run, the functions do not
+-- exist yet — revoking would abort the file, so skip missing ones instead.
+do $$
+declare
+  f text;
+begin
+  foreach f in array array[
+    'public.fn_incident_summary(timestamptz, timestamptz)',
+    'public.fn_incident_density(timestamptz, timestamptz)',
+    'public.fn_monthly_summary(int, int)'
+  ] loop
+    begin
+      execute 'revoke execute on function ' || f || ' from anon';
+      execute 'grant execute on function ' || f || ' to authenticated';
+    exception when undefined_function then
+      raise notice 'analytics function % not present, skipped', f;
+    end;
+  end loop;
+end $$;
+
+-- ── 17. RESOLVED HISTORY — RESPONDER INSERT ----------------------------------
+-- The responder app records each resolution directly
+-- (calye-safe-responders.html → CalyeDB.insert('resolved_history', …)).
+-- No insert policy exists anywhere else: without this, resolving a job fails
+-- under RLS with "new row violates row-level security" and the resolution is
+-- lost. Reads stay staff-only via history_responder_select above.
+drop policy if exists "history_responder_insert" on resolved_history;
+create policy "history_responder_insert" on resolved_history for insert with check (
+  auth_is_responder() and auth_is_approved()
+);
+
+-- ── 18. RESOLUTION-EVIDENCE PREREQUISITES (re-asserted) ----------------------
+-- Mirrors supabase-resolution-evidence.sql so this migration is self-contained
+-- for the full report → resolved flow even if that file was never run.
+-- All three are idempotent (drop + create).
+-- (a) responders/staff may advance & annotate the resident's timeline steps
+-- (markReportStep silently fails without this).
+drop policy if exists "timeline_staff_update" on report_timeline;
+create policy "timeline_staff_update"
+  on report_timeline for update using (auth_is_responder());
+-- (b) responders/staff may advance their assignment timeline steps.
+drop policy if exists "at_timeline_update" on assignment_timeline;
+create policy "at_timeline_update"
+  on assignment_timeline for update using (auth_is_responder());
+-- (c) the resident who filed the report may read its assignment, because
+-- resolution notes + proof photo live there.
+drop policy if exists "assignments_owner_select" on assignments;
+create policy "assignments_owner_select"
+  on assignments for select using (
+    exists (
+      select 1 from reports r
+      where r.id = assignments.report_id
+        and r.reporter_id = auth.uid()
+    )
+  );
 
 -- ============================================================================
 -- VERIFY AFTER RUNNING (SQL Editor):
