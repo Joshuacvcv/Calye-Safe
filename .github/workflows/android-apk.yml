@@ -70,6 +70,25 @@ jobs:
           open(p, 'w').write(s)
           EOF
 
+      # Password-reset deep link: lets a ph.atsu.calyesafe://reset-password
+      # email link open the installed app instead of a browser. Must run after
+      # `cap add android` (which creates the manifest) — like permissions above.
+      - name: Add reset deep-link intent filter
+        run: |
+          python3 - <<'EOF'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p).read()
+          filt = ('<intent-filter>\n'
+                  '                <action android:name="android.intent.action.VIEW" />\n'
+                  '                <category android:name="android.intent.category.DEFAULT" />\n'
+                  '                <category android:name="android.intent.category.BROWSABLE" />\n'
+                  '                <data android:scheme="ph.atsu.calyesafe" />\n'
+                  '            </intent-filter>\n        ')
+          if 'ph.atsu.calyesafe' not in s:
+              s = s.replace('</activity>', filt + '</activity>', 1)
+          open(p, 'w').write(s)
+          EOF
+
       - name: Sync Capacitor
         run: npx cap sync
 

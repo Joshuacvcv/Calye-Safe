@@ -1789,6 +1789,32 @@
       if (which === 'reg') regToken = '';
     }
 
+    // ── Password-reset deep link (Android custom scheme) ────────────────────
+    // The reset email points at ph.atsu.calyesafe://reset-password so tapping
+    // it opens the installed app instead of a browser. Capacitor delivers the
+    // URL here on cold start and warm, and we forward to the local reset page
+    // keeping everything from the first ? or # (Supabase recovery tokens).
+    // Plain browsers never have window.Capacitor: no-op there.
+    (function handleResetDeepLink() {
+      try {
+        var cap = window.Capacitor;
+        if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
+        var App = cap.Plugins && cap.Plugins.App;
+        if (!App || !App.addListener) return;
+        App.addListener('appUrlOpen', function (data) {
+          try {
+            var url = String((data && data.url) || '');
+            if (/reset-password/i.test(url)) {
+              var tail = '';
+              var m = url.match(/[?#][\s\S]*$/);
+              if (m) tail = m[0];
+              location.href = 'reset-password.html' + tail;
+            }
+          } catch (e) { /* ignore */ }
+        });
+      } catch (e) { /* ignore */ }
+    })();
+
     function doLogin() {
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-pass').value;
