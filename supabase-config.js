@@ -30,6 +30,17 @@ window.CALYE_SUPABASE = (function () {
   var URL = 'https://dltyttngbrenbwdsaiwg.supabase.co';
   var ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsdHl0dG5nYnJlbmJ3ZHNhaXdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MDYzMDMsImV4cCI6MjEwMTA4MjMwM30.0F96Q3TUQ4IFZnlcOtXiGP5FtTt6F6fthiC5a9kJE6E';
 
+  // Turnstile (Cloudflare) SITE key — PUBLIC, safe to commit. Get it from
+  // dash.cloudflare.com → Turnstile → your widget → Site key, and paste it
+  // below (keep the quotes). The SECRET key is never here: it lives as the
+  // TURNSTILE_SECRET secret on the auth-gate Edge Function.
+  // Deploy-time override, same pattern as the Supabase URL/key:
+  //   window.CALYE_TURNSTILE_ENV = { siteKey: '0x4AAAAAAA…' };
+  var TURNSTILE_KEY = '0x4AAAAAAFPIFcZt7Bd6wCK-';
+  if (window.CALYE_TURNSTILE_ENV && window.CALYE_TURNSTILE_ENV.siteKey) {
+    TURNSTILE_KEY = window.CALYE_TURNSTILE_ENV.siteKey;
+  }
+
   // Deploy-time override (see options A / B above). Purely cosmetic for a
   // static SPA — the value still lands in the browser either way.
   if (window.CALYE_SUPABASE_ENV && window.CALYE_SUPABASE_ENV.url) {
@@ -73,6 +84,7 @@ window.CALYE_SUPABASE = (function () {
   return {
     url: URL,
     anonKey: ANON_KEY,
+    turnstileSiteKey: TURNSTILE_KEY,
     init: init,
     isReady: isReady,
     getClient: getClient

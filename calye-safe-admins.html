@@ -9169,10 +9169,17 @@ const pageTitles = {
 
     function mfaQrHtml(qr, secret, uri) {
       var out = '';
-      if (qr && qr.indexOf('data:') === 0) {
-        out += '<div style="text-align:center;margin-bottom:12px;"><img src="' + qr + '" alt="Authenticator QR code" style="width:180px;height:180px;border-radius:8px;border:1px solid var(--border);"></div>';
-      } else if (qr && qr.trim().charAt(0) === '<') {
-        out += '<div style="text-align:center;margin-bottom:12px;"><div style="display:inline-block;width:180px;height:180px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;">' + qr + '</div></div>';
+      var q = (qr || '').trim();
+      if (q.indexOf('data:') === 0) {
+        // GoTrue embeds raw SVG markup inside the data: URL — its double
+        // quotes terminate the src attribute and spill markup as page text.
+        // Entity-escape them (base64 payloads contain no quotes: untouched).
+        var safe = q.split('"').join('&quot;');
+        out += '<div style="text-align:center;margin-bottom:12px;"><img src="' + safe + '" alt="Authenticator QR code" style="width:180px;height:180px;border-radius:8px;border:1px solid var(--border);"></div>';
+      } else if (q.charAt(0) === '<') {
+        // Raw SVG markup: inject as HTML and pin it to the 180px box.
+        var svg = q.replace(/<svg/i, '<svg width="180" height="180" style="display:block"');
+        out += '<div style="text-align:center;margin-bottom:12px;"><div style="display:inline-block;width:180px;height:180px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;">' + svg + '</div></div>';
       }
       if (secret) {
         out += '<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Manual entry key</div>'
@@ -9199,7 +9206,12 @@ const pageTitles = {
         ? '<button class="modal-btn cancel" onclick="mfaSkipEnroll()">Skip for now</button>'
         : '<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>');
       document.getElementById('modal-mfa').classList.add('open');
-      CalyeAuth.mfaEnroll('Calye-Safe Admin').then(function (res) {
+      // Drop stale unverified factors first (an attempt that never got
+      // verified blocks re-enrollment: duplicate friendly name), then enroll
+      // under a unique name so retries can never collide.
+      CalyeAuth.mfaDiscardUnverified().then(function () {
+        var stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
+        CalyeAuth.mfaEnroll('Calye-Safe Admin ' + stamp).then(function (res) {
         if (res.error || !res.factorId) {
           document.getElementById('mfa-body').innerHTML = '<div style="font-size:13px;color:var(--danger);font-weight:700;">Could not start setup: ' + (res.error || 'unknown error') + '</div>';
           return;
@@ -9213,6 +9225,7 @@ const pageTitles = {
         mfaSetFooter((skippable ? '<button class="modal-btn cancel" onclick="mfaSkipEnroll()">Skip for now</button>' : '<button class="modal-btn cancel" onclick="closeModal(\'modal-mfa\')">Close</button>')
           + '<button class="modal-btn confirm" id="mfa-verify-btn" onclick="doMfaVerifyEnroll()">Verify &amp; Enable</button>');
         setTimeout(function () { var i = document.getElementById('mfa-code'); if (i) i.focus(); }, 100);
+        });
       });
     }
 

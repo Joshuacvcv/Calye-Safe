@@ -154,6 +154,90 @@ window.CalyeAuth = (function () {
     });
   }
 
+  // ── Turnstile gate (Cloudflare human-check + server-side rate limits) ────
+  // All calls go to the auth-gate Edge Function. Helpers resolve, never reject.
+  function gateUrl() {
+    try {
+      var base = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.url) || '';
+      if (!base) return '';
+      return base.replace(/\/+$/, '') + '/functions/v1/auth-gate';
+    } catch (e) { return ''; }
+  }
+
+  function gateCall(body) {
+    return new Promise(function (resolve) {
+      var url = gateUrl();
+      var key = '';
+      try { key = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.anonKey) || ''; } catch (e) { }
+      if (!url || !key) { resolve({ status: 0, body: { error: 'Auth service unavailable.' } }); return; }
+      var done = false;
+      setTimeout(function () {
+        if (!done) { done = true; resolve({ status: 0, body: { error: 'Auth service is taking too long. Try again.' } }); }
+      }, 30000);
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: key, Authorization: 'Bearer ' + key },
+        body: JSON.stringify(body || {})
+      }).then(function (r) {
+        r.json().then(function (j) {
+          if (!done) { done = true; resolve({ status: r.status, body: j || {} }); }
+        }).catch(function () {
+          if (!done) { done = true; resolve({ status: r.status, body: { error: 'Auth service unavailable.' } }); }
+        });
+      }).catch(function () {
+        if (!done) { done = true; resolve({ status: 0, body: { error: 'Auth service unavailable.' } }); }
+      });
+    });
+  }
+
+  // Verify a Turnstile token (signup friction). Resolves { error, rateLimited };
+  // error null means the human check passed.
+  function turnstileCheck(token) {
+    return new Promise(function (resolve) {
+      gateCall({ mode: 'check', token: token }).then(function (out) {
+        var j = out.body || {};
+        if (j.ok) { resolve({ error: null }); return; }
+        resolve({ error: j.error || 'Verification failed.', rateLimited: !!j.rateLimited });
+      });
+    });
+  }
+
+  // Password login through the gate: the token is verified and rate limits
+  // are enforced server-side, then the password is checked there too, so the
+  // gate cannot be skipped by calling the Auth API directly.
+  // Resolves { error, rateLimited } like signIn.
+  function signInViaGate(email, password, token) {
+    return new Promise(function (resolve) {
+      gateCall({ mode: 'login', email: email, password: password, token: token }).then(function (out) {
+        var j = out.body || {};
+        if (!j.ok) {
+          resolve({ error: j.error || 'Sign in failed.', rateLimited: !!j.rateLimited });
+          return;
+        }
+        var sess = j.session;
+        if (!sess || !sess.access_token) { resolve({ error: 'Sign in failed.' }); return; }
+        var c = getClient();
+        if (!c) { resolve({ error: 'Database not reachable' }); return; }
+        c.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token })
+          .then(function (sr) {
+            if (sr.error) { resolve({ error: sr.error.message }); return; }
+            // Same password-history backfill as signIn (blocks reuse).
+            var user = (sr.data && sr.data.session && sr.data.session.user) || (sr.data && sr.data.user) || null;
+            lastSession = (sr.data && sr.data.session) || null;
+            passwordFingerprint(password).then(function (fp) {
+              if (!fp || !user) { resolve({ error: null }); return; }
+              var hist = historyFromUser(user);
+              if (hist.indexOf(fp) !== -1) { resolve({ error: null }); return; }
+              hist = [fp].concat(hist).slice(0, 8);
+              c.auth.updateUser({ data: metaWithHistory(user, hist) })
+                .then(function () { resolve({ error: null }); })
+                .catch(function () { resolve({ error: null }); });
+            });
+          }).catch(function (e) { resolve({ error: e.message || 'Sign in failed.' }); });
+      });
+    });
+  }
+
   /**
    * Sign out. Returns a promise resolving to true on success.
    */
@@ -589,6 +673,51 @@ window.CalyeAuth = (function () {
     });
   }
 
+  // List EVERY factor (verified AND unverified), each with a `verified`
+  // boolean. Tolerates MFA-disabled projects the same way mfaStatus does.
+  function mfaList() {
+    return new Promise(function (resolve) {
+      var mfa = mfaClient();
+      if (!mfa) { resolve({ error: 'Database not reachable', factors: [] }); return; }
+      mfa.listFactors().then(function (res) {
+        if (res.error) {
+          resolve({ error: res.error.message, factors: [], unsupported: mfaDisabled(res.error) });
+          return;
+        }
+        var all = (res.data && (res.data.all || res.data.totp)) || [];
+        var factors = all.map(function (f) {
+          return {
+            id: f && f.id,
+            name: (f && (f.friendly_name || f.friendlyName)) || '',
+            verified: !!(f && (f.status === 'verified' || f.verified_at))
+          };
+        }).filter(function (f) { return !!f.id; });
+        resolve({ error: null, factors: factors });
+      }).catch(function (e) { resolve({ error: e.message || 'MFA unavailable', factors: [] }); });
+    });
+  }
+
+  // Remove every UNVERIFIED factor (stale retries that were never confirmed).
+  // Verified factors are never touched. Returns { error, removed }.
+  // A retry that skips cleanup hits GoTrue's duplicate-friendly-name error,
+  // so enrollment flows must call this first.
+  function mfaDiscardUnverified() {
+    return new Promise(function (resolve) {
+      mfaList().then(function (ls) {
+        if (ls.error) { resolve({ error: ls.unsupported ? null : ls.error, removed: 0 }); return; }
+        var stale = ls.factors.filter(function (f) { return !f.verified; });
+        if (!stale.length) { resolve({ error: null, removed: 0 }); return; }
+        var done = 0;
+        stale.forEach(function (f) {
+          mfaUnenroll(f.id).then(function () {
+            done++;
+            if (done >= stale.length) resolve({ error: null, removed: stale.length });
+          });
+        });
+      });
+    });
+  }
+
   return {
     init: init,
     isOnline: isOnline,
@@ -608,6 +737,10 @@ window.CalyeAuth = (function () {
     mfaVerifyEnroll: mfaVerifyEnroll,
     mfaChallenge: mfaChallenge,
     mfaVerify: mfaVerify,
-    mfaUnenroll: mfaUnenroll
+    mfaUnenroll: mfaUnenroll,
+    mfaList: mfaList,
+    mfaDiscardUnverified: mfaDiscardUnverified,
+    turnstileCheck: turnstileCheck,
+    signInViaGate: signInViaGate
   };
 })();
