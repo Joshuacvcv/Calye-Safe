@@ -6,17 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Calye-Safe — Responder Sign In</title>
   <link rel="icon" type="image/png" href="calye-safe-logo.png">
+  <link rel="preload" as="image" href="calye-safe-logo.png" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileApiReady" async defer></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-data.js"></script>
-  <script src="supabase-auth.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="santarosa-boundary.js"></script>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-data.js" defer></script>
+  <script src="supabase-auth.js" defer></script>
   <style>
     * {
       margin: 0;
@@ -213,10 +212,6 @@
       opacity: 0.5;
     }
 
-    #welcome .w-map .leaflet-container {
-      background: #1E3A5F;
-    }
-
     #welcome .w-veil {
       position: absolute;
       inset: 0;
@@ -291,10 +286,18 @@
 
     #welcome .w-chip {
       background: #FFFFFF;
+      border: none;
       border-radius: 14px;
       padding: 12px 4px 10px;
       text-align: center;
-      cursor: default;
+      cursor: pointer;
+      font: inherit;
+      width: 100%;
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    #welcome .w-chip:active {
+      transform: scale(0.96);
     }
 
     #welcome .w-chip .ic {
@@ -309,6 +312,88 @@
 
     #welcome .w-chip .ic svg { width: 20px; height: 20px; }
     #welcome .w-chip span { font-size: 10px; font-weight: 700; color: #1A1A1A; }
+
+    #welcome .w-step .num {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    #welcome .w-step[aria-expanded="true"] {
+      outline: 2px solid rgba(245, 166, 35, 0.65);
+      outline-offset: 2px;
+    }
+
+    #welcome .w-step[aria-expanded="true"] .num {
+      box-shadow: 0 0 0 5px rgba(245, 166, 35, 0.22);
+    }
+
+    #welcome .w-cap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 30px;
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5b6b82;
+      text-align: center;
+    }
+
+    #welcome .w-cap-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #F5A623;
+      flex-shrink: 0;
+      animation: wTapDot 1.6s ease-in-out infinite;
+    }
+
+    #welcome .w-cap-arrow {
+      display: inline-block;
+      color: #F5A623;
+      font-weight: 800;
+      animation: wTapArrow 1.6s ease-in-out infinite;
+    }
+
+    #welcome .w-cap.has-detail {
+      color: #1E3A5F;
+    }
+
+    #welcome .w-cap.has-detail .w-cap-dot,
+    #welcome .w-cap.has-detail .w-cap-arrow {
+      animation: none;
+      opacity: 0;
+    }
+
+    @keyframes wTapDot {
+      0%, 100% { transform: scale(0.72); opacity: 0.55; }
+      50% { transform: scale(1.12); opacity: 1; }
+    }
+
+    @keyframes wTapArrow {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+
+    #welcome.show .w-sheet {
+      animation: wSheetPop 0.48s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    @keyframes wSheetPop {
+      from { opacity: 0; transform: translateY(26px) scale(0.97); }
+      62% { opacity: 1; transform: translateY(-3px) scale(1.004); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #welcome.show .w-sheet,
+      #welcome .w-cap-dot,
+      #welcome .w-cap-arrow {
+        animation: none;
+      }
+    }
 
     #welcome .w-go {
       width: 100%;
@@ -593,10 +678,6 @@
       opacity: 0.4;
       filter: saturate(0.9) brightness(1.1);
       pointer-events: none;
-    }
-
-    .login-map .leaflet-container {
-      background: #1E3A5F;
     }
 
     .login-veil {
@@ -1280,12 +1361,13 @@
         </div>
       </div>
       <div class="w-sheet">
-        <div class="w-chips">
-          <div class="w-chip"><div class="ic" style="background:#FFE9E9;"><svg viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span>Report</span></div>
-          <div class="w-chip"><div class="ic" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg></div><span>Track</span></div>
-          <div class="w-chip"><div class="ic" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><span>Alerts</span></div>
-          <div class="w-chip"><div class="ic" style="background:#E8F5E9;"><svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></div><span>Hotlines</span></div>
+        <div class="w-chips" role="group" aria-label="How this app works">
+          <button type="button" class="w-chip w-step" data-detail="Residents file reports with photo + GPS pinpoint." aria-expanded="false"><span class="ic num" style="background:#F57C00;">1</span><span>Report</span></button>
+          <button type="button" class="w-chip w-step" data-detail="Barangay staff verify IDs in one queue." aria-expanded="false"><span class="ic num" style="background:#1565C0;">2</span><span>Verify</span></button>
+          <button type="button" class="w-chip w-step" data-detail="Nearest unit is dispatched with live ETA." aria-expanded="false"><span class="ic num" style="background:#D4841A;">3</span><span>Dispatch</span></button>
+          <button type="button" class="w-chip w-step" data-detail="Resolution proof closes the loop publicly." aria-expanded="false"><span class="ic num" style="background:#2E7D32;">4</span><span>Resolve</span></button>
         </div>
+        <p class="w-cap" id="w-flow-cap"><span class="w-cap-dot" aria-hidden="true"></span><span class="w-cap-text">Tap a step to see what happens <span class="w-cap-arrow" aria-hidden="true">→</span></span></p>
         <button class="w-go" onclick="welcomeGo()">Get Started →</button>
         <span class="w-guest">Just looking around? <b onclick="welcomeGuest()">Continue as guest</b></span>
       </div>
@@ -1498,8 +1580,6 @@
   </div>
 
   <script>
-    CalyeAuth.init('calye-responder');
-
     // All users live in Santa Rosa City, Laguna — so registration only asks for
     // their Barangay plus the home/street + subdivision. City/province are implicit.
     const BARANGAYS = ['Aplaya', 'Balibago', 'Caingin', 'Dila', 'Dita', 'Don Jose',
@@ -1788,6 +1868,22 @@
       if (which === 'login') loginToken = '';
       if (which === 'reg') regToken = '';
     }
+    let turnstileRequested = false;
+    function ensureTurnstile() {
+      if (turnstileRequested) return;
+      try {
+        if (typeof turnstile !== 'undefined') return;
+        const key = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.turnstileSiteKey) || '';
+        if (!key || key.indexOf('PASTE') === 0) return;
+        if (!document.getElementById('ts-login') && !document.getElementById('ts-reg')) return;
+        turnstileRequested = true;
+        const s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileApiReady&render=explicit';
+        s.async = true;
+        s.defer = true;
+        document.head.appendChild(s);
+      } catch (e) { }
+    }
 
     // ── Password-reset deep link (Android custom scheme) ────────────────────
     // The reset email points at ph.atsu.calyesafe://reset-password so tapping
@@ -1947,14 +2043,63 @@
       CalyeAuth.signOut().then(() => location.reload());
     }
 
-    // If a verified session already exists, go straight to the app.
-    CalyeAuth.getStatus().then(st => {
-      if (st.status === 'approved') {
-        location.href = 'calye-safe-responders.html';
-      } else if (st.session) {
-        showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
+    // Authentication starts after the landing/login markup has parsed. Deferred
+    // library scripts run before DOMContentLoaded, so this preserves their
+    // order while keeping first paint free of network/auth work.
+    let authBooted = false;
+    function scheduleIdleTask(fn, timeoutMs) {
+      try {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(fn, { timeout: timeoutMs || 1200 });
+          return;
+        }
+      } catch (e) { }
+      setTimeout(fn, 120);
+    }
+    function landingAmbientOK() {
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+        var conn = navigator.connection || navigator.webkitConnection;
+        if (conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g')) return false;
+      } catch (e) { }
+      return true;
+    }
+    function checkSavedSession() {
+      try {
+        CalyeAuth.getStatus().then(st => {
+          if (!st) return;
+          if (st.status === 'approved') {
+            location.href = 'calye-safe-responders.html';
+          } else if (st.session) {
+            showGate(st.status, st.profile, (st.profile && st.profile.review_note) || '');
+          }
+        });
+      } catch (e) { }
+    }
+    function armAuthUi() {
+      var card = document.getElementById('auth-card');
+      if (card && !card.dataset.tsArmed) {
+        card.dataset.tsArmed = '1';
+        ['focusin', 'pointerdown'].forEach(function (ev) {
+          card.addEventListener(ev, ensureTurnstile, { passive: true });
+        });
       }
-    });
+      var welcome = document.getElementById('welcome');
+      var welcomeHidden = !welcome || welcome.style.display === 'none' || welcome.classList.contains('hide');
+      if (welcomeHidden) ensureTurnstile();
+    }
+    function bootLandingLogin() {
+      if (authBooted) return;
+      authBooted = true;
+      try { CalyeAuth.init('calye-responder'); } catch (e) { }
+      armAuthUi();
+      scheduleIdleTask(checkSavedSession, 1200);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bootLandingLogin, { once: true });
+    } else {
+      bootLandingLogin();
+    }
 
     // Jump between the two logins without replaying the boot splash.
     // Flag travels as a query param (survives blocked storage and new tabs)
@@ -1991,8 +2136,9 @@
     (function initBootSky() {
       var sky = document.querySelector('#boot-splash .bs-sky');
       if (!sky) return;
+      var ambient = landingAmbientOK();
       var colors = ['#F5A623', '#5B9BF5', '#66BB6A', '#FF8A80'];
-      for (var i = 0; i < 8; i++) {
+      for (var i = 0; i < (ambient ? 8 : 0); i++) {
         var p = document.createElement('div');
         p.className = 'bs-pin';
         p.style.left = (6 + Math.random() * 88) + '%';
@@ -2001,7 +2147,7 @@
         p.innerHTML = '<i style="background:' + colors[i % colors.length] + '"></i><b></b>';
         sky.appendChild(p);
       }
-      for (var j = 0; j < 22; j++) {
+      for (var j = 0; j < (ambient ? 22 : 0); j++) {
         var t = document.createElement('div');
         t.className = 'bs-tw';
         var sz = (Math.random() * 2 + 1) + 'px';
@@ -2014,6 +2160,7 @@
     })();
     // Splash roads: top builds left→right, bottom builds right→left
     (function initSplashRoads() {
+      if (!landingAmbientOK()) return;
       var splash = document.getElementById('boot-splash');
       if (!splash) return;
       function buildRoad(svg, unit, reverse) {
@@ -2058,14 +2205,15 @@
         if (bs0) bs0.remove();
       } else {
         const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
+        setTimeout(hideBootSplash, bootReduced ? 300 : 800);
       }
-    } catch (e) { setTimeout(hideBootSplash, 1700); }
+    } catch (e) { setTimeout(hideBootSplash, 800); }
 
     // ── WELCOME (first launch: scene-build intro → get-started sheet) ──
     var WELCOME_KEY = 'calye_welcome_seen';
     function welcomeGo() {
       try { localStorage.setItem(WELCOME_KEY, '1'); } catch (e) { }
+      ensureTurnstile();
       var w = document.getElementById('welcome');
       if (w) { w.classList.add('hide'); setTimeout(function () { w.style.display = 'none'; }, 400); }
       playLoginIntro();
@@ -2109,7 +2257,9 @@
       var w = document.getElementById('welcome');
       if (!w) return;
       w.classList.remove('hide');
+      w.classList.remove('show');
       w.style.display = 'flex';
+      void w.offsetWidth;
       welcomePlayIntro();
     }
     var welcomeTimers = [];
@@ -2129,19 +2279,22 @@
       var intro = document.getElementById('w-intro');
       if (!w || !intro) return;
       welcomeClearTimers();
+      w.classList.remove('show');
+      var oldPins = intro.querySelectorAll('.w-pin');
+      for (var r = 0; r < oldPins.length; r++) oldPins[r].remove();
       intro.style.display = 'flex';
       var shield = intro.querySelector('.w-shield');
       var name = intro.querySelector('.w-name');
       var tag = intro.querySelector('.w-tag');
       wAnim(shield,
         [{ opacity: 0, transform: 'scale(0.4)' }, { opacity: 1, transform: 'scale(1)' }],
-        { duration: 500, delay: 150, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
+        { duration: 420, delay: 100, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
       wAnim(name,
         [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
-        { duration: 500, delay: 1100, easing: 'ease', fill: 'both' });
+        { duration: 420, delay: 520, easing: 'ease', fill: 'both' });
       wAnim(tag,
         [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
-        { duration: 500, delay: 1250, easing: 'ease', fill: 'both' });
+        { duration: 420, delay: 620, easing: 'ease', fill: 'both' });
       var spots = [[22, 38, '#F5A623'], [74, 34, '#E53935'], [30, 66, '#66BB6A'], [70, 68, '#5B9BF5'], [50, 20, '#FF8A80'], [14, 55, '#F5A623'], [86, 55, '#66BB6A'], [40, 80, '#E53935'], [60, 80, '#F5A623'], [12, 30, '#5B9BF5'], [88, 30, '#FF8A80'], [50, 88, '#66BB6A']];
       spots.forEach(function (sp, k) {
         welcomeTimers.push(setTimeout(function () {
@@ -2155,7 +2308,7 @@
           wAnim(d,
             [{ opacity: 0, transform: 'scale(0)' }, { opacity: 1, transform: 'scale(1)' }],
             { duration: 450, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
-        }, 350 + k * 70));
+        }, 220 + k * 50));
       });
       welcomeTimers.push(setTimeout(function () {
         var w2 = document.getElementById('welcome');
@@ -2163,11 +2316,13 @@
         if (!w2 || !i2) return;
         i2.style.display = 'none';
         welcomePlaySheet(w2);
-      }, 2100));
+      }, 1050));
     }
     function welcomePlaySheet(w) {
       w = w || document.getElementById('welcome');
       if (!w) return;
+      w.classList.add('show');
+      resetWelcomeFlow();
       var seq = [];
       var h2 = w.querySelector('.w-hero h2');
       var hp = w.querySelector('.w-hero p');
@@ -2185,6 +2340,43 @@
           { duration: 480, delay: pair[1], easing: 'ease', fill: 'both' });
       });
     }
+    var WELCOME_FLOW_DEFAULT = 'Tap a step to see what happens <span class="w-cap-arrow" aria-hidden="true">→</span>';
+    function setWelcomeFlowCaption(detail) {
+      var cap = document.getElementById('w-flow-cap');
+      if (!cap) return;
+      var label = cap.querySelector('.w-cap-text');
+      if (!label) return;
+      if (detail) {
+        cap.classList.add('has-detail');
+        label.textContent = detail;
+      } else {
+        cap.classList.remove('has-detail');
+        label.innerHTML = WELCOME_FLOW_DEFAULT;
+      }
+    }
+    function resetWelcomeFlow() {
+      var steps = document.querySelectorAll('#welcome .w-step');
+      for (var i = 0; i < steps.length; i++) steps[i].setAttribute('aria-expanded', 'false');
+      setWelcomeFlowCaption('');
+    }
+    function initWelcomeFlow() {
+      var flow = document.querySelector('#welcome .w-chips');
+      if (!flow || flow.dataset.flowBound === '1') return;
+      flow.dataset.flowBound = '1';
+      flow.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.w-step') : null;
+        if (!btn) return;
+        var wasOpen = btn.getAttribute('aria-expanded') === 'true';
+        var steps = flow.querySelectorAll('.w-step');
+        for (var i = 0; i < steps.length; i++) steps[i].setAttribute('aria-expanded', 'false');
+        if (wasOpen) {
+          setWelcomeFlowCaption('');
+        } else {
+          btn.setAttribute('aria-expanded', 'true');
+          setWelcomeFlowCaption(btn.getAttribute('data-detail') || '');
+        }
+      });
+    }
     (function initWelcome() {
       var w = document.getElementById('welcome');
       if (!w) return;
@@ -2192,40 +2384,10 @@
       try { seen = localStorage.getItem(WELCOME_KEY) === '1'; } catch (e) { }
       if (seen) { w.style.display = 'none'; return; }
       w.style.display = 'flex';
+      initWelcomeFlow();
       welcomePlayIntro();
-      // Real Santa Rosa map: retry until the container is measurable —
-      // a 0-size init paints gray forever, so never init blind.
-      (function initWelcomeMap(attempt) {
-        attempt = attempt || 0;
-        var el = document.getElementById('w-map');
-        if (!el || el.dataset.done) return;
-        if (typeof L === 'undefined') return;
-        if (el.clientWidth < 10 && attempt < 25) {
-          setTimeout(function () { initWelcomeMap(attempt + 1); }, 200);
-          return;
-        }
-        try {
-          el.dataset.done = '1';
-          var wm = L.map('w-map', { zoomControl: false, attributionControl: false });
-          wm.setView([14.312, 121.111], 12);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(wm);
-          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
-            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(wm);
-          }
-          var wpts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
-          var wcols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
-          wpts.forEach(function (p, i) {
-            L.circleMarker(p, { radius: 7, color: wcols[i], weight: 2, fillColor: wcols[i], fillOpacity: 0.85 }).addTo(wm);
-          });
-          wm.dragging.disable();
-          if (wm.scrollWheelZoom) wm.scrollWheelZoom.disable();
-          if (wm.doubleClickZoom) wm.doubleClickZoom.disable();
-          if (wm.boxZoom) wm.boxZoom.disable();
-          if (wm.keyboard) wm.keyboard.disable();
-          setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 350);
-          setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 1200);
-        } catch (e) { }
-      })(0);
+      // The welcome hero already contains a lightweight inline SVG map, so this
+      // page does not load live Leaflet tiles on startup.
     })();
 
     // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-typing ──
@@ -2270,40 +2432,16 @@
       }
     });
 
-    // Mini Santa Rosa map behind the blue header (same look as admin login).
-    (function initLoginMap() {
-      try {
-        if (typeof L === 'undefined') return;
-        var el = document.getElementById('login-map');
-        if (!el || el.dataset.done) return;
-        el.dataset.done = '1';
-        var map = L.map('login-map', { zoomControl: false, attributionControl: false });
-        map.setView([14.312, 121.111], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        try {
-          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
-            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(map);
-          }
-        } catch (e) { }
-        var pts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
-        var cols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
-        pts.forEach(function (p, i) {
-          L.circleMarker(p, { radius: 7, color: cols[i], weight: 2, fillColor: cols[i], fillOpacity: 0.85 }).addTo(map);
-        });
-        map.dragging.disable();
-        if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
-        if (map.doubleClickZoom) map.doubleClickZoom.disable();
-        if (map.boxZoom) map.boxZoom.disable();
-        if (map.keyboard) map.keyboard.disable();
-      } catch (e) { }
-    })();
+    // The login header already contains a lightweight inline SVG map, so this
+    // page does not load live Leaflet tiles on startup.
 
     // In-app animated sky inside the navy header (pins + twinkles)
     (function initLoginSky() {
       var sky = document.querySelector('.login-sky');
       if (!sky) return;
+      var ambient = landingAmbientOK();
       var colors = ['#F5A623', '#5B9BF5', '#66BB6A', '#FF8A80'];
-      for (var i = 0; i < 7; i++) {
+      for (var i = 0; i < (ambient ? 7 : 0); i++) {
         var p = document.createElement('div');
         p.className = 'login-pin';
         p.style.left = (8 + Math.random() * 84) + '%';
@@ -2312,7 +2450,7 @@
         p.innerHTML = '<i style="background:' + colors[i % colors.length] + '"></i><b></b>';
         sky.appendChild(p);
       }
-      for (var j = 0; j < 16; j++) {
+      for (var j = 0; j < (ambient ? 16 : 0); j++) {
         var t = document.createElement('div');
         t.className = 'login-tw';
         var s = (Math.random() * 2 + 1) + 'px';
