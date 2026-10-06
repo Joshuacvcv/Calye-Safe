@@ -3612,6 +3612,23 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="guest-preview-modal" onclick="closeModal('guest-preview-modal')">
+      <div class="modal-box" onclick="event.stopPropagation()" style="text-align:center;">
+        <div class="modal-handle"></div>
+        <div class="success-icon"
+          style="width:72px;height:72px;border-radius:50%;background:#E3F2FD;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </div>
+        <h3>That's the Whole Flow!</h3>
+        <p style="font-size:13px;color:var(--text2);margin:8px 0 20px;line-height:1.6;">You just walked through filing a report — <strong>nothing was sent</strong> and nothing appears on the admin side. Sign in to file for real, attach photos, and track the live status.</p>
+        <button class="btn btn-primary" onclick="guestSignIn()" style="margin-bottom:10px;">Sign In / Create Account</button>
+        <button class="btn btn-secondary" onclick="closeModal('guest-preview-modal')">Keep Browsing</button>
+      </div>
+    </div>
+
     <!-- RESPONDER LIVE TRACKING MODAL -->
     <div class="modal-overlay" id="tracking-modal" onclick="closeTrackingModal()">
       <div class="modal-box" onclick="event.stopPropagation()"
@@ -4805,6 +4822,14 @@
     }
 
     function submitReport() {
+      // Guests walk the whole flow, but nothing is stored or sent anywhere:
+      // no local writes, no Supabase, no admin visibility.
+      if (typeof isGuestMode === 'function' && isGuestMode()) {
+        closeModal('review-modal');
+        resetReportForm();
+        document.getElementById('guest-preview-modal').classList.add('open');
+        return;
+      }
       // Guard against double-click / double submission creating duplicate reports.
       if (submittingReport) {
         showToast('Your report is already being submitted.');
@@ -6073,6 +6098,8 @@
     }
 
     function renderProfileHeader() {
+      // Guests keep the visitor identity no matter what re-renders.
+      if (isGuestMode()) { applyGuestLabels(); return; }
       const avatar = document.querySelector('#screen-profile .avatar');
       const nameEl = document.querySelector('#screen-profile .profile-header h3');
       const subEl = document.querySelector('#screen-profile .profile-header p');
@@ -6526,8 +6553,49 @@
     // ── VERIFICATION GATE ──
     // Only enforced when there is a real Supabase session. Demo access
     // (no session) and approved accounts use the app as normal.
+    // Guest mode (entered via "Continue as guest"): browse-only. Guests can
+    // view everything but filing a report sends them to sign in.
+    var GUEST_KEY = 'calye_guest';
+    function isGuestMode() {
+      try { return localStorage.getItem(GUEST_KEY) === '1'; } catch (e) { return false; }
+    }
+    function enterGuestMode() {
+      const piItem = document.querySelector('.profile-menu-item[onclick="openProfileInfo()"]');
+      if (piItem) piItem.style.display = 'none';
+      applyGuestLabels();
+      const scroller = document.querySelector('#screen-profile .scroll-content');
+      if (scroller && !document.getElementById('guest-signin-card')) {
+        const card = document.createElement('div');
+        card.id = 'guest-signin-card';
+        card.innerHTML = `<div style="background:var(--primary);border-radius:var(--radius);padding:18px;margin-bottom:16px;color:#fff;">`
+          + `<div style="font-size:15px;font-weight:800;">Browsing as Guest</div>`
+          + `<div style="font-size:12px;opacity:0.8;margin:4px 0 12px;line-height:1.55;">Sign in to file reports, track their status, and get verified.</div>`
+          + `<button class="btn btn-primary" onclick="guestSignIn()" style="width:100%;">Sign In / Create Account</button></div>`;
+        scroller.prepend(card);
+      }
+      const homeH2 = document.querySelector('#screen-home h2');
+      if (homeH2) homeH2.textContent = timeGreeting() + ', Guest';
+    }
+    function applyGuestLabels() {
+      const avatar = document.querySelector('#screen-profile .avatar');
+      const nameEl = document.querySelector('#screen-profile .profile-header h3');
+      const subEl = document.querySelector('#screen-profile .profile-header p');
+      if (avatar) avatar.textContent = '?';
+      if (nameEl) nameEl.textContent = 'Guest Visitor';
+      if (subEl) subEl.textContent = 'Browsing in view-only mode';
+    }
+    function guestSignIn() {
+      try { localStorage.removeItem(GUEST_KEY); } catch (e) { }
+      location.href = 'index.html';
+    }
     CalyeAuth.init('calye-resident');
     CalyeAuth.getStatus().then(gate => {
+      if (gate.session) {
+        try { localStorage.removeItem(GUEST_KEY); } catch (e) { }
+      } else if (isGuestMode()) {
+        enterGuestMode();
+        return;
+      }
       if (!gate.session) return; // demo mode — allow
       if (gate.status === 'approved') {
         // In-app watchdog: if the account is deleted, rejected, or the

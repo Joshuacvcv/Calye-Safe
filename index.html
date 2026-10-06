@@ -69,6 +69,293 @@
       flex-direction: column;
     }
 
+    #app-shell {
+      width: 360px;
+      height: 800px;
+      background: var(--bg);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── WELCOME (first-launch intro + get-started sheet) ── */
+    #welcome {
+      position: absolute;
+      inset: 0;
+      z-index: 1100;
+      background: #1E3A5F;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #welcome.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+
+    #welcome .w-intro {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #welcome .w-intro.out {
+      opacity: 0;
+      transform: translateY(-40px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      pointer-events: none;
+    }
+
+    #welcome .w-boundary {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300px;
+      height: 300px;
+      margin: -190px 0 0 -150px;
+      overflow: visible;
+    }
+
+    #welcome .w-boundary path {
+      fill: none;
+      stroke: #F5A623;
+      stroke-width: 2;
+      stroke-dasharray: 6 8;
+      opacity: 0.55;
+      animation: wbf 8s linear infinite;
+    }
+
+    @keyframes wbf { to { stroke-dashoffset: -160; } }
+
+    #welcome .w-icenter {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      transform: translateY(-50%);
+      margin-top: -30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    #welcome .w-shield {
+      width: 96px;
+      height: 96px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    #welcome .w-shield img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    @keyframes wpop { to { opacity: 1; transform: scale(1); } }
+
+    #welcome .w-pin {
+      position: absolute;
+    }
+
+    #welcome .w-pin i {
+      display: block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50% 50% 50% 4px;
+      transform: rotate(-45deg);
+      margin: 0 auto;
+    }
+
+    #welcome .w-pin b {
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #1E3A5F;
+      margin: -13px auto 0;
+      position: relative;
+    }
+
+    #welcome .w-name {
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-top: 14px;
+    }
+
+    #welcome .w-tag {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 10.5px;
+      font-weight: 600;
+      margin-top: 6px;
+      letter-spacing: 0.14em;
+    }
+
+    @keyframes wup {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    #welcome .w-hero {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #1E3A5F;
+    }
+
+    #welcome .w-map {
+      position: absolute;
+      inset: 0;
+      opacity: 0.5;
+    }
+
+    #welcome .w-map .leaflet-container {
+      background: #1E3A5F;
+    }
+
+    #welcome .w-veil {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 38, 64, 0.55);
+      pointer-events: none;
+    }
+
+    #welcome .w-brand {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      z-index: 4;
+    }
+
+    #welcome .w-brand img {
+      width: 58px;
+      height: 58px;
+      background: #fff;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    #welcome .w-brand img.sq { border-radius: 16px; }
+    #welcome .w-brand img.r { border-radius: 50%; }
+    #welcome .w-brand b { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+
+    #welcome .w-head {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      top: 120px;
+      z-index: 2;
+    }
+
+    #welcome .w-head h2 {
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+    }
+
+    #welcome .w-head h2 em { font-style: normal; color: #F5A623; }
+
+    #welcome .w-head p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.72);
+      margin-top: 8px;
+      line-height: 1.6;
+      max-width: 230px;
+      font-weight: 600;
+    }
+
+    #welcome .w-sheet {
+      background: #F4F6FA;
+      border-radius: 26px 26px 0 0;
+      padding: 20px 20px 22px;
+      margin-top: -26px;
+      position: relative;
+      z-index: 5;
+    }
+
+    #welcome .w-chips {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    #welcome .w-chip {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 12px 4px 10px;
+      text-align: center;
+      cursor: default;
+    }
+
+    #welcome .w-chip .ic {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      margin: 0 auto 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #welcome .w-chip .ic svg { width: 20px; height: 20px; }
+    #welcome .w-chip span { font-size: 10px; font-weight: 700; color: #1A1A1A; }
+
+    #welcome .w-go {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: #F5A623;
+      color: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(245, 166, 35, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #welcome .w-guest {
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      color: #5b6b82;
+      margin-top: 12px;
+    }
+
+    #welcome .w-guest b {
+      color: #1E3A5F;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Sheet content is visible by default; the script animates it in
+       with the Web Animations API so a dead animation can never hide it. */
+
     /* ── BOOT SPLASH (same as admin, scoped inside the phone) ── */
     #boot-splash {
       position: absolute;
@@ -459,6 +746,37 @@
       margin-top: -18px;
       position: relative;
       z-index: 1;
+    }
+
+    .replay-fab {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .replay-fab:active {
+      transform: scale(0.94);
+    }
+
+    .replay-fab svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--text3);
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .login-content::-webkit-scrollbar {
@@ -941,6 +1259,48 @@
 </head>
 <body>
   <div id="app-shell">
+    <!-- WELCOME (first launch only) -->
+    <div id="welcome" style="display:none;">
+      <div class="w-intro" id="w-intro">
+        <svg class="w-boundary" viewBox="0 0 300 300"><path d="M150,18 C230,18 282,70 282,150 C282,230 230,282 150,282 C70,282 18,230 18,150 C18,70 70,18 150,18 Z"/></svg>
+        <div class="w-icenter">
+          <div class="w-shield"><img src="calye-safe-logo.png" alt="Calye Safe logo"></div>
+          <div class="w-name">Calye Safe</div>
+          <div class="w-tag">REPORT · RESPOND · RESOLVE</div>
+        </div>
+      </div>
+      <div class="w-hero">
+        <div class="w-map" id="w-map">
+          <svg viewBox="0 0 360 420" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;display:block;">
+            <path d="M60,60 C140,30 240,50 300,110 C340,160 320,260 260,330 C200,395 100,390 50,320 C10,260 15,150 60,60 Z" fill="rgba(245,166,35,0.07)" stroke="#F5A623" stroke-width="2.5" stroke-dasharray="8 7" opacity="0.9"/>
+            <g>
+              <circle cx="120" cy="140" r="11" fill="#E53935"/><circle cx="120" cy="140" r="4.5" fill="#fff"/>
+              <circle cx="220" cy="110" r="11" fill="#F5A623"/><circle cx="220" cy="110" r="4.5" fill="#fff"/>
+              <circle cx="180" cy="210" r="11" fill="#2E7D32"/><circle cx="180" cy="210" r="4.5" fill="#fff"/>
+              <circle cx="90" cy="260" r="11" fill="#5B9BF5"/><circle cx="90" cy="260" r="4.5" fill="#fff"/>
+              <circle cx="250" cy="250" r="11" fill="#FF8A80"/><circle cx="250" cy="250" r="4.5" fill="#fff"/>
+              <circle cx="150" cy="320" r="11" fill="#F5A623"/><circle cx="150" cy="320" r="4.5" fill="#fff"/>
+            </g>
+          </svg>
+        </div>
+        <div class="w-veil"></div>
+        <div class="w-brand"><img class="sq" src="calye-safe-logo.png" alt=""><img class="r" src="Santa Rosa Logo.png" alt=""><b>Calye Safe</b></div>
+        <div class="w-head">
+          <h2>Your Barangay,<br><em>Safer.</em></h2>
+          <p>Report incidents, track response, and get alerts — all in one simple app.</p>
+        </div>
+      </div>
+      <div class="w-sheet">
+        <div class="w-chips">
+          <div class="w-chip"><div class="ic" style="background:#FFE9E9;"><svg viewBox="0 0 24 24" fill="none" stroke="#C62828" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><span>Report</span></div>
+          <div class="w-chip"><div class="ic" style="background:#E3F2FD;"><svg viewBox="0 0 24 24" fill="none" stroke="#1565C0" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg></div><span>Track</span></div>
+          <div class="w-chip"><div class="ic" style="background:#FFF3E0;"><svg viewBox="0 0 24 24" fill="none" stroke="#F57C00" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><span>Alerts</span></div>
+          <div class="w-chip"><div class="ic" style="background:#E8F5E9;"><svg viewBox="0 0 24 24" fill="none" stroke="#2E7D32" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></div><span>Hotlines</span></div>
+        </div>
+        <button class="w-go" onclick="welcomeGo()">Get Started →</button>
+        <span class="w-guest">Just looking around? <b onclick="welcomeGuest()">Continue as guest</b></span>
+      </div>
+    </div>
     <!-- BOOT SPLASH (tap to skip) -->
     <div id="boot-splash" onclick="hideBootSplash(true)">
       <div class="bs-sky"></div>
@@ -972,7 +1332,17 @@
       <div class="bs-sub">Barangay Community App</div>
     </div>
     <div class="login-header">
-      <div class="login-map" id="login-map"></div>
+      <div class="login-map" id="login-map">
+        <svg viewBox="0 0 360 260" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;display:block;">
+          <path d="M40,40 C120,15 240,30 320,80 C350,130 330,210 280,250 C220,295 110,290 60,240 C20,195 15,90 40,40 Z" fill="rgba(245,166,35,0.07)" stroke="#F5A623" stroke-width="2.5" stroke-dasharray="8 7" opacity="0.9"/>
+          <g>
+            <circle cx="110" cy="100" r="10" fill="#E53935"/><circle cx="110" cy="100" r="4" fill="#fff"/>
+            <circle cx="210" cy="80" r="10" fill="#F5A623"/><circle cx="210" cy="80" r="4" fill="#fff"/>
+            <circle cx="170" cy="160" r="10" fill="#2E7D32"/><circle cx="170" cy="160" r="4" fill="#fff"/>
+            <circle cx="260" cy="170" r="10" fill="#5B9BF5"/><circle cx="260" cy="170" r="4" fill="#fff"/>
+          </g>
+        </svg>
+      </div>
       <div class="login-veil"></div>
       <div class="login-sky"></div>
       <div class="brand">
@@ -988,6 +1358,9 @@
     </div>
 
     <div class="login-content">
+      <button class="replay-fab" onclick="welcomeReplay()" aria-label="Replay welcome intro" title="Replay welcome intro">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+      </button>
       <div class="login-card" id="auth-card">
         <div><span class="role-chip">RESIDENT</span></div>
         <div class="welcome-title">Welcome back</div>
@@ -996,7 +1369,7 @@
         <div class="role-switch-label">Log in as</div>
         <div class="role-switch" role="tablist" aria-label="Choose your role">
           <button type="button" class="active" aria-selected="true">Resident</button>
-          <button type="button" onclick="location.href='responder-login.html'" aria-label="Go to responder sign in">Responder</button>
+          <button type="button" onclick="skipSplashTo('responder-login.html')" aria-label="Go to responder sign in">Responder</button>
         </div>
 
         <div class="auth-tabs">
@@ -1123,8 +1496,7 @@
       <div class="login-card" id="status-card" style="display:none;"></div>
 
       <div class="foot-note">
-        Are you a responder?
-        <b onclick="location.href='responder-login.html'" style="cursor:pointer;text-decoration:underline;color:var(--primary);">Go to Responder Sign In →</b>
+        Santa Rosa, Laguna · Barangay Calye
       </div>
     </div>
   </div>
@@ -1544,6 +1916,28 @@
       }
     });
 
+    // Jump between the two logins without replaying the boot splash.
+    // Flag travels as a query param (survives blocked storage and new tabs)
+    // with sessionStorage as backup; the landing page consumes and strips it.
+    function skipSplashTo(url) {
+      try { sessionStorage.setItem('skip_splash', '1'); } catch (e) { }
+      location.href = url + (url.indexOf('?') === -1 ? '?nosplash=1' : '&nosplash=1');
+    }
+    function consumeSplashSkip() {
+      var skip = false;
+      try {
+        if (location.search.indexOf('nosplash=1') !== -1) skip = true;
+      } catch (e) { }
+      try {
+        if (sessionStorage.getItem('skip_splash') === '1') skip = true;
+        sessionStorage.removeItem('skip_splash');
+      } catch (e) { }
+      if (skip) {
+        try { history.replaceState(null, '', location.pathname); } catch (e) { }
+      }
+      return skip;
+    }
+
     // ── BOOT SPLASH (hide after the logo animation plays, tap to skip) ──
     let bootSplashDone = false;
     function hideBootSplash(now) {
@@ -1617,8 +2011,15 @@
       } catch (e) { }
     })();
     try {
-      const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
+      // Coming from the other login: skip the splash entirely.
+      if (consumeSplashSkip()) {
+        bootSplashDone = true;
+        var bs0 = document.getElementById('boot-splash');
+        if (bs0) bs0.remove();
+      } else {
+        const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setTimeout(hideBootSplash, bootReduced ? 300 : 1700);
+      }
     } catch (e) { setTimeout(hideBootSplash, 1700); }
 
     // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-typing ──
@@ -1689,6 +2090,177 @@
         if (map.boxZoom) map.boxZoom.disable();
         if (map.keyboard) map.keyboard.disable();
       } catch (e) { }
+    })();
+
+    // ── WELCOME (first launch: scene-build intro → get-started sheet) ──
+    var WELCOME_KEY = 'calye_welcome_seen';
+    function welcomeGo() {
+      try { localStorage.setItem(WELCOME_KEY, '1'); } catch (e) { }
+      var w = document.getElementById('welcome');
+      if (w) { w.classList.add('hide'); setTimeout(function () { w.style.display = 'none'; }, 400); }
+      playLoginIntro();
+    }
+    // Staggered pop-in for the login page after Get Started.
+    function playLoginIntro() {
+      var seq = [];
+      var brand = document.querySelector('.login-header .brand');
+      var bname = document.querySelector('.login-header .brand-name');
+      var bsub = document.querySelector('.login-header .brand-sub');
+      var card = document.getElementById('auth-card');
+      if (brand) seq.push([brand, 60]);
+      if (bname) seq.push([bname, 140]);
+      if (bsub) seq.push([bsub, 200]);
+      if (card) seq.push([card, 280]);
+      seq.forEach(function (pair) {
+        wAnim(pair[0],
+          [{ opacity: 0, transform: 'translateY(18px) scale(0.97)' }, { opacity: 1, transform: 'none' }],
+          { duration: 520, delay: pair[1], easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
+      });
+    }
+    function welcomeGuest() {
+      // A stored session would otherwise win over guest mode, so sign out
+      // first, then enter as a guest.
+      let left = false;
+      const goGuest = () => {
+        if (left) return;
+        left = true;
+        try {
+          localStorage.setItem(WELCOME_KEY, '1');
+          localStorage.setItem('calye_guest', '1');
+        } catch (e) { }
+        location.href = 'calye-safe-community.html';
+      };
+      try {
+        CalyeAuth.signOut().then(goGuest);
+        setTimeout(goGuest, 2500);
+      } catch (e) { goGuest(); }
+    }
+    // Rewatch the intro + sheet on demand (does not reset first-launch state).
+    function welcomeReplay() {
+      var w = document.getElementById('welcome');
+      if (!w) return;
+      w.classList.remove('hide');
+      w.style.display = 'flex';
+      welcomePlayIntro();
+    }
+    var welcomeTimers = [];
+    function welcomeClearTimers() {
+      welcomeTimers.forEach(clearTimeout);
+      welcomeTimers = [];
+    }
+    // Motion helper: uses the Web Animations API so each effect is started
+    // imperatively. If WAAPI or motion is unavailable, elements simply stay
+    // visible in their final state — nothing can get stuck invisible.
+    function wAnim(el, frames, opts) {
+      try {
+        if (!el || !el.animate) return null;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+        return el.animate(frames, opts);
+      } catch (e) { return null; }
+    }
+    function welcomePlayIntro() {
+      var w = document.getElementById('welcome');
+      var intro = document.getElementById('w-intro');
+      if (!w || !intro) return;
+      welcomeClearTimers();
+      intro.style.display = 'flex';
+      intro.style.display = 'flex';
+      var shield = intro.querySelector('.w-shield');
+      var name = intro.querySelector('.w-name');
+      var tag = intro.querySelector('.w-tag');
+      wAnim(shield,
+        [{ opacity: 0, transform: 'scale(0.4)' }, { opacity: 1, transform: 'scale(1)' }],
+        { duration: 500, delay: 150, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
+      wAnim(name,
+        [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 500, delay: 1100, easing: 'ease', fill: 'both' });
+      wAnim(tag,
+        [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 500, delay: 1250, easing: 'ease', fill: 'both' });
+      var spots = [[22, 38, '#F5A623'], [74, 34, '#E53935'], [30, 66, '#66BB6A'], [70, 68, '#5B9BF5'], [50, 20, '#FF8A80'], [14, 55, '#F5A623'], [86, 55, '#66BB6A'], [40, 80, '#E53935'], [60, 80, '#F5A623'], [12, 30, '#5B9BF5'], [88, 30, '#FF8A80'], [50, 88, '#66BB6A']];
+      spots.forEach(function (sp, k) {
+        welcomeTimers.push(setTimeout(function () {
+          var box = document.getElementById('w-intro');
+          if (!box) return;
+          var d = document.createElement('div');
+          d.className = 'w-pin';
+          d.style.cssText = 'position:absolute;left:' + sp[0] + '%;top:' + sp[1] + '%;';
+          d.innerHTML = '<i style="display:block;width:18px;height:18px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);margin:0 auto;background:' + sp[2] + ';"></i><b style="display:block;width:6px;height:6px;border-radius:50%;background:#1E3A5F;margin:-13px auto 0;position:relative;"></b>';
+          box.appendChild(d);
+          wAnim(d,
+            [{ opacity: 0, transform: 'scale(0)' }, { opacity: 1, transform: 'scale(1)' }],
+            { duration: 450, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'both' });
+        }, 350 + k * 70));
+      });
+      welcomeTimers.push(setTimeout(function () {
+        var w2 = document.getElementById('welcome');
+        var i2 = document.getElementById('w-intro');
+        if (!w2 || !i2) return;
+        i2.style.display = 'none';
+        welcomePlaySheet(w2);
+      }, 2100));
+    }
+    function welcomePlaySheet(w) {
+      w = w || document.getElementById('welcome');
+      if (!w) return;
+      var seq = [];
+      var h2 = w.querySelector('.w-hero h2');
+      var hp = w.querySelector('.w-hero p');
+      if (h2) seq.push([h2, 0]);
+      if (hp) seq.push([hp, 80]);
+      var chips = w.querySelectorAll('.w-chip');
+      for (var i = 0; i < chips.length; i++) seq.push([chips[i], 120 + i * 60]);
+      var go = w.querySelector('.w-go');
+      var guest = w.querySelector('.w-guest');
+      if (go) seq.push([go, 320]);
+      if (guest) seq.push([guest, 400]);
+      seq.forEach(function (pair) {
+        wAnim(pair[0],
+          [{ opacity: 0, transform: 'translateY(16px) scale(0.97)' }, { opacity: 1, transform: 'none' }],
+          { duration: 480, delay: pair[1], easing: 'ease', fill: 'both' });
+      });
+    }
+    (function initWelcome() {
+      var w = document.getElementById('welcome');
+      if (!w) return;
+      var seen = false;
+      try { seen = localStorage.getItem(WELCOME_KEY) === '1'; } catch (e) { }
+      if (seen) { w.style.display = 'none'; return; }
+      w.style.display = 'flex';
+      welcomePlayIntro();
+      // Real Santa Rosa map: retry until the container is measurable —
+      // a 0-size init paints gray forever, so never init blind.
+      (function initWelcomeMap(attempt) {
+        attempt = attempt || 0;
+        var el = document.getElementById('w-map');
+        if (!el || el.dataset.done) return;
+        if (typeof L === 'undefined') return;
+        if (el.clientWidth < 10 && attempt < 25) {
+          setTimeout(function () { initWelcomeMap(attempt + 1); }, 200);
+          return;
+        }
+        try {
+          el.dataset.done = '1';
+          var wm = L.map('w-map', { zoomControl: false, attributionControl: false });
+          wm.setView([14.312, 121.111], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(wm);
+          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(wm);
+          }
+          var wpts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
+          var wcols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
+          wpts.forEach(function (p, i) {
+            L.circleMarker(p, { radius: 7, color: wcols[i], weight: 2, fillColor: wcols[i], fillOpacity: 0.85 }).addTo(wm);
+          });
+          wm.dragging.disable();
+          if (wm.scrollWheelZoom) wm.scrollWheelZoom.disable();
+          if (wm.doubleClickZoom) wm.doubleClickZoom.disable();
+          if (wm.boxZoom) wm.boxZoom.disable();
+          if (wm.keyboard) wm.keyboard.disable();
+          setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 350);
+          setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 1200);
+        } catch (e) { }
+      })(0);
     })();
 
     // In-app animated sky inside the navy header (pins + twinkles)
