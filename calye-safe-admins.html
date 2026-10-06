@@ -3900,6 +3900,30 @@
     .gate-ticker:hover span { animation-play-state: paused; }
     @keyframes gateTick { to { transform: translateX(-100%); } }
     .gate-stage { position: relative; z-index: 4; flex: 1; display: flex; align-items: center; justify-content: center; padding: 36px; }
+    /* ── GATE LANDING SECTIONS (scroll below the login card) ── */
+    .gate-section { position: relative; z-index: 4; background: #F4F6FA; padding: 48px 24px; color: #0f1a2b; }
+    .gate-section.alt { background: #FFFFFF; }
+    .gate-wrap { max-width: 880px; margin: 0 auto; }
+    .gate-section h2.gs { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; color: #0f1a2b; }
+    .gate-lead { font-size: 13.5px; color: #5b6b82; margin-bottom: 22px; }
+    .gate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .gate-scard { background: #fff; border-radius: 14px; padding: 22px 20px; box-shadow: 0 2px 12px rgba(30,58,95,.10); }
+    .gate-section.alt .gate-scard { background: #F4F6FA; box-shadow: none; }
+    .gate-scard .n { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; margin-bottom: 12px; }
+    .gate-scard h3 { font-size: 15px; font-weight: 800; margin-bottom: 6px; color: #0f1a2b; }
+    .gate-scard p { font-size: 13px; color: #5b6b82; line-height: 1.65; }
+    .gate-footer { position: relative; z-index: 4; background: #1b2a44; color: rgba(255,255,255,.65); padding: 22px 28px; }
+    .gate-frow { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .gate-fbrand { display: flex; align-items: center; gap: 10px; }
+    .gate-fbrand img { width: 34px; height: 34px; background: #fff; }
+    .gate-fbrand img.r { border-radius: 50%; }
+    .gate-fbrand img.sq { border-radius: 9px; }
+    .gate-fbrand .div { width: 1px; height: 26px; background: rgba(255,255,255,.25); }
+    .gate-fbrand b { color: #fff; font-size: 15px; font-weight: 800; white-space: nowrap; }
+    .gate-fcopy { font-size: 11.5px; white-space: nowrap; }
+    .grv { opacity: 0; transform: translateY(26px); transition: opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1); }
+    .grv.in { opacity: 1; transform: none; }
+    #shell.hidden { display: none; }
     .gate-card {
       display: flex; width: 960px; max-width: 96vw;
       border-radius: 20px; overflow: hidden;
@@ -4070,9 +4094,44 @@
       </div>
     </div>
     </div>
+
+    <section class="gate-section">
+      <div class="gate-wrap">
+        <h2 class="gs grv">How it works</h2>
+        <div class="gate-lead grv">From a resident's report to a resolved street — in four steps.</div>
+        <div class="gate-grid">
+          <div class="gate-scard grv"><div class="n" style="background:#F57C00">1</div><h3>Report</h3><p>Residents file reports with photo evidence and a GPS pinpoint.</p></div>
+          <div class="gate-scard grv"><div class="n" style="background:#1565C0">2</div><h3>Verify</h3><p>Staff confirm identities and reports in one review queue.</p></div>
+          <div class="gate-scard grv"><div class="n" style="background:#D4841A">3</div><h3>Dispatch</h3><p>The nearest unit is dispatched with a live ETA and route.</p></div>
+          <div class="gate-scard grv"><div class="n" style="background:#2E7D32">4</div><h3>Resolve</h3><p>Photo proof closes the loop — visible to the community.</p></div>
+        </div>
+      </div>
+    </section>
+    <section class="gate-section alt">
+      <div class="gate-wrap">
+        <h2 class="gs grv">Why it helps our community</h2>
+        <div class="gate-lead grv">Faster response where it matters most.</div>
+        <div class="gate-grid">
+          <div class="gate-scard grv"><h3>Faster response</h3><p>GPS-precise dispatch cuts the time between a report and a responder on site.</p></div>
+          <div class="gate-scard grv"><h3>Full transparency</h3><p>Every incident, dispatch, and resolution is tracked and visible.</p></div>
+          <div class="gate-scard grv"><h3>Verified community</h3><p>ID-verified accounts keep reports trustworthy and responders safe.</p></div>
+        </div>
+      </div>
+    </section>
+    <footer class="gate-footer">
+      <div class="gate-frow">
+        <div class="gate-fbrand">
+          <img class="sq" src="calye-safe-logo.png" alt="Calye Safe logo">
+          <div class="div"></div>
+          <img class="r" src="Santa Rosa Logo.png" alt="City of Santa Rosa seal">
+          <b>Calye Safe</b>
+        </div>
+        <div class="gate-fcopy">© 2026 Calye-Safe</div>
+      </div>
+    </footer>
   </div>
 
-  <div id="shell">
+  <div id="shell" class="hidden">
 
     <!-- ── SIDEBAR ── -->
     <aside id="sidebar">
@@ -9213,6 +9272,7 @@ const pageTitles = {
         if (chipRole && prof.role) chipRole.textContent = prof.role === 'admin' ? 'Administrator' : 'Staff';
       } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
+      document.getElementById('shell').classList.remove('hidden');
       showDashboardSplash();
       try { refreshMfaSettings(); } catch (e) { }
       loadDefaultMap();
@@ -9692,7 +9752,9 @@ const pageTitles = {
         mfaSessionClear();
         adminBooted = false;
         adminSessionUid = null;
+        document.getElementById('shell').classList.add('hidden');
         document.getElementById('admin-gate').classList.remove('hidden');
+        try { document.getElementById('admin-gate').scrollTop = 0; } catch (e) { }
         document.getElementById('gate-email').value = '';
         document.getElementById('gate-pass').value = '';
         document.getElementById('gate-email').style.display = 'block';
@@ -9841,6 +9903,21 @@ const pageTitles = {
     }
     window.addEventListener('resize', syncMobileMode);
     syncMobileMode();
+
+    // Gate landing reveals (subtle scroll-in, skipped for reduced motion).
+    try {
+      if (window.matchMedia && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        && 'IntersectionObserver' in window) {
+        var grvObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) { en.target.classList.add('in'); grvObserver.unobserve(en.target); }
+          });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('#admin-gate .grv').forEach(function (el) { grvObserver.observe(el); });
+      } else {
+        document.querySelectorAll('#admin-gate .grv').forEach(function (el) { el.classList.add('in'); });
+      }
+    } catch (e) { }
 
     // ── CLOCK ──
     (function tick() {
