@@ -252,65 +252,8 @@
       #content { padding: 12px; }
     }
 
-    /* ── MOBILE / TABLET: off-canvas drawer + proportioned chrome ── */
-    #side-backdrop {
-      display: none;
-    }
-
-    #side-close {
-      display: none;
-    }
-
+    /* ── MOBILE / TABLET: proportioned chrome ── */
     @media (max-width: 900px) {
-      #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        z-index: 60;
-        width: min(300px, 84vw) !important;
-        transform: translateX(-105%);
-        transition: transform 0.25s ease;
-        box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
-      }
-
-      body.side-open #sidebar {
-        transform: translateX(0);
-      }
-
-      #side-backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(10, 16, 28, 0.5);
-        z-index: 55;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease;
-      }
-
-      body.side-open #side-backdrop {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      #side-close {
-        display: flex;
-        position: absolute;
-        top: 14px;
-        right: 14px;
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 2;
-      }
-
       #topbar { padding: 0 14px; }
       .page-title { font-size: 17px; }
       .breadcrumb { display: none; }
@@ -339,29 +282,6 @@
 
     body.mobi #sidebar {
       display: none;
-    }
-
-    body.mobi.side-open #sidebar {
-      display: flex;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      z-index: 60;
-      width: min(300px, 84vw);
-      box-shadow: 24px 0 60px rgba(0, 0, 0, 0.35);
-    }
-
-    body.mobi #side-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(10, 16, 28, 0.5);
-      z-index: 55;
-    }
-
-    body.mobi.side-open #side-backdrop {
-      display: block;
     }
 
     body.mobi #mobile-nav {
@@ -821,56 +741,6 @@
       color: #FFFFFF;
       transition: width 0.22s ease;
       overflow: hidden;
-    }
-
-    /* Manual collapse (hamburger): icon rail on any screen size. */
-    body.side-collapsed {
-      --sidebar-w: 64px;
-    }
-
-    body.side-collapsed .sidebar-logo .brand,
-    body.side-collapsed .sidebar-logo .sub,
-    body.side-collapsed .nav-item span,
-    body.side-collapsed .nav-label,
-    body.side-collapsed .sidebar-footer {
-      display: none;
-    }
-
-    body.side-collapsed .nav-item {
-      justify-content: center;
-      padding: 12px;
-    }
-
-    body.side-collapsed .nav-item::before {
-      display: none;
-    }
-
-    .side-toggle {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background 0.16s;
-    }
-
-    .side-toggle:hover {
-      background: var(--border);
-    }
-
-    .side-toggle svg {
-      width: 18px;
-      height: 18px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
     }
 
     #sidebar::before {
@@ -4206,9 +4076,6 @@
 
     <!-- ── SIDEBAR ── -->
     <aside id="sidebar">
-      <button id="side-close" onclick="toggleSidebar()" aria-label="Close menu">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-      </button>
       <div class="sidebar-logo">
         <div class="badge-logo">
           <div class="icon-wrap" onclick="location.reload()" title="Reload dashboard" style="cursor:pointer;">
@@ -4311,9 +4178,8 @@
         </div>
       </div>
     </aside>
-    <div id="side-backdrop" onclick="toggleSidebar()"></div>
 
-    <!-- ── MOBILE BOTTOM NAV (JS-driven: works even where media queries fail) ── -->
+    <!-- ── MOBILE BOTTOM NAV (kept: phones navigate with this, no hamburger) ── -->
     <nav id="mobile-nav">
       <button data-p="dashboard" class="active" onclick="navTo('dashboard',this)">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
@@ -4339,9 +4205,6 @@
       <!-- TOPBAR -->
       <div id="topbar">
         <div class="topbar-left">
-          <button class="side-toggle" onclick="toggleSidebar()" title="Collapse sidebar" aria-label="Collapse sidebar">
-            <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-          </button>
           <div>
             <div class="page-title">Dashboard Overview</div>
             <div class="breadcrumb"><span class="pulse-dot"></span>Live · Barangay Calye · <span id="dash-date">—</span></div>
@@ -6326,8 +6189,6 @@ const pageTitles = {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       if (el) el.classList.add('active');
       document.querySelectorAll('#mobile-nav button').forEach(b => b.classList.toggle('active', b.getAttribute('data-p') === page));
-      // Tuck the mobile drawer away after navigating.
-      document.body.classList.remove('side-open');
       // Phones: re-seat maps after the layout settles (wrong-size tiles
       // are what paint those grey half-maps).
       try {
@@ -9963,36 +9824,10 @@ const pageTitles = {
       try {
         var mobi = window.innerWidth <= 900;
         document.body.classList.toggle('mobi', mobi);
-        if (mobi) document.body.classList.remove('side-open');
       } catch (e) { }
     }
     window.addEventListener('resize', syncMobileMode);
     syncMobileMode();
-
-    // ── COLLAPSIBLE SIDEBAR (flexible on any device) ──
-    // Narrow screens get an off-canvas drawer instead of the icon rail.
-    function toggleSidebar() {
-      try {
-        if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) {
-          document.body.classList.toggle('side-open');
-          document.body.classList.remove('side-collapsed');
-          return;
-        }
-      } catch (e) { }
-      const collapsed = document.body.classList.toggle('side-collapsed');
-      try { localStorage.setItem('calye_sidebar', collapsed ? '1' : '0'); } catch (e) { }
-      const btn = document.querySelector('.side-toggle');
-      if (btn) btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
-    }
-    try {
-      // Small screens always boot with the drawer closed and full-width
-      // content — no tap required. Desktop restores the saved rail choice.
-      if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) {
-        document.body.classList.remove('side-open', 'side-collapsed');
-      } else if (localStorage.getItem('calye_sidebar') === '1') {
-        document.body.classList.add('side-collapsed');
-      }
-    } catch (e) { }
 
     // ── CLOCK ──
     (function tick() {
