@@ -9854,11 +9854,12 @@ const pageTitles = {
     }
     initBootSky(document);
     buildSplashRoads(document);
-    // No loader in front of the landing: show the gate immediately so first
-    // paint is the login itself. (Post-login dashboard splash is untouched.)
+    // Let the scene-build intro play out (pins + name + tagline) before
+    // lifting to the landing. (Post-login dashboard splash is untouched.)
     try {
-      hideBootSplash(true);
-    } catch (e) { setTimeout(hideBootSplash, 300); }
+      const bootReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(hideBootSplash, bootReduced ? 300 : 1900);
+    } catch (e) { setTimeout(hideBootSplash, 1900); }
 
     // ── IDLE TIMEOUT (30 min): sign out idle sessions, never mid-task ──
     // Passive listeners only (no per-keystroke work); one status check per
