@@ -2465,13 +2465,10 @@
       }
     })();
 
-    // Header map: static inline SVG on phones (zero cost), live Leaflet
-    // tiles only on desktop widths where the extra load is affordable.
+    // Header map: live Leaflet tiles on all screens (static inline SVG
+    // paints first underneath while tiles load).
     (function initLoginMap() {
       try {
-        var phone = false;
-        try { phone = window.matchMedia && window.matchMedia('(max-width: 640px)').matches; } catch (e) { }
-        if (phone) return;
         function build() {
           try {
             if (typeof L === 'undefined') return;
@@ -2517,13 +2514,10 @@
       } catch (e) { }
     })();
 
-    // Welcome hero map: same live tiles as the login header on desktop widths
-    // (static inline SVG stays on phones). Retries until the hero is measurable.
+    // Welcome hero map: same live tiles as the login header on all screens.
+    // Retries until the hero is measurable.
     (function initWelcomeMap(attempt) {
       try {
-        var phone = false;
-        try { phone = window.matchMedia && window.matchMedia('(max-width: 640px)').matches; } catch (e) { }
-        if (phone) return;
         attempt = attempt || 0;
         var el = document.getElementById('w-map');
         if (!el || el.dataset.done) return;
