@@ -212,6 +212,10 @@
       opacity: 0.5;
     }
 
+    #welcome .w-map .leaflet-container {
+      background: #1E3A5F;
+    }
+
     #welcome .w-veil {
       position: absolute;
       inset: 0;
@@ -2490,6 +2494,48 @@
         });
       } catch (e) { }
     })();
+
+    // Welcome hero map: same live tiles as the login header on desktop widths
+    // (static inline SVG stays on phones). Retries until the hero is measurable.
+    (function initWelcomeMap(attempt) {
+      try {
+        var phone = false;
+        try { phone = window.matchMedia && window.matchMedia('(max-width: 640px)').matches; } catch (e) { }
+        if (phone) return;
+        attempt = attempt || 0;
+        var el = document.getElementById('w-map');
+        if (!el || el.dataset.done) return;
+        if (typeof L === 'undefined') {
+          if (attempt < 20) setTimeout(function () { initWelcomeMap(attempt + 1); }, 500);
+          return;
+        }
+        if (el.clientWidth < 10 && attempt < 25) {
+          setTimeout(function () { initWelcomeMap(attempt + 1); }, 200);
+          return;
+        }
+        el.dataset.done = '1';
+        var wm = L.map('w-map', { zoomControl: false, attributionControl: false });
+        wm.setView([14.312, 121.111], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(wm);
+        try {
+          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(wm);
+          }
+        } catch (e) { }
+        var wpts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15], [14.32, 121.12]];
+        var wcols = ['#E53935', '#F5A623', '#66BB6A', '#5B9BF5', '#FF8A80', '#F5A623'];
+        wpts.forEach(function (p, i) {
+          L.circleMarker(p, { radius: 7, color: wcols[i], weight: 2, fillColor: wcols[i], fillOpacity: 0.85 }).addTo(wm);
+        });
+        wm.dragging.disable();
+        if (wm.scrollWheelZoom) wm.scrollWheelZoom.disable();
+        if (wm.doubleClickZoom) wm.doubleClickZoom.disable();
+        if (wm.boxZoom) wm.boxZoom.disable();
+        if (wm.keyboard) wm.keyboard.disable();
+        setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 350);
+        setTimeout(function () { try { wm.invalidateSize(); } catch (e) { } }, 1200);
+      } catch (e) { }
+    })(0);
   </script>
 </body>
 </html>
