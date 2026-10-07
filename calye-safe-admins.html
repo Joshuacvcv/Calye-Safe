@@ -5736,6 +5736,23 @@
     }
 
     // ── REPORT DETAIL: full info + attached photos for any table row ──
+    // Report media is stored one row per photo — always work with the full list.
+    function reportPhotoList(dbId, fallback) {
+      const v = (typeof reportMediaByReport !== 'undefined') ? reportMediaByReport[dbId] : null;
+      if (Array.isArray(v) && v.length) return v.filter(Boolean);
+      if (typeof v === 'string' && v) return [v];
+      return fallback ? [fallback] : [];
+    }
+    function reportPhotoGrid(list, label) {
+      if (!list.length) return '';
+      const cells = list.map(function (src, i) {
+        const cap = (label || 'Attached photo') + (list.length > 1 ? ' ' + (i + 1) : '');
+        return `<img src="${src}" alt="${cap}" title="Click to expand" onclick="openPhotoSrcLightbox('${src}','${cap}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:zoom-in;background:var(--surface2);">`;
+      }).join('');
+      return list.length > 1
+        ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">${cells}</div>`
+        : cells;
+    }
     function openPhotoSrcLightbox(src, alt) {
       if (!src) return;
       const overlay = document.createElement('div');
@@ -5750,10 +5767,10 @@
       const r = (reports || []).find(x => x.dbId === dbId) || (fullReports || []).find(x => x.dbId === dbId);
       if (!r) return;
       const full = (reports || []).find(x => x.dbId === dbId) || r;
-      const photo = full.photo || reportMediaByReport[dbId] || '';
+      const photoList = reportPhotoList(dbId, full.photo);
       const statusLabel = { urgent: 'Urgent', pending: 'Pending', responding: 'Responding', resolved: 'Resolved', declined: 'Declined' }[r.status] || r.status;
-      const photos = photo
-        ? `<img src="${photo}" alt="Attached photo" title="Click to expand" onclick="openPhotoSrcLightbox('${photo}','Attached photo')" style="width:100%;max-width:1920px;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);cursor:zoom-in;background:var(--surface2);">`
+      const photos = photoList.length
+        ? reportPhotoGrid(photoList, 'Attached photo')
         : `<div style="padding:14px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-sm);">No photo attached</div>`;
       const resolution = (full.resolutionNotes || full.proofUrl)
         ? `<div class="verify-detail-label">Resolution</div>
@@ -5955,7 +5972,7 @@
       tbody.innerHTML = data.map(r => `
     <tr onclick="openReportDetail('${r.dbId || ''}')" title="Click to view report details" style="cursor:pointer;">
       <td><span class="report-num">${r.id}</span></td>
-      <td><div class="report-name">${r.type}${photoTag(r.photo || reportMediaByReport[r.dbId] || '')}</div></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo || reportPhotoList(r.dbId)[0] || '')}</div></td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
@@ -6385,7 +6402,7 @@ const pageTitles = {
     let currentDispatchId = null;   // display id, e.g. #BRGY-2026-0047
     let currentDispatchDbId = null; // reports row uuid in Supabase
     let currentDispatchPhoto = '';  // attached incident photo url
-    let reportMediaByReport = {};   // report dbId -> photo url
+    let reportMediaByReport = {};   // report dbId -> photo url list
 
     function openResponseModal(rid, dbId) {
       dispatchDone = false;
@@ -6404,9 +6421,9 @@ const pageTitles = {
       const filedLabel = target ? target.filed : 'Recent';
       const reporter = target ? target.reporterName : 'Resident';
       const desc = target && target.description ? target.description : 'No description provided.';
-      const photo = target && target.photo ? target.photo : '';
-      const photoBlock = photo
-        ? `<img class="dispatch-report-photo" src="${photo}" alt="Resident photo" onclick="openPhotoLightbox('${currentDispatchId}','${currentDispatchDbId}')">`
+      const photoList = reportPhotoList(currentDispatchDbId, target && target.photo);
+      const photoBlock = photoList.length
+        ? reportPhotoGrid(photoList, 'Resident photo')
         : `<div class="dispatch-report-photo-empty">No photo attached to this report</div>`;
       const body = document.getElementById('dispatch-modal-body');
       // Pre-fill the optional announcement fields from this report so the
@@ -6418,7 +6435,7 @@ const pageTitles = {
       const annCat = (target && (target.severity === 'urgent' || target.urgent)) ? 'emergency' : 'advisory';
       // Attach the incident photo (if any) to the announcement so residents can
       // see exactly what was reported. Falls back to the DB media lookup.
-      currentDispatchPhoto = photo || reportMediaByReport[currentDispatchDbId] || '';
+      currentDispatchPhoto = photoList[0] || '';
       body.innerHTML = `
     <div class="dispatch-report">
       <div class="dispatch-report-header">
@@ -6530,11 +6547,13 @@ const pageTitles = {
     }
 
     function openPhotoLightbox(reportId, dbId) {
-      const photo = reportMediaByReport[dbId] || '';
-      if (!photo) return;
+      const list = reportPhotoList(dbId, '');
+      if (!list.length) return;
       const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-      overlay.innerHTML = `<img src="${photo}" alt="Report photo ${reportId}" style="max-width:92vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;overflow-y:auto;cursor:zoom-out;';
+      overlay.innerHTML = list.map(function (src, i) {
+        return `<img src="${src}" alt="Report photo ${reportId}${list.length > 1 ? ' ' + (i + 1) + ' of ' + list.length : ''}" style="max-width:92vw;max-height:80vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+      }).join('') + (list.length > 1 ? `<div style="color:#fff;font-size:12px;font-weight:700;">${list.length} photos — tap anywhere to close</div>` : '');
       overlay.onclick = function () { document.body.removeChild(overlay); };
       document.body.appendChild(overlay);
     }
@@ -6551,16 +6570,16 @@ const pageTitles = {
       const filedLabel = target.filed || 'Recent';
       const reporter = target.reporterName || 'Resident';
       const desc = target.description || 'No description provided.';
-      const photo = target.photo || reportMediaByReport[currentDispatchDbId] || '';
+      const photoList = reportPhotoList(currentDispatchDbId, target.photo);
       const status = target.status || 'pending';
       const severityLabel = (target.severity || 'minor').charAt(0).toUpperCase() + (target.severity || 'minor').slice(1);
       const urgent = target.urgent ? 'Yes' : 'No';
       const reportNo = target.id || currentDispatchId;
       
-      const photoBlock = photo
-        ? `<img class="dispatch-report-photo" src="${photo}" alt="Resident photo" onclick="openPhotoLightbox('${currentDispatchId}','${currentDispatchDbId}')">`
+      const photoBlock = photoList.length
+        ? reportPhotoGrid(photoList, 'Resident photo')
         : `<div class="dispatch-report-photo-empty">No photo attached to this report</div>`;
-      
+
       const statusBadge = status === 'urgent' ? 'urgent' : status === 'responding' ? 'responding' : status === 'resolved' ? 'resolved' : 'pending';
       const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
       
@@ -8708,7 +8727,9 @@ const pageTitles = {
       CalyeDB.fetch('report_media', { limit: 500 }).then(mediaRows => {
         reportMediaByReport = {};
         (mediaRows || []).forEach(m => {
-          if (!reportMediaByReport[m.report_id] && m.url) reportMediaByReport[m.report_id] = m.url;
+          if (m.report_id && m.url) {
+            (reportMediaByReport[m.report_id] = reportMediaByReport[m.report_id] || []).push(m.url);
+          }
         });
         loadReports();
       });
@@ -8803,7 +8824,7 @@ const pageTitles = {
               assignedAt: asn.assigned_at || null,
               asnStatus: asn.status || null,
               responderId: asn.responder_id || null,
-              photo: reportMediaByReport[r.id] || '',
+              photo: reportPhotoList(r.id)[0] || '',
               resolutionNotes: asn.resolution_notes || '',
               proofUrl: asn.proof_url || '',
               announceConsent: r.announce_consent === true,

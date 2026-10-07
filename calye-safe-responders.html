@@ -3864,8 +3864,16 @@
         let selectedReason = null;
         let dispatchTimer = null;
         let incomingJob = null;
-        let reportMediaByReport = {};
+        let reportMediaByReport = {};   // report id -> photo url list
         let currentResidentPhoto = '';
+        let currentResidentPhotos = [];
+        // Report media is stored one row per photo — always work with the full list.
+        function reportPhotoList(reportId, fallback) {
+            const v = reportMediaByReport[reportId];
+            if (Array.isArray(v) && v.length) return v.filter(Boolean);
+            if (typeof v === 'string' && v) return [v];
+            return fallback ? [fallback] : [];
+        }
 
         // Fallback responder position (Barangay Hall / patrol base) used if
         // live geolocation isn't available or permission is denied.
@@ -4234,6 +4242,7 @@
                 return;
             }
             currentResidentPhoto = j.photo || '';
+            currentResidentPhotos = (j.photos && j.photos.length ? j.photos : (j.photo ? [j.photo] : []));
             ensureTimeline(j);
             const c = CAT[j.cat] || CAT.other;
             const d = 0.01;
@@ -4299,12 +4308,13 @@
 
             ${j.photo ? `
             <div class="evidence-row" onclick="openResidentPhoto()">
-              <div class="evidence-thumb">
+              <div class="evidence-thumb" style="position:relative;">
                 <img src="${j.photo}" alt="Resident photo" style="width:100%;height:100%;object-fit:cover;border-radius:6px;display:block;">
+                ${(j.photos && j.photos.length > 1) ? `<span style="position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;">+${j.photos.length - 1}</span>` : ''}
               </div>
               <div class="evidence-text">
-                <h5>Resident's submitted photo</h5>
-                <p>Tap to view full photo</p>
+                <h5>Resident's submitted photo${(j.photos && j.photos.length > 1) ? 's (' + j.photos.length + ')' : ''}</h5>
+                <p>Tap to view full photo${(j.photos && j.photos.length > 1) ? 's' : ''}</p>
               </div>
             </div>` : `
             <div class="evidence-row" style="opacity:0.55;cursor:default;">
@@ -4383,13 +4393,15 @@
             }
         }
 
-        // Full-screen viewer for the resident's submitted photo.
+        // Full-screen viewer for the resident's submitted photos.
         function openResidentPhoto() {
-            const photo = currentResidentPhoto;
-            if (!photo) { showToast('No photo attached to this report.'); return; }
+            const list = (currentResidentPhotos && currentResidentPhotos.length ? currentResidentPhotos : (currentResidentPhoto ? [currentResidentPhoto] : []));
+            if (!list.length) { showToast('No photo attached to this report.'); return; }
             const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-            overlay.innerHTML = `<img src="${photo}" alt="Resident submitted photo" style="max-width:94vw;max-height:92vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;overflow-y:auto;cursor:zoom-out;';
+            overlay.innerHTML = list.map(function (src, i) {
+                return `<img src="${src}" alt="Resident submitted photo${list.length > 1 ? ' ' + (i + 1) + ' of ' + list.length : ''}" style="max-width:94vw;max-height:80vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.5);">`;
+            }).join('') + (list.length > 1 ? `<div style="color:#fff;font-size:12px;font-weight:700;">${list.length} photos — tap anywhere to close</div>` : '');
             overlay.onclick = function () { document.body.removeChild(overlay); };
             document.body.appendChild(overlay);
         }
@@ -5361,9 +5373,12 @@
             CalyeDB.fetch('report_media', { limit: 300 }).then(mediaRows => {
                 reportMediaByReport = {};
                 (mediaRows || []).forEach(m => {
-                    if (m.report_id && m.url && !reportMediaByReport[m.report_id]) reportMediaByReport[m.report_id] = m.url;
+                    if (m.report_id && m.url) {
+                        (reportMediaByReport[m.report_id] = reportMediaByReport[m.report_id] || []).push(m.url);
+                    }
                 });
             });
+
             CalyeAuth.getStatus().then(function (g) {
                 if (!g.session || !g.profile) return;
                 const p = g.profile;
@@ -5479,7 +5494,8 @@
                                     status: a.status,
                                     desc: r.description || '',
                                     notes: a.resolution_notes || '',
-                                    photo: reportMediaByReport[r.id] || '',
+                                    photo: reportPhotoList(r.id)[0] || '',
+                                    photos: reportPhotoList(r.id),
                                     timeline: (function () {
                                       const tl = canonicalTimeline(tlByAsn[a.id] || []);
                                       if (tl.length > 0) {
