@@ -12,9 +12,6 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-  <script src="santarosa-boundary.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="supabase-config.js" defer></script>
   <script src="supabase-data.js" defer></script>
@@ -2450,34 +2447,55 @@
       }
     })();
 
-    // Mini live Santa Rosa map behind the blue header (same look as admin login).
+    // Header map: static inline SVG on phones (zero cost), live Leaflet
+    // tiles only on desktop widths where the extra load is affordable.
     (function initLoginMap() {
       try {
-        if (typeof L === 'undefined') {
-          setTimeout(initLoginMap, 600);
-          return;
+        var phone = false;
+        try { phone = window.matchMedia && window.matchMedia('(max-width: 640px)').matches; } catch (e) { }
+        if (phone) return;
+        function build() {
+          try {
+            if (typeof L === 'undefined') return;
+            var el = document.getElementById('login-map');
+            if (!el || el.dataset.done) return;
+            el.dataset.done = '1';
+            var map = L.map('login-map', { zoomControl: false, attributionControl: false });
+            map.setView([14.312, 121.111], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+            try {
+              if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
+                L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(map);
+              }
+            } catch (e) { }
+            var pts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
+            var cols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
+            pts.forEach(function (p, i) {
+              L.circleMarker(p, { radius: 7, color: cols[i], weight: 2, fillColor: cols[i], fillOpacity: 0.85 }).addTo(map);
+            });
+            map.dragging.disable();
+            if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
+            if (map.doubleClickZoom) map.doubleClickZoom.disable();
+            if (map.boxZoom) map.boxZoom.disable();
+            if (map.keyboard) map.keyboard.disable();
+          } catch (e) { }
         }
-        var el = document.getElementById('login-map');
-        if (!el || el.dataset.done) return;
-        el.dataset.done = '1';
-        var map = L.map('login-map', { zoomControl: false, attributionControl: false });
-        map.setView([14.312, 121.111], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-        try {
-          if (typeof SANTA_ROSA_BOUNDARY !== 'undefined') {
-            L.polygon(SANTA_ROSA_BOUNDARY, { color: '#F5A623', weight: 2, opacity: 0.9, fillColor: '#F5A623', fillOpacity: 0.08, dashArray: '6 6' }).addTo(map);
-          }
-        } catch (e) { }
-        var pts = [[14.325, 121.095], [14.298, 121.125], [14.335, 121.135], [14.285, 121.095], [14.31, 121.15]];
-        var cols = ['#E53935', '#F5A623', '#2E7D32', '#1565C0', '#E53935'];
-        pts.forEach(function (p, i) {
-          L.circleMarker(p, { radius: 7, color: cols[i], weight: 2, fillColor: cols[i], fillOpacity: 0.85 }).addTo(map);
+        function load(src, next) {
+          try {
+            var s = document.createElement('script');
+            s.src = src; s.defer = true;
+            s.onload = next;
+            s.onerror = function () { };
+            document.head.appendChild(s);
+          } catch (e) { }
+        }
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(css);
+        load('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', function () {
+          load('santarosa-boundary.js', build);
         });
-        map.dragging.disable();
-        if (map.scrollWheelZoom) map.scrollWheelZoom.disable();
-        if (map.doubleClickZoom) map.doubleClickZoom.disable();
-        if (map.boxZoom) map.boxZoom.disable();
-        if (map.keyboard) map.keyboard.disable();
       } catch (e) { }
     })();
   </script>
