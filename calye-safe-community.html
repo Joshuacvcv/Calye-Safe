@@ -5481,6 +5481,20 @@
     }
 
     // Deep-link: notification → that exact report, timeline expanded.
+    // A notification tap that cold-starts the app lands here after the login
+    // redirect; open the pushed report once the list has synced.
+    function consumePendingPush() {
+      var raw = null;
+      try { raw = localStorage.getItem('calye_pending_push'); } catch (e) { return; }
+      if (!raw) return;
+      try { localStorage.removeItem('calye_pending_push'); } catch (e) { /* ignore */ }
+      try {
+        var p = JSON.parse(raw);
+        var d = (p && p.data) || {};
+        if (d.report_id) setTimeout(function () { try { openNotifReport(d.report_id, null); } catch (e) { /* ignore */ } }, 2000);
+      } catch (e) { /* ignore */ }
+    }
+
     function openNotifReport(reportId, reportNo) {
       closeNotifPanel();
       switchScreen('myreports'); // re-renders the resident's report list
@@ -6175,7 +6189,7 @@
 
     function confirmLogOut() {
       try { sessionStorage.removeItem('calye_safe_role'); } catch (e) { /* ignore */ }
-      CalyeAuth.signOut().then(() => { location.href = 'index.html'; });
+      CalyeAuth.pushClear().then(() => { CalyeAuth.signOut().then(() => { location.href = 'index.html'; }); });
     }
 
     function openStaticModal(key) {
@@ -6569,6 +6583,21 @@
             }
           });
         }, 20000);
+        // Device push (native only): FCM token + foreground/tap routing.
+        // Polling stays as the fallback everywhere else.
+        try {
+          CalyeAuth.pushInit({
+            onMessage: function (m) {
+              showToast(m.title ? (m.title + (m.body ? ' — ' + m.body : '')) : (m.body || 'New update'));
+              try { syncFromSupabase(); } catch (e) { /* ignore */ }
+            },
+            onTap: function (d) {
+              d = d || {};
+              if (d.report_id) { try { openNotifReport(d.report_id, null); } catch (e) { /* ignore */ } }
+            }
+          });
+          consumePendingPush();
+        } catch (e) { /* ignore */ }
         return;
       }
       const shell = document.getElementById('app-shell');

@@ -96,6 +96,21 @@ window.CalyeDB = (function () {
     });
   }
 
+  // upsert(table, rows, onConflict): insert-or-update for tables with a
+  // unique constraint (e.g. push_tokens on user_id,token). Resolves null on
+  // any failure, same contract as insert.
+  function upsert(table, rows, onConflict) {
+    var list = Array.isArray(rows) ? rows : [rows];
+    return new Promise(function (resolve) {
+      var c = client();
+      if (!c) { resolve(null); return; }
+      c.from(table).upsert(list, { onConflict: onConflict || 'id' }).select().then(function (res) {
+        if (res.error) { resolve(null); return; }
+        resolve(res.data || list);
+      }).catch(function () { resolve(null); });
+    });
+  }
+
   // Normalize filters into [col, val] pairs. Accepts both:
   //   [['id', 1]]            (array of pairs)
   //   { id: 1 }              (plain object)
@@ -266,6 +281,7 @@ window.CalyeDB = (function () {
     fetch: fetch,
     fetchOne: fetchOne,
     insert: insert,
+    upsert: upsert,
     update: update,
     remove: remove,
     rpc: rpc,

@@ -59,6 +59,7 @@ jobs:
               'android.permission.ACCESS_FINE_LOCATION',
               'android.permission.ACCESS_COARSE_LOCATION',
               'android.permission.CAMERA',
+              'android.permission.POST_NOTIFICATIONS',
           ]:
               if perm not in s:
                   s = re.sub(
@@ -87,6 +88,37 @@ jobs:
           if 'ph.atsu.calyesafe' not in s:
               s = s.replace('</activity>', filt + '</activity>', 1)
           open(p, 'w').write(s)
+          EOF
+
+      # Firebase Cloud Messaging: needs google-services.json (from the
+      # GOOGLE_SERVICES_JSON repo secret, base64) plus the google-services
+      # Gradle plugin. Skipped cleanly when the secret is absent — the app
+      # still builds, push just stays dormant.
+      - name: Add Firebase (google-services)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          python3 - <<'EOF'
+          import os, base64
+          raw = (os.environ.get('GOOGLE_SERVICES_JSON') or '').strip()
+          if not raw:
+              print('No GOOGLE_SERVICES_JSON secret — skipping FCM wiring.')
+          else:
+              open('android/app/google-services.json', 'wb').write(base64.b64decode(raw))
+              print('Wrote android/app/google-services.json')
+              p = 'android/build.gradle'
+              s = open(p).read()
+              if 'com.google.gms' not in s and 'dependencies {' in s:
+                  s = s.replace('dependencies {',
+                                'dependencies {\n        classpath "com.google.gms:google-services:4.4.2"', 1)
+                  open(p, 'w').write(s)
+                  print('Patched android/build.gradle')
+              p = 'android/app/build.gradle'
+              s = open(p).read()
+              if "com.google.gms.google-services" not in s:
+                  s = s.rstrip() + "\napply plugin: 'com.google.gms.google-services'\n"
+                  open(p, 'w').write(s)
+                  print('Patched android/app/build.gradle')
           EOF
 
       - name: Sync Capacitor

@@ -250,6 +250,92 @@ window.CalyeAuth = (function () {
     });
   }
 
+  // ── Device push (Capacitor @capacitor/push-notifications + FCM) ──────────
+  // pushInit({ onMessage, onTap }): no-op on web. On native it asks for
+  // permission, registers with FCM, saves the token for the signed-in user
+  // (upsert on user_id,token), and routes foreground messages + taps to the
+  // callbacks. Taps are also persisted to localStorage (calye_pending_push)
+  // so a tap that cold-starts the app survives the login redirect.
+  // Resolves when listeners are attached — the token itself arrives later
+  // via the 'registration' event (or on the next SIGNED_IN if pre-login).
+  var pushToken = null;
+
+  function pushNative() {
+    try {
+      var cap = window.Capacitor;
+      if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return null;
+      var PN = cap.Plugins && cap.Plugins.PushNotifications;
+      return PN || null;
+    } catch (e) { return null; }
+  }
+
+  function pushSaveToken(token) {
+    return new Promise(function (resolve) {
+      pushToken = token;
+      if (!token) { resolve(false); return; }
+      currentSession().then(function (sess) {
+        var user = sess && sess.user ? sess.user : null;
+        if (!user) { resolve(false); return; } // retried on SIGNED_IN below
+        try {
+          window.CalyeDB.upsert('push_tokens', {
+            user_id: user.id, token: token, platform: 'android',
+            updated_at: new Date().toISOString()
+          }, 'user_id,token').then(function () { resolve(true); });
+        } catch (e) { resolve(false); }
+      });
+    });
+  }
+
+  function pushInit(opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var PN = pushNative();
+      if (!PN) { resolve({ native: false }); return; }
+      try {
+        PN.addListener('registration', function (t) {
+          if (t && t.value) pushSaveToken(t.value);
+        });
+        PN.addListener('registrationError', function () { /* stay on polling */ });
+        PN.addListener('pushNotificationReceived', function (n) {
+          try {
+            if (opts.onMessage) opts.onMessage({ title: n.title, body: n.body, data: (n && n.data) || {} });
+          } catch (e) { /* ignore */ }
+        });
+        PN.addListener('pushNotificationActionPerformed', function (a) {
+          var data = (a && a.notification && a.notification.data) || {};
+          try {
+            try { localStorage.setItem('calye_pending_push', JSON.stringify({ data: data, at: Date.now() })); } catch (e) { /* ignore */ }
+          } catch (e2) { /* ignore */ }
+          try { if (opts.onTap) opts.onTap(data); } catch (e) { /* ignore */ }
+        });
+        PN.requestPermissions().then(function (res) {
+          if (res && res.receive === 'granted') { try { PN.register(); } catch (e) { /* ignore */ } }
+          resolve({ native: true });
+        }).catch(function () { resolve({ native: true }); });
+        // A token that arrived before login gets saved on the next sign-in.
+        onAuthEvent(function (ev) {
+          if (ev === 'SIGNED_IN' && pushToken) pushSaveToken(pushToken);
+        });
+      } catch (e) { resolve({ native: true }); }
+    });
+  }
+
+  // Best-effort: drop this device's token so a signed-out phone stops
+  // buzzing. Call BEFORE signOut (needs the session). Always resolves.
+  function pushClear() {
+    return new Promise(function (resolve) {
+      var tok = pushToken;
+      pushToken = null;
+      try { localStorage.removeItem('calye_pending_push'); } catch (e) { /* ignore */ }
+      if (!tok) { resolve(true); return; }
+      currentSession().then(function (sess) {
+        var user = sess && sess.user ? sess.user : null;
+        if (!user || !window.CalyeDB || !window.CalyeDB.remove) { resolve(true); return; }
+        window.CalyeDB.remove('push_tokens', { token: tok }).then(function () { resolve(true); });
+      });
+    });
+  }
+
   /**
    * Send a password-reset email. The link returns the user to `redirectTo`
    * (typically this page). Returns { error }.
@@ -741,6 +827,8 @@ window.CalyeAuth = (function () {
     mfaList: mfaList,
     mfaDiscardUnverified: mfaDiscardUnverified,
     turnstileCheck: turnstileCheck,
-    signInViaGate: signInViaGate
+    signInViaGate: signInViaGate,
+    pushInit: pushInit,
+    pushClear: pushClear
   };
 })();

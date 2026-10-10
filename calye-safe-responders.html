@@ -4798,7 +4798,7 @@
 
         function confirmLogOut() {
             try { sessionStorage.removeItem('calye_safe_role'); } catch (e) { /* ignore */ }
-            CalyeAuth.signOut().then(() => { location.href = 'responder-login.html'; });
+            CalyeAuth.pushClear().then(() => { CalyeAuth.signOut().then(() => { location.href = 'responder-login.html'; }); });
         }
 
         // ══════════════════════════ SHEETS ══════════════════════════
@@ -5232,6 +5232,20 @@
                 notifs.forEach(n => { readMap[n.key] = true; });
                 saveReadNotifKeys(readMap);
                 setTimeout(updateNotifDot, 50);
+            } catch (e) { /* ignore */ }
+        }
+
+        // A notification tap that cold-starts the app lands here after the login
+        // redirect; open the pushed job once the queue has synced.
+        function consumePendingPush() {
+            var raw = null;
+            try { raw = localStorage.getItem('calye_pending_push'); } catch (e) { return; }
+            if (!raw) return;
+            try { localStorage.removeItem('calye_pending_push'); } catch (e) { /* ignore */ }
+            try {
+                var p = JSON.parse(raw);
+                var d = (p && p.data) || {};
+                if (d.assignment_id) setTimeout(function () { try { openNotifJob(d.assignment_id); } catch (e) { /* ignore */ } }, 2000);
             } catch (e) { /* ignore */ }
         }
 
@@ -5696,6 +5710,21 @@
                         }
                     });
                 }, 20000);
+                // Device push (native only): FCM token + foreground/tap routing.
+                // Polling stays as the fallback everywhere else.
+                try {
+                    CalyeAuth.pushInit({
+                        onMessage: function (m) {
+                            showToast(m.title ? (m.title + (m.body ? ' — ' + m.body : '')) : (m.body || 'New update'));
+                            try { syncFromSupabase(); } catch (e) { /* ignore */ }
+                        },
+                        onTap: function (d) {
+                            d = d || {};
+                            if (d.assignment_id) { try { openNotifJob(d.assignment_id); } catch (e) { /* ignore */ } }
+                        }
+                    });
+                    consumePendingPush();
+                } catch (e) { /* ignore */ }
                 return;
             }
 

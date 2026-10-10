@@ -2106,6 +2106,10 @@
       try { CalyeAuth.init('calye-resident'); } catch (e) { }
       armAuthUi();
       scheduleIdleTask(checkSavedSession, 1200);
+      // Device push: attach listeners early so a notification tap that
+      // cold-starts the app is persisted (calye_pending_push) before the
+      // session redirect carries the user into the app. Native only.
+      try { CalyeAuth.pushInit({}); } catch (e) { }
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', bootLandingLogin, { once: true });
