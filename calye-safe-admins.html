@@ -13,6 +13,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileApiReady" async defer></script>
   <script src="supabase-config.js"></script>
   <script src="supabase-data.js"></script>
   <script src="supabase-auth.js"></script>
@@ -4093,6 +4094,7 @@
           </button>
         </div>
         <div id="gate-hint" class="gate-msg" style="display:none"></div>
+        <div id="ts-gate" style="margin:2px 0 12px;display:flex;justify-content:center;"></div>
         <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
         <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
         <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
@@ -9746,12 +9748,42 @@ const pageTitles = {
       });
     }
 
+    // ── Turnstile human-check (staff gate) ────────────────────────────────
+    // Same gate as the resident/responder logins: the widget proves humanity,
+    // the auth-gate Edge Function enforces it + rate limits server-side.
+    let gateToken = '';
+    let tsGateWidget = null;
+    function onTurnstileApiReady() {
+      try {
+        const key = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.turnstileSiteKey) || '';
+        if (!key || key.indexOf('PASTE') === 0 || typeof turnstile === 'undefined') return;
+        if (document.getElementById('ts-gate') && tsGateWidget === null) {
+          tsGateWidget = turnstile.render('#ts-gate', {
+            sitekey: key, theme: 'light',
+            callback: function (t) { gateToken = t; },
+            'expired-callback': function () { gateToken = ''; },
+            'error-callback': function () { gateToken = ''; }
+          });
+        }
+      } catch (e) { /* server still enforces */ }
+    }
+    function resetGateTurnstile() {
+      try {
+        if (typeof turnstile !== 'undefined' && tsGateWidget !== null) turnstile.reset(tsGateWidget);
+      } catch (e) { }
+      gateToken = '';
+    }
+
     function adminGateLogin() {
       const email = document.getElementById('gate-email').value.trim();
       const pass = document.getElementById('gate-pass').value;
       if (!email || !pass) { gateMsg('Enter your email and password.', false); return; }
+      if (!gateToken) { gateMsg('Please complete the human verification check below.', false); return; }
       gateLoading(true); gateMsg('Signing in…', true);
-      CalyeAuth.signIn(email, pass).then(res => {
+      // Staff login goes through the auth-gate Edge Function like the other
+      // apps: Turnstile token verified + rate limits enforced server-side.
+      CalyeAuth.signInViaGate(email, pass, gateToken).then(res => {
+        resetGateTurnstile();
         if (res.error) { gateLoading(false); gateMsg(res.error, false); return; }
         CalyeAuth.getStatus().then(gs => {
           if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
