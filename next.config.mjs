@@ -12,6 +12,9 @@ const nextConfig = {
       "/app/*": [
         "./calye-safe-admins.html",
         "./reset-password.html",
+        "./index.html",
+        "./calye-safe-community.html",
+        "./privacy.html",
         "./supabase-config.js",
         "./supabase-auth.js",
         "./supabase-data.js",

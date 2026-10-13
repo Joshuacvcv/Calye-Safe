@@ -12,6 +12,11 @@ const PUBLIC_FILES: Record<string, string> = {
   // Exception to admin-only: the password-reset page must be public so APK
   // users (whose origin is the app's private localhost) get a working link.
   "reset-password.html": "text/html; charset=utf-8",
+  // Survey access: resident app in the browser, no APK install needed.
+  // (Responder app stays APK-only.)
+  "index.html": "text/html; charset=utf-8",
+  "calye-safe-community.html": "text/html; charset=utf-8",
+  "privacy.html": "text/html; charset=utf-8",
   "supabase-config.js": "text/javascript; charset=utf-8",
   "supabase-auth.js": "text/javascript; charset=utf-8",
   "supabase-data.js": "text/javascript; charset=utf-8",
