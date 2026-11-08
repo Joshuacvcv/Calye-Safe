@@ -3858,6 +3858,11 @@
         ]);
 
         let onDuty = true;
+        // profiles.id of the signed-in responder — set by the auth chains.
+        // Duty persists to profiles.on_duty so this card, the admin
+        // console's "On Duty Now" card, and get_nearby_responders() all
+        // read the same truth. Null in demo mode (no session): local only.
+        let dutyProfileId = null;
         let currentJobId = null;
         let currentQueueFilter = 'all';
         let proofDataURL = null;
@@ -4165,20 +4170,35 @@
         }
 
         // ══════════════════════════ DUTY TOGGLE ══════════════════════════
-        function toggleDuty(fromProfile) {
+        // Single place that flips both toggles + the duty card, so the home
+        // card and the profile-screen switch can never disagree.
+        function setDutyState(v) {
+            onDuty = !!v;
             const box1 = document.getElementById('duty-toggle');
             const box2 = document.getElementById('duty-toggle-2');
-            if (fromProfile) {
-                onDuty = box2.checked;
-                box1.checked = onDuty;
-            } else {
-                onDuty = box1.checked;
-                box2.checked = onDuty;
-            }
+            if (box1) box1.checked = onDuty;
+            if (box2) box2.checked = onDuty;
             document.getElementById('duty-dot').classList.toggle('on', onDuty);
             document.getElementById('duty-title').textContent = onDuty ? 'On Duty' : 'Off Duty';
             document.getElementById('duty-sub').textContent = onDuty ? "You're visible to dispatch" : "You won't receive new assignments";
             if (!onDuty && dispatchTimer) { clearTimeout(dispatchTimer); }
+        }
+
+        // Save to profiles.on_duty — this is what the admin "On Duty Now"
+        // card and the get_nearby_responders RPC read. Without this write
+        // the admin console could only ever show 0 on duty.
+        function persistDuty(v) {
+            if (!dutyProfileId || !CalyeDB.isOnline()) return; // demo mode: local only
+            CalyeDB.update('profiles', { id: dutyProfileId }, { on_duty: v }).then(function (rows) {
+                if (!rows || !rows.length) showToast("Couldn't save duty status — check connection");
+            });
+        }
+
+        function toggleDuty(fromProfile) {
+            const box1 = document.getElementById('duty-toggle');
+            const box2 = document.getElementById('duty-toggle-2');
+            setDutyState(fromProfile ? box2.checked : box1.checked);
+            persistDuty(onDuty);
         }
 
         // ══════════════════════════ QUEUE ══════════════════════════
@@ -5397,6 +5417,7 @@
                 if (!g.session || !g.profile) return;
                 const p = g.profile;
                 authProfile = p;
+                dutyProfileId = p.id || dutyProfileId; // for persistDuty()
                 const changed = {};
                 if (p.full_name && rProfile.name !== p.full_name) { rProfile.name = p.full_name; changed.name = p.full_name; }
                 if (p.unit_id && rProfile.unit !== p.unit_id) { rProfile.unit = p.unit_id; changed.unit = p.unit_id; }
@@ -5674,6 +5695,16 @@
         CalyeAuth.init('calye-responder');
         CalyeAuth.getStatus().then(function (gate) {
             if (!gate.session) return; // demo mode — allow
+            // Initialize duty from the database (profiles.on_duty), not from
+            // the hardcoded default, so this toggle matches the admin
+            // console's "On Duty Now" card from the very first paint.
+            // Demo access (no session) never reaches here: it stays on-duty.
+            try {
+                if (gate.profile && gate.profile.id) {
+                    dutyProfileId = gate.profile.id;
+                    setDutyState(gate.profile.on_duty === true);
+                }
+            } catch (e) { /* ignore */ }
             var role = (gate.profile && gate.profile.role) || '';
             // Responder app is restricted to authorized responder-type accounts.
             // An approved resident must NOT be able to use it.
