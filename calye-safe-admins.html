@@ -19,7 +19,158 @@
   <script src="supabase-auth.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="santarosa-boundary.js"></script>
-  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+  <!-- Bundled heat layer. Do NOT point this back at unpkg leaflet.heat:
+       that build is an ES module (import statements) and throws
+       "Cannot use import statement outside a module" as a classic
+       script, so L.heatLayer never gets defined. -->
+  <script>
+  (function () {
+    if (typeof L === 'undefined' || typeof L.heatLayer === 'function') return;
+
+    function toRGB(color) {
+      // Canvas fillStyle normalizes color names to #rrggbb in Chromium
+      // and rgb() in Firefox — accept both, plus #rgb shorthand.
+      try {
+        var tmp = document.createElement('canvas').getContext('2d');
+        tmp.fillStyle = '#000';
+        tmp.fillStyle = color;
+        var s = String(tmp.fillStyle);
+        var hex = /^#([0-9a-f]{6})$/i.exec(s);
+        if (hex) return [parseInt(hex[1].slice(0, 2), 16), parseInt(hex[1].slice(2, 4), 16), parseInt(hex[1].slice(4, 6), 16)];
+        var hex3 = /^#([0-9a-f]{3})$/i.exec(s);
+        if (hex3) return [parseInt(hex3[1][0] + hex3[1][0], 16), parseInt(hex3[1][1] + hex3[1][1], 16), parseInt(hex3[1][2] + hex3[1][2], 16)];
+        var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s);
+        if (m) return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+      } catch (e) { }
+      return [0, 0, 0];
+    }
+
+    function parseStops(gradient) {
+      var stops = [];
+      for (var k in gradient) {
+        var c = toRGB(gradient[k]);
+        stops.push([parseFloat(k), c[0], c[1], c[2]]);
+      }
+      stops.sort(function (a, b) { return a[0] - b[0]; });
+      return stops;
+    }
+
+    function buildPalette(stops) {
+      var palette = [];
+      for (var i = 0; i < 256; i++) {
+        var t = i / 255, c = null;
+        if (t <= stops[0][0]) c = stops[0];
+        else if (t >= stops[stops.length - 1][0]) c = stops[stops.length - 1];
+        else {
+          for (var j = 0; j < stops.length - 1; j++) {
+            if (t >= stops[j][0] && t <= stops[j + 1][0]) {
+              var a = stops[j], b = stops[j + 1], f = (t - a[0]) / (b[0] - a[0]);
+              c = [0,
+                Math.round(a[1] + (b[1] - a[1]) * f),
+                Math.round(a[2] + (b[2] - a[2]) * f),
+                Math.round(a[3] + (b[3] - a[3]) * f)];
+              break;
+            }
+          }
+        }
+        palette.push([c[1], c[2], c[3]]);
+      }
+      return palette;
+    }
+
+    function drawHeat(canvas, points, opts, palette) {
+      var ctx = canvas.getContext('2d');
+      var w = canvas.width, h = canvas.height;
+      if (!w || !h) return;
+      var radius = Math.max(1, (opts.radius || 30) + Math.floor((opts.blur || 0) / 2));
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'lighter';
+      for (var i = 0; i < points.length; i++) {
+        var p = points[i];
+        var x = p[0], y = p[1];
+        if (x < -radius || y < -radius || x > w + radius || y > h + radius) continue;
+        var alpha = Math.max(0, Math.min(1, p[2] == null ? 1 : p[2]));
+        var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        g.addColorStop(0, 'rgba(0,0,0,' + alpha + ')');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      }
+      // Colorize by accumulated intensity (the alpha channel), toned to
+      // a translucent wash so the map stays readable underneath.
+      var opacity = (opts.opacity == null ? 0.6 : opts.opacity);
+      var img = ctx.getImageData(0, 0, w, h), d = img.data;
+      for (var j = 0; j < d.length; j += 4) {
+        var a = d[j + 3];
+        if (a < 6) { d[j + 3] = 0; continue; }
+        var c = palette[a];
+        d[j] = c[0]; d[j + 1] = c[1]; d[j + 2] = c[2];
+        d[j + 3] = Math.round(a * opacity);
+      }
+      ctx.putImageData(img, 0, 0);
+    }
+
+    L.HeatLayer = L.Layer.extend({
+      options: {
+        radius: 30,
+        blur: 22,
+        maxZoom: 18,
+        minOpacity: 0.05,
+        opacity: 0.6,
+        gradient: { 0.4: '#6E93C9', 0.65: '#8FC07A', 0.8: '#E8917A' }
+      },
+      initialize: function (latlngs, options) {
+        L.setOptions(this, options || {});
+        this._latlngs = latlngs || [];
+        this._palette = buildPalette(parseStops(this.options.gradient));
+      },
+      onAdd: function (map) {
+        this._map = map;
+        var canvas = this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer leaflet-layer');
+        canvas.style.pointerEvents = 'none';
+        map.getPanes().overlayPane.appendChild(canvas);
+        map.on('move zoom moveend zoomend', this._reset, this);
+        this._reset();
+      },
+      onRemove: function (map) {
+        map.off('move zoom moveend zoomend', this._reset, this);
+        L.DomUtil.remove(this._canvas);
+        this._map = null;
+      },
+      _reset: function () {
+        var map = this._map;
+        if (!map) return;
+        var size = map.getSize();
+        this._canvas.width = Math.max(1, Math.round(size.x));
+        this._canvas.height = Math.max(1, Math.round(size.y));
+        L.DomUtil.setPosition(this._canvas, map.containerPointToLayerPoint(L.point(0, 0)));
+        this._draw();
+      },
+      _draw: function () {
+        var map = this._map;
+        if (!map) return;
+        var pts = [], i;
+        for (i = 0; i < this._latlngs.length; i++) {
+          var p = this._latlngs[i];
+          var pt = map.latLngToContainerPoint(L.latLng(p[0], p[1]));
+          pts.push([pt.x, pt.y, p[2] == null ? 1 : p[2]]);
+        }
+        drawHeat(this._canvas, pts, this.options, this._palette);
+      },
+      setLatLngs: function (latlngs) {
+        this._latlngs = latlngs || [];
+        if (this._map) this._draw();
+        return this;
+      },
+      redraw: function () {
+        if (this._map) this._draw();
+        return this;
+      }
+    });
+
+    L.heatLayer = function (latlngs, options) { return new L.HeatLayer(latlngs, options); };
+  })();
+  </script>
   <style>
     * {
       margin: 0;
@@ -5027,8 +5178,14 @@
               <div class="panel" style="display:flex;flex-direction:column;">
                 <div class="panel-header">
                   <div class="sec-title">Geospatial Hotspot Map</div>
-                  <div class="sec-action"
-                    onclick="viewFullMapWithHeat()">View Full Map</div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <label class="toggle-switch" title="Toggle the Geospatial Hotspot heat layer">
+                      <input type="checkbox" id="analytics-heat-toggle" checked onchange="toggleAnalyticsHeat(this)">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <div class="sec-action"
+                      onclick="viewFullMapWithHeat()">View Full Map</div>
+                  </div>
                 </div>
                 <div class="panel-body"
                   style="display:flex;flex-direction:column;position:relative;padding:14px;">
@@ -7082,6 +7239,11 @@ const pageTitles = {
 
     function renderAnalytics(summary, rows) {
       const s = summary || {};
+      // Cache the drill data FIRST. The popup charts read from
+      // lastAnalyticsSummary/lastAnalyticsRows, so if any sub-render below
+      // throws (e.g. the heat plugin CDN failed), the popups must still work.
+      lastAnalyticsSummary = s;
+      lastAnalyticsRows = rows || [];
       const t = s.totals || { total: 0, open: 0, resolved: 0 };
       const cats = s.by_category || [];
       const hotspots = s.hotspots || [];
@@ -7105,8 +7267,6 @@ const pageTitles = {
       renderInsights(s, rows);
       renderDeptAllocation(rows);
       renderAnalyticsHeat(rows);
-      lastAnalyticsSummary = s;
-      lastAnalyticsRows = rows || [];
       if (analyticsDrill) renderAnalyticsDrill();
     }
 
@@ -7237,10 +7397,24 @@ const pageTitles = {
       document.getElementById('an-drill-title').textContent = 'Avg. Resolution Time by Week';
       const body = document.getElementById('an-drill-body');
       body.innerHTML = '<div style="text-align:center;padding:26px 12px;color:var(--text3);font-size:12.5px;font-weight:600;">Loading resolution data…</div>';
-      CalyeDB.fetch('resolved_history', { order: 'resolved_at', asc: false, limit: 200 }).then(function (hist) {
+      // NOTE: resolved_history.duration_min is always written as NULL by the
+      // responder app, so that table can never feed this chart. Derive
+      // durations from assignments (resolved_at) minus reports (created_at)
+      // instead — the same math fn_incident_summary uses for avg_resolution_hrs.
+      Promise.all([
+        CalyeDB.fetch('assignments', { order: 'resolved_at', asc: false, limit: 500 }),
+        CalyeDB.fetch('reports', { limit: 500 })
+      ]).then(function (results) {
         if (analyticsDrill !== 'res') return;
-        hist = hist || [];
-        const withDur = hist.filter(h => h && h.duration_min != null && !isNaN(Number(h.duration_min)));
+        const createdById = {};
+        (results[1] || []).forEach(function (r) { if (r && r.id) createdById[r.id] = r.created_at; });
+        const withDur = (results[0] || []).map(function (a) {
+          if (!a || !a.resolved_at || !a.report_id || !createdById[a.report_id]) return null;
+          const start = new Date(createdById[a.report_id]).getTime();
+          const end = new Date(a.resolved_at).getTime();
+          if (isNaN(start) || isNaN(end) || end < start) return null;
+          return { resolved_at: a.resolved_at, duration_min: (end - start) / 60000 };
+        }).filter(Boolean);
         if (!withDur.length) { body.innerHTML = drillEmpty('No resolution timing data yet.'); return; }
         // Bucket into weeks (short ranges) or months (long ranges).
         const longRange = analyticsRange === 0 || analyticsRange > 31;
@@ -7395,6 +7569,26 @@ const pageTitles = {
       }).join('');
     }
 
+    let analyticsHeatOn = true;
+
+    function toggleAnalyticsHeat(cb) {
+      analyticsHeatOn = !!(cb && cb.checked);
+      if (!analyticsHeatOn) {
+        if (analyticsHeatLayer && analyticsHeatmap) analyticsHeatmap.removeLayer(analyticsHeatLayer);
+        analyticsHeatLayer = null;
+        return;
+      }
+      if (typeof L === 'undefined' || typeof L.heatLayer !== 'function') {
+        showToastMsg('Heatmap unavailable — the map plugin failed to load.', 'error');
+        if (cb) cb.checked = false;
+        analyticsHeatOn = false;
+        return;
+      }
+      const coords = analyticsRows.filter(function (r) { return typeof r.lat === 'number' && typeof r.lng === 'number' && r.lat && r.lng; }).length;
+      if (!coords) { showToastMsg('No GPS coordinates on reports for this period.', 'info'); }
+      renderAnalyticsHeat(analyticsRows);
+    }
+
     function renderAnalyticsHeat(rows) {
       if (!analyticsHeatmap) return;
       const points = [];
@@ -7404,7 +7598,8 @@ const pageTitles = {
         }
       });
       if (analyticsHeatLayer) { analyticsHeatmap.removeLayer(analyticsHeatLayer); analyticsHeatLayer = null; }
-      if (points.length) {
+      if (!analyticsHeatOn) return;
+      if (points.length && typeof L.heatLayer === 'function') {
         analyticsHeatLayer = L.heatLayer(points, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(analyticsHeatmap);
         analyticsHeatmap.fitBounds(L.latLngBounds(points.map(function (p) { return [p[0], p[1]]; })), { padding: [30, 30] });
       } else {
@@ -8449,6 +8644,16 @@ const pageTitles = {
 
     function togglePageMapHeat(cb) {
       pageMapHeatOn = !!(cb && cb.checked);
+      if (!pageMapHeatOn) { refreshPageMapHeat(); return; }
+      if (typeof L === 'undefined' || typeof L.heatLayer !== 'function') {
+        showToastMsg('Heatmap unavailable — the map plugin failed to load.', 'error');
+        if (cb) cb.checked = false;
+        pageMapHeatOn = false;
+        return;
+      }
+      if (!pageMapHeatPoints(pageMapFilteredPins()).length) {
+        showToastMsg('No GPS coordinates on incidents for this filter.', 'info');
+      }
       refreshPageMapHeat();
     }
 
