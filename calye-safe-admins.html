@@ -5532,6 +5532,52 @@
     </div>
   </div>
 
+  <!-- REJECT VERIFICATION -->
+  <div class="modal-overlay" id="modal-reject-user" onclick="if(event.target===this)closeModal('modal-reject-user')">
+    <div class="modal-box" style="max-width:460px;">
+      <div class="modal-head">
+        <h3>Reject verification</h3>
+        <button class="modal-close" onclick="closeModal('modal-reject-user')">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-form-group">
+          <div class="modal-label">Applicant</div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--text);">
+            <span id="reject-user-name"></span>
+            <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:2px;" id="reject-user-email"></div>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Quick reasons</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;">
+            <button class="verify-meta-tag" style="cursor:pointer;border:none;font-size:11px;padding:6px 11px;" onclick="pickRejectReason('The ID photo is blurry or unreadable')">Blurry photo</button>
+            <button class="verify-meta-tag" style="cursor:pointer;border:none;font-size:11px;padding:6px 11px;" onclick="pickRejectReason('The ID presented is expired')">Expired ID</button>
+            <button class="verify-meta-tag" style="cursor:pointer;border:none;font-size:11px;padding:6px 11px;" onclick="pickRejectReason('The name on the ID does not match the submitted details')">Name mismatch</button>
+            <button class="verify-meta-tag" style="cursor:pointer;border:none;font-size:11px;padding:6px 11px;" onclick="pickRejectReason('The photo appears to belong to a different person')">Wrong person</button>
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <div class="modal-label">Reason (shown to the user)</div>
+          <textarea class="modal-textarea" id="reject-note" rows="3"
+            placeholder="Explain why this application is being rejected…"
+            oninput="document.getElementById('reject-confirm-btn').disabled = !this.value.trim();"></textarea>
+          <div style="font-size:11px;color:var(--text3);font-weight:600;margin-top:6px;line-height:1.5;">
+            This message is saved with the decision and can be shown to the applicant if they re-apply.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn cancel" onclick="closeModal('modal-reject-user')">Cancel</button>
+        <button class="modal-btn danger-confirm" id="reject-confirm-btn" onclick="confirmRejectVerify()">Reject application</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MFA (two-factor authentication) -->
   <div class="modal-overlay" id="modal-mfa">
     <div class="modal-box" style="max-width:440px;">
@@ -9030,16 +9076,45 @@ const pageTitles = {
     function rejectVerify(id) {
       const r = verifyRequests.find(x => x.id === id);
       if (!r) return;
-      const note = prompt('Reason for rejection (shown to the user):', 'ID could not be verified');
-      if (note === null) return;
+      rejectTargetId = id;
+      document.getElementById('reject-user-name').textContent = r.full_name || 'Unnamed account';
+      document.getElementById('reject-user-email').textContent = r.email || '';
+      const note = document.getElementById('reject-note');
+      note.value = 'ID could not be verified';
+      document.getElementById('reject-confirm-btn').disabled = false;
+      document.getElementById('modal-reject-user').classList.add('open');
+      note.focus();
+    }
+
+    let rejectTargetId = null;
+
+    function pickRejectReason(text) {
+      const note = document.getElementById('reject-note');
+      note.value = text;
+      document.getElementById('reject-confirm-btn').disabled = false;
+      note.focus();
+    }
+
+    function confirmRejectVerify() {
+      const id = rejectTargetId;
+      const r = verifyRequests.find(x => x.id === id);
+      if (!r) { closeModal('modal-reject-user'); return; }
+      const note = document.getElementById('reject-note').value.trim();
+      if (!note) return;
+      const btn = document.getElementById('reject-confirm-btn');
+      btn.disabled = true;
+      btn.textContent = 'Rejecting…';
       CalyeDB.rpc('admin_review_verification', {
         p_request_id: id, p_decision: 'rejected', p_note: note
       }).then(res => {
+        btn.textContent = 'Reject application';
         const row = res && res[0];
         if (!row || row.ok !== true) {
+          btn.disabled = false;
           showToastMsg((row && row.message) || 'Rejection failed — the database rejected the update.', 'error');
           return;
         }
+        closeModal('modal-reject-user');
         r.status = 'rejected';
         r.review_note = note;
         openVerifyDetail(id);
