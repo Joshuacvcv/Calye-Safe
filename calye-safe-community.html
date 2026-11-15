@@ -5123,6 +5123,41 @@
       }
     }
 
+    // The 18 Santa Rosa barangays offered at registration (kept in sync with
+    // BARANGAYS in index.html) — used to tag each report with the barangay the
+    // pinned location actually belongs to.
+    const BRGY_NAMES = ['Aplaya', 'Balibago', 'Caingin', 'Dila', 'Dita', 'Don Jose',
+      'Ibaba', 'Kanluran', 'Labas', 'Macabling', 'Malitlit', 'Malusak',
+      'Market Area', 'Pook', 'Pulong Santa Cruz', 'Santo Domingo', 'Sinalhan', 'Tagapo'];
+
+    // Reverse-geocode the pinned location and match it against the barangay
+    // list. That tag is what scopes a barangay admin's dashboard
+    // (supabase-brgy-scoping.sql), so it must be set on every report.
+    // Falls back to the reporter's registered barangay when the pin is
+    // outside the city or the geocoder is unreachable, and never blocks
+    // filing (6s ceiling).
+    function resolveReportBarangay(lat, lng) {
+      const fallback = (profile && profile.barangay) || 'Barangay Calye';
+      const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng;
+      const geo = fetch(url, { headers: { 'Accept-Language': 'en' } })
+        .then(r => r.json())
+        .then(data => {
+          const a = (data && data.address) || {};
+          const hay = [a.suburb, a.village, a.neighbourhood, a.quarter, a.city_district,
+            a.district, a.county, a.state_district, (data && data.display_name) || '']
+            .filter(Boolean).join(' | ');
+          for (let i = 0; i < BRGY_NAMES.length; i++) {
+            const n = BRGY_NAMES[i];
+            // Word-boundary match so "Dila" never hits "Diliman", etc.
+            const re = new RegExp('(^|[^a-z])' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^a-z]|$)', 'i');
+            if (re.test(hay)) return n;
+          }
+          return fallback;
+        })
+        .catch(() => fallback);
+      return Promise.race([geo, new Promise(res => setTimeout(() => res(fallback), 6000))]);
+    }
+
     function pushReportToSupabase(rid) {
       if (!CalyeDB.isOnline()) return;
       const g = groupOf();
@@ -5147,9 +5182,16 @@
         announce_consent: !!(document.getElementById('announce-consent') && document.getElementById('announce-consent').checked)
       };
       // Attach the real reporter_id so "My Reports" filtering and the
-      // notification triggers work (NULL → notifications can't be routed).
-      CalyeAuth.currentSession().then(function (s) {
+      // notification triggers work (NULL → notifications can't be routed),
+      // and stamp the barangay the pin falls in (reverse geocode, with the
+      // reporter's own barangay as fallback).
+      Promise.all([
+        CalyeAuth.currentSession().catch(() => null),
+        resolveReportBarangay(row.lat, row.lng)
+      ]).then(function (res) {
+        const s = res[0];
         if (s && s.user && s.user.id) row.reporter_id = s.user.id;
+        row.barangay = res[1] || profile.barangay || 'Barangay Calye';
         insertReportRow(row, 0);
       });
     }
@@ -5157,14 +5199,24 @@
     function insertReportRow(row, attempt) {
       CalyeDB.insert('reports', row).then(inserted => {
         if (!inserted || !inserted[0] || !inserted[0].id) {
-          // Most likely the `subtype` column does not exist yet (migration
-          // supabase-report-subtype.sql not run) — retry once with the
-          // specific incident folded into the description so no report is lost.
-          if (attempt === 0 && row.subtype) {
-            const retry = Object.assign({}, row);
+          // Column ladder — never lose a report just because one migration
+          // hasn't been run yet:
+          //   attempt 0 -> 1 : drop `subtype`   (supabase-report-subtype.sql),
+          //                    folding it into the description
+          //   attempt 1 -> 2 : drop `barangay`  (supabase-brgy-scoping.sql)
+          const retry = Object.assign({}, row);
+          let changed = false;
+          if (attempt === 0 && retry.subtype) {
+            retry.description = '[' + retry.subtype + '] ' + (retry.description || '');
             delete retry.subtype;
-            retry.description = '[' + row.subtype + '] ' + (retry.description || '');
-            insertReportRow(retry, 1);
+            changed = true;
+          }
+          if (!changed && attempt <= 1 && 'barangay' in retry) {
+            delete retry.barangay;
+            changed = true;
+          }
+          if (changed) {
+            insertReportRow(retry, attempt + 1);
             return;
           }
           showToast('Could not sync report. Please try again.');
@@ -6499,7 +6551,10 @@
         if (p.full_name && profile.name !== p.full_name) { profile.name = p.full_name; changed.name = p.full_name; }
         if (p.email && profile.email !== p.email) { profile.email = p.email; changed.email = p.email; }
         if (p.address && profile.address !== p.address) { profile.address = p.address; changed.address = p.address; }
-        profile.barangay = 'Barangay Calye';
+        // The registered barangay is the fallback tag for reports whose pin
+        // can't be reverse-geocoded — read it from the DB instead of pinning
+        // every account to the legacy default.
+        if (p.barangay && profile.barangay !== p.barangay) { profile.barangay = p.barangay; changed.barangay = p.barangay; }
         if (Object.keys(changed).length || !localStorage.getItem(LS_KEY_PROFILE)) {
           saveStoredObj(LS_KEY_PROFILE, profile);
           renderProfileHeader();

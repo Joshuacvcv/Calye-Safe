@@ -6168,6 +6168,29 @@
     // ── ALL REPORTS PAGE (Major / Minor categorized) ──
     let fullReports = loadStoredData(LS_KEY_FULL_REPORTS, []);
 
+    // ── BARANGAY SCOPE ──────────────────────────────────────────────────────
+    // A `staff` account only ever sees ONE barangay (profiles.barangay); the
+    // `admin` account is city-wide. Set in bootAdmin() from the signed-in
+    // profile. RLS enforces this server-side (supabase-brgy-scoping.sql) —
+    // these helpers mirror it in the UI and also scrub the localStorage cache
+    // so a barangay account never renders another area's rows from a previous
+    // city-wide session on the same browser.
+    let adminScope = null;
+    function scopeOf(row) { return (row && row.barangay) || 'Barangay Calye'; }
+    function inScope(row) { return !adminScope || scopeOf(row) === adminScope; }
+    function scopeRows(rows) { return (rows || []).filter(inScope); }
+    function scopeFilters(filters) {
+      const f = (filters || []).slice();
+      if (adminScope) f.push(['barangay', 'eq', adminScope]);
+      return f;
+    }
+    // The definer-RPCs (fn_incident_summary, fn_monthly_summary,
+    // fn_responder_monthly_performance) bypass RLS and would hand a scoped
+    // account city-wide totals — so when a scope is active the call is never
+    // even sent, and the already-filtered rows are aggregated client-side
+    // instead. Takes a THUNK so the request stays lazy.
+    function scopedRpc(call) { return adminScope ? Promise.resolve(null) : call(); }
+
     function renderReportsGroupTable(bodyId, data) {
       const tbody = document.getElementById(bodyId);
       if (!data || data.length === 0) {
@@ -7164,8 +7187,8 @@ const pageTitles = {
         : 'All time';
 
       Promise.all([
-        CalyeDB.rpc('fn_incident_summary', { p_from: from ? from.toISOString() : null, p_to: to.toISOString() }),
-        CalyeDB.fetch('reports', { filters: filters, order: 'created_at', asc: false, limit: 500 })
+        scopedRpc(() => CalyeDB.rpc('fn_incident_summary', { p_from: from ? from.toISOString() : null, p_to: to.toISOString() })),
+        CalyeDB.fetch('reports', { filters: scopeFilters(filters), order: 'created_at', asc: false, limit: 500 })
       ]).then(function (results) {
         const rows = (results[1] || []).map(function (r) {
           return {
@@ -7403,11 +7426,13 @@ const pageTitles = {
       // instead — the same math fn_incident_summary uses for avg_resolution_hrs.
       Promise.all([
         CalyeDB.fetch('assignments', { order: 'resolved_at', asc: false, limit: 500 }),
-        CalyeDB.fetch('reports', { limit: 500 })
+        CalyeDB.fetch('reports', { filters: scopeFilters(), limit: 500 })
       ]).then(function (results) {
         if (analyticsDrill !== 'res') return;
         const createdById = {};
         (results[1] || []).forEach(function (r) { if (r && r.id) createdById[r.id] = r.created_at; });
+        // Scoped accounts only get in-scope report ids in createdById, so the
+        // assignment rows below are implicitly limited to the same barangay.
         const withDur = (results[0] || []).map(function (a) {
           if (!a || !a.resolved_at || !a.report_id || !createdById[a.report_id]) return null;
           const start = new Date(createdById[a.report_id]).getTime();
@@ -7703,13 +7728,22 @@ const pageTitles = {
       const month = lastPrevMonth.getMonth() + 1;
 
       Promise.all([
-        CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month }),
+        scopedRpc(() => CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month })),
         CalyeDB.fetch('assignments', { filters: [['created_at', 'gte', new Date(year, month - 1, 1).toISOString()], ['created_at', 'lt', new Date(year, month, 1).toISOString()]], order: 'created_at', asc: false, limit: 500 }),
-        CalyeDB.fetch('responders', { limit: 100 })
+        CalyeDB.fetch('responders', { limit: 100 }),
+        // assignments carries no barangay column, so a scoped account first
+        // pulls the ids of the reports it is allowed to see and keeps only
+        // the assignments that point at one of them.
+        adminScope ? CalyeDB.fetch('reports', { select: 'id', limit: 1000 }) : Promise.resolve(null)
       ]).then(function (results) {
         const rpc = results[0];
-        const assignments = results[1] || [];
+        let assignments = results[1] || [];
         const responders = results[2] || [];
+        if (adminScope) {
+          const okIds = {};
+          (results[3] || []).forEach(function (r) { if (r && r.id) okIds[r.id] = 1; });
+          assignments = assignments.filter(function (a) { return a && a.report_id && okIds[a.report_id]; });
+        }
 
         // Build responder lookup
         const responderMap = {};
@@ -8064,7 +8098,10 @@ const pageTitles = {
       if (catsEl) catsEl.innerHTML = loadingNote;
       if (jobsEl) jobsEl.innerHTML = loadingNote;
       const paintPerfDetailJobs = (asns, repMap) => {
-        const list = asns || [];
+        // Scoped accounts only keep jobs whose report they can actually read —
+        // repMap is built from an RLS-filtered reports fetch, so anything from
+        // another barangay is absent and gets dropped here.
+        const list = (asns || []).filter(a => !adminScope || (a && a.report_id && repMap && repMap[a.report_id]));
         if (!list.length) {
           if (catsEl) catsEl.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:11.5px;font-weight:600;">No jobs on record.</div>';
           if (jobsEl) jobsEl.innerHTML = '<div style="padding:10px 4px;color:var(--text3);font-size:11.5px;font-weight:600;">No jobs on record.</div>';
@@ -8192,8 +8229,8 @@ const pageTitles = {
       body.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">Generating ' + monthlyLabel + ' summary…</div>';
 
       Promise.all([
-        CalyeDB.rpc('fn_monthly_summary', { p_year: firstPrevMonth.getFullYear(), p_month: firstPrevMonth.getMonth() + 1 }),
-        CalyeDB.fetch('reports', { filters: [['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]], order: 'created_at', asc: false, limit: 500 })
+        scopedRpc(() => CalyeDB.rpc('fn_monthly_summary', { p_year: firstPrevMonth.getFullYear(), p_month: firstPrevMonth.getMonth() + 1 })),
+        CalyeDB.fetch('reports', { filters: scopeFilters([['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]]), order: 'created_at', asc: false, limit: 500 })
       ]).then(function (results) {
         const rows = (results[1] || []).map(function (r) {
           return {
@@ -8995,7 +9032,7 @@ const pageTitles = {
         announcementIdSeq = 1;
         renderAnnouncements();
       });
-      CalyeDB.fetch('map_incidents', { limit: 200 }).then(rows => {
+      CalyeDB.fetch('map_incidents', { filters: scopeFilters(), limit: 200 }).then(rows => {
         if (!rows || !rows.length) return;
         // Resident mapKeys → closed admin cats (+ real severity). Keeps pins,
         // legend, filters and heat in sync instead of lumping minors as gray.
@@ -9033,7 +9070,7 @@ const pageTitles = {
         renderNotifList();
         return;
       }
-      CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 200 }).then(rows => {
+      CalyeDB.fetch('reports', { filters: scopeFilters(), order: 'created_at', asc: false, limit: 200 }).then(rows => {
         if (!rows) {
           showToastMsg('Could not reach the database — reports may be out of date.', 'error');
           return;
@@ -9564,6 +9601,17 @@ const pageTitles = {
       adminBooted = true;      // Pin the identity this dashboard session claims, so privileged actions
       // can later detect when another tab overwrites the shared auth token.
       adminSessionUid = (gs && gs.session && gs.session.user && gs.session.user.id) || null;
+      // Barangay scope: `staff` is confined to profiles.barangay, `admin`
+      // keeps the whole of Santa Rosa. Set before anything renders, then used
+      // to scrub any city-wide rows left in localStorage by a prior session.
+      try {
+        const sp = (gs && gs.profile) || {};
+        adminScope = (sp.role === 'staff' && sp.barangay) ? sp.barangay : null;
+      } catch (e) { adminScope = null; }
+      if (adminScope) {
+        reports = scopeRows(reports);
+        fullReports = scopeRows(fullReports);
+      }
       // Reflect whichever staff/admin account signed in (email, name, chip).
       try {
         const prof = (gs && gs.profile) || {};
@@ -9578,7 +9626,10 @@ const pageTitles = {
           chipAv.textContent = prof.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'BA';
         }
         const chipRole = document.querySelector('.admin-chip .admin-info .role');
-        if (chipRole && prof.role) chipRole.textContent = prof.role === 'admin' ? 'Administrator' : 'Staff';
+        if (chipRole && prof.role) {
+          chipRole.textContent = prof.role === 'admin' ? 'Administrator'
+            : (adminScope ? 'Staff · ' + adminScope : 'Staff');
+        }
       } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
       document.getElementById('shell').classList.remove('hidden');
@@ -9641,7 +9692,7 @@ const pageTitles = {
       try {
         if (!CalyeDB.isOnline()) return;
         if (typeof document !== 'undefined' && document.hidden) return;
-        CalyeDB.fetch('reports', { order: 'created_at', asc: false, limit: 100 }).then(function (rows) {
+        CalyeDB.fetch('reports', { filters: scopeFilters(), order: 'created_at', asc: false, limit: 100 }).then(function (rows) {
           var box = document.getElementById('gate-ticker-text');
           if (!box) return;
           var majors = (rows || [])
