@@ -9529,6 +9529,27 @@ const pageTitles = {
         r.review_note = '';
         openVerifyDetail(id);
         renderVerifyList();
+        // A staff request only becomes a real staff ACCOUNT when the review
+        // RPC promotes profiles.role — that lives in
+        // supabase-staff-signup.sql. If it has not been applied, the request
+        // still says "approved" but the applicant can never sign in, so
+        // verify the promotion instead of claiming success.
+        if (r.role === 'staff') {
+          CalyeDB.fetch('profiles', { filters: [['id', 'eq', r.user_id]], limit: 1 }).then(prs => {
+            if (!prs) { // read failed — don't claim success or failure
+              showToastMsg(r.full_name + ' approved — reload Verify-Users to confirm the staff role was granted.', 'success');
+              return;
+            }
+            const role = prs[0] && prs[0].role;
+            if (role === 'staff' || role === 'admin') {
+              showToastMsg(r.full_name + ' approved — staff account activated', 'success');
+            } else {
+              showToastMsg('Request approved, but ' + (r.full_name || 'the account')
+                + ' was NOT activated as staff (role is still "' + role + '"). Run calye-safe_database/supabase-staff-signup.sql in the Supabase SQL editor, then approve again.', 'error');
+            }
+          }).catch(() => showToastMsg(r.full_name + ' approved — reload Verify-Users to confirm the staff role was granted.', 'success'));
+          return;
+        }
         showToastMsg(r.full_name + ' approved — account is now active', 'success');
       });
     }
@@ -10519,9 +10540,16 @@ const pageTitles = {
       }).catch(() => { gateRegLoading(false); gateRegMsg('Verification failed to run. Please try again.', false); });
     }
 
-    // A signed-in account that is NOT staff/admin: show the barangay staff
-    // application that is still awaiting approval (or file it, when sign-up
-    // could not), instead of the flat "admin access required" denial.
+    // A signed-in account that is NOT staff/admin: report the REAL state of
+    // its barangay staff application (pending / rejected / approved but not
+    // yet activated) instead of the flat "admin access required" denial —
+    // or file the request, when sign-up could not.
+    //
+    // IMPORTANT: staff requests are read in EVERY status, newest first.
+    // Filtering on status='pending' alone made an APPROVED application look
+    // like "none yet", so the intent fallback below re-filed a brand-new
+    // pending request on every sign-in and the gate reported "pending
+    // approval" forever, no matter how many times the admin approved it.
     function handleNonStaffGate(gs) {
       const prof = (gs && gs.profile) || {};
       const sessUser = (gs && gs.session && gs.session.user) || {};
@@ -10529,38 +10557,97 @@ const pageTitles = {
       const uid = sessUser.id;
       const deny = () => showAccessDenied(gs);
       if (!uid) { deny(); return; }
-      const finish = req => {
-        if (req) { showStaffPending(req, prof, meta); return; }
-        if (meta.staff) {
-          // Intent recorded at sign-up but no row yet (the email-confirmation
-          // path: there is no session until the first sign-in).
-          fileStaffRequest(prof.full_name || meta.full_name || '', prof.email || '',
-            meta.barangay || prof.barangay || '', 0).then(res => {
-              if (!res.error) { showStaffPending(res.row || {}, prof, meta); return; }
-              deny();
-            });
+
+      const finish = rows => {
+        const staffReqs = (rows || []).filter(r => r && r.role === 'staff')
+          .sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
+        const newest = staffReqs[0];
+        const approved = staffReqs.find(r => r.status === 'approved');
+        const pending = staffReqs.find(r => r.status === 'pending');
+
+        if (!staffReqs.length) {
+          if (meta.staff) {
+            // Intent recorded at sign-up but no row yet (the email-confirmation
+            // path: there is no session until the first sign-in).
+            fileStaffRequest(prof.full_name || meta.full_name || '', prof.email || '',
+              meta.barangay || prof.barangay || '', 0).then(res => {
+                if (!res.error) { showStaffPending(res.row || {}, prof, meta); return; }
+                deny();
+              });
+            return;
+          }
+          deny();
           return;
         }
-        deny();
+
+        // State precedence (why not simply "newest row wins"):
+        // 1. A rejection is the most recent DECISION — including a reject
+        //    that came after an earlier approval (the RPC demotes on reject).
+        // 2. An approved application beats a NEWER pending row, because the
+        //    previous version of this gate re-filed a duplicate pending
+        //    request on every sign-in after approval — those stale rows must
+        //    not mask the approval. (If the promotion had landed, the role
+        //    check in adminGateLogin would already have booted the dashboard.)
+        // 3. Otherwise the newest pending/rejected row is the live state.
+        if (newest.status !== 'rejected' && approved) {
+          if (prof.role === 'staff' || prof.role === 'admin') { bootAdmin(gs); return; }
+          // Approved but the role is still 'resident': the review RPC that
+          // promotes staff accounts has not been applied to the database.
+          showStaffActivationPending(approved, prof, meta);
+          return;
+        }
+        if (newest.status === 'rejected') { showStaffRejected(newest, prof, meta); return; }
+        showStaffPending(pending || newest, prof, meta);
       };
-      if (!CalyeDB.isOnline()) { finish(null); return; }
+
+      if (!CalyeDB.isOnline()) {
+        gateMsg('You are offline — connect to check your application status.', false);
+        return;
+      }
       CalyeDB.fetch('verification_requests', {
-        filters: [['user_id', 'eq', uid], ['status', 'eq', 'pending']], limit: 10
-      }).then(rows => {
-        finish((rows || []).find(r => r.role === 'staff') || null);
-      }).catch(() => finish(null));
+        filters: [['user_id', 'eq', uid]], order: 'submitted_at', asc: false, limit: 20
+      }).then(rows => finish(rows))
+        // Never fall back to "file a new request" on a read error: that is
+        // exactly what created duplicate applications after approval.
+        .catch(() => gateMsg('Could not check your application status — check your connection and sign in again.', false));
+    }
+
+    // Swaps the sign-in form for a status notice (keeps "sign out" available).
+    function hideGateSignin() {
+      ['gate-email', 'gate-pass', 'gate-btn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      const ts = document.getElementById('ts-gate');
+      if (ts) ts.style.display = 'none';
+      const out = document.getElementById('gate-out');
+      if (out) out.style.display = 'inline-block';
+      // The applicant already has an account — don't offer to file another.
+      const sw = document.querySelector('#gate-signin-view .gate-switch');
+      if (sw) sw.style.display = 'none';
+    }
+    function staffBrgy(req, prof, meta) {
+      return (req && (req.barangay || req.address)) || (prof && prof.barangay)
+        || (meta && meta.barangay) || 'your barangay';
     }
 
     function showStaffPending(req, prof, meta) {
-      document.getElementById('gate-email').style.display = 'none';
-      document.getElementById('gate-pass').style.display = 'none';
-      document.getElementById('gate-btn').style.display = 'none';
-      const ts = document.getElementById('ts-gate');
-      if (ts) ts.style.display = 'none';
-      document.getElementById('gate-out').style.display = 'inline-block';
-      const brgy = (req && (req.barangay || req.address)) || (prof && prof.barangay)
-        || (meta && meta.barangay) || 'your barangay';
-      gateMsg('Your ' + brgy + ' staff account is pending approval by the city administrator. You will get access as soon as it is approved.', true);
+      hideGateSignin();
+      gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff account is pending approval by the city administrator. You will get access as soon as it is approved.', true);
+    }
+
+    function showStaffRejected(req, prof, meta) {
+      hideGateSignin();
+      const note = ((req && req.review_note) || '').trim();
+      gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff application was rejected'
+        + (note ? ' — ' + note : '') + '. Contact the city administrator if you believe this is a mistake.', false);
+    }
+
+    // Approved, but profiles.role is still 'resident' → the SQL upgrade that
+    // adds the staff promotion to admin_review_verification() is missing.
+    function showStaffActivationPending(req, prof, meta) {
+      hideGateSignin();
+      gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff application was approved, but the account has not been activated yet. Ask the city administrator to run the staff-signup database upgrade (supabase-staff-signup.sql), then sign in again.', false);
     }
 
     function adminGateLogin() {
@@ -10600,6 +10687,8 @@ const pageTitles = {
         const ts = document.getElementById('ts-gate');
         if (ts) ts.style.display = 'flex';          // hidden by showStaffPending
         document.getElementById('gate-out').style.display = 'none';
+        const sw = document.querySelector('#gate-signin-view .gate-switch');
+        if (sw) sw.style.display = '';              // hidden by hideGateSignin
         showGateView('signin');
         gateMsg('Signed out.');
       });
