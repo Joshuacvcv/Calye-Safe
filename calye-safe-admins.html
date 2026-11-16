@@ -9452,7 +9452,20 @@ const pageTitles = {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             Approve
           </button>
-        </div>` : '';
+        </div>`
+        // Already-approved STAFF application: keep a button so the promotion
+        // can be (re)run. Approve only grants the staff role when
+        // supabase-staff-signup.sql has been applied — without it the request
+        // flipped to "approved" while profiles.role stayed 'resident', and the
+        // old UI offered no way to try again.
+        : (r.role === 'staff' && r.status === 'approved' ? `
+        <div class="verify-btn-row">
+          <button class="verify-btn approve" onclick="approveVerify('${r.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Re-run activation
+          </button>
+        </div>
+        <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:8px;line-height:1.5;">Approved. Press this after applying <b>supabase-staff-signup.sql</b> to grant the staff role — safe to press even when the role is already active.</div>` : '');
 
       const dangerDelete = `
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
