@@ -9465,7 +9465,7 @@ const pageTitles = {
             Re-run activation
           </button>
         </div>
-        <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:8px;line-height:1.5;">Approved. Press this after applying <b>supabase-staff-signup.sql</b> to grant the staff role — safe to press even when the role is already active.</div>` : '');
+        <div style="font-size:11.5px;color:var(--text3);font-weight:600;margin-top:8px;line-height:1.5;">Approved. Press this to (re)grant the <b>staff</b> role — it works with or without <b>supabase-staff-signup.sql</b>, and never grants <b>admin</b>.</div>` : '');
 
       const dangerDelete = `
         <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
@@ -9542,28 +9542,58 @@ const pageTitles = {
         r.review_note = '';
         openVerifyDetail(id);
         renderVerifyList();
-        // A staff request only becomes a real staff ACCOUNT when the review
-        // RPC promotes profiles.role — that lives in
-        // supabase-staff-signup.sql. If it has not been applied, the request
-        // still says "approved" but the applicant can never sign in, so
-        // verify the promotion instead of claiming success.
-        if (r.role === 'staff') {
-          CalyeDB.fetch('profiles', { filters: [['id', 'eq', r.user_id]], limit: 1 }).then(prs => {
-            if (!prs) { // read failed — don't claim success or failure
-              showToastMsg(r.full_name + ' approved — reload Verify-Users to confirm the staff role was granted.', 'success');
-              return;
-            }
-            const role = prs[0] && prs[0].role;
-            if (role === 'staff' || role === 'admin') {
-              showToastMsg(r.full_name + ' approved — staff account activated', 'success');
-            } else {
-              showToastMsg('Request approved, but ' + (r.full_name || 'the account')
-                + ' was NOT activated as staff (role is still "' + role + '"). Run calye-safe_database/supabase-staff-signup.sql in the Supabase SQL editor, then approve again.', 'error');
-            }
-          }).catch(() => showToastMsg(r.full_name + ' approved — reload Verify-Users to confirm the staff role was granted.', 'success'));
+        // A staff request only becomes a real staff ACCOUNT when profiles.role
+        // becomes 'staff'. The review RPC does that when
+        // supabase-staff-signup.sql has been applied; when it has not, grant
+        // the role directly instead of leaving the applicant locked out.
+        if (r.role === 'staff') { finishStaffActivation(r); return; }
+        showToastMsg(r.full_name + ' approved — account is now active', 'success');
+      });
+    }
+
+    // Confirms — and if necessary GRANTS — the staff role after a staff
+    // request was approved. The RPC from supabase-staff-signup.sql does the
+    // promotion when that upgrade has been applied; when it has not, the
+    // request is 'approved' but profiles.role is still 'resident' and the
+    // applicant could never sign in. `profiles_staff_update` RLS lets an
+    // approved staff/admin session write another profile — which is exactly
+    // the session pressing Approve — so the role is granted directly here.
+    // Only 'staff' is ever written; 'admin' can never be granted this way.
+    function finishStaffActivation(r) {
+      const name = r.full_name || 'the account';
+      const ok = () => showToastMsg(name + ' approved — staff account activated', 'success');
+      const readRole = () => CalyeDB.fetch('profiles', { filters: [['id', 'eq', r.user_id]], limit: 1 });
+
+      readRole().then(prs => {
+        if (!prs) { // read failed: don't claim success OR failure
+          showToastMsg(name + ' approved — reload Verify-Users to confirm the staff role was granted.', 'success');
           return;
         }
-        showToastMsg(r.full_name + ' approved — account is now active', 'success');
+        const prof = prs[0];
+        const role = prof && prof.role;
+        if (role === 'staff' || role === 'admin') { ok(); return; }   // RPC already did it
+
+        const patch = { role: 'staff', verification_status: 'approved' };
+        // A staff row with an empty barangay scopes to the WHOLE city, so
+        // backfill it from the application (bare name — the zone lookup keys
+        // are 'Balibago', not 'Barangay Balibago').
+        const brgy = String((prof && prof.barangay) || '').trim().replace(/^Barangay\s+/i, '');
+        const fromAddr = String(r.address || '').trim().replace(/^Barangay\s+/i, '');
+        if (!brgy) patch.barangay = fromAddr || 'Barangay Calye';
+
+        CalyeDB.update('profiles', { id: r.user_id }, patch).then(rows => {
+          if (!rows || !rows.length) {
+            showToastMsg('Request approved, but the staff role could not be granted for ' + name
+              + ' — the database refused the update. Run calye-safe_database/supabase-staff-signup.sql in the Supabase SQL editor.', 'error');
+            return;
+          }
+          readRole().then(prs2 => {
+            const role2 = prs2 && prs2[0] && prs2[0].role;
+            if (role2 === 'staff' || role2 === 'admin') { ok(); return; }
+            showToastMsg('Request approved, but ' + name + ' is still "' + (role2 || 'unknown')
+              + '". Run calye-safe_database/supabase-staff-signup.sql in the Supabase SQL editor.', 'error');
+          });
+        });
       });
     }
 
@@ -10660,7 +10690,7 @@ const pageTitles = {
     // adds the staff promotion to admin_review_verification() is missing.
     function showStaffActivationPending(req, prof, meta) {
       hideGateSignin();
-      gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff application was approved, but the account has not been activated yet. Ask the city administrator to run the staff-signup database upgrade (supabase-staff-signup.sql), then sign in again.', false);
+      gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff application was approved, but the account has not been activated yet. Ask the city administrator to open it in Verify-Users and press "Re-run activation", then sign in again.', false);
     }
 
     function adminGateLogin() {
