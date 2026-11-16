@@ -100,6 +100,14 @@ window.CalyeAuth = (function () {
         role: opts.role || 'resident',
         full_name: opts.full_name || ''
       };
+      // Barangay staff sign-up: the profile is still created as a plain
+      // 'resident' (handle_new_user never grants a privileged role from
+      // client-supplied metadata — that would be self-promotion). These two
+      // claims only carry the applicant's INTENT + chosen barangay so the
+      // admin gate can file the staff request on the user's behalf, even when
+      // email confirmation means there is no session yet at sign-up time.
+      if (opts.staff) meta.staff = true;
+      if (opts.barangay) meta.barangay = opts.barangay;
       passwordFingerprint(opts.password).then(function (fp) {
         if (fp) meta.pw_hist = [fp];
         c.auth.signUp({

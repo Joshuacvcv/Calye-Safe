@@ -19,6 +19,7 @@
   <script src="supabase-auth.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="santarosa-boundary.js"></script>
+  <script src="barangay-boundaries.js"></script>
   <!-- Bundled heat layer. Do NOT point this back at unpkg leaflet.heat:
        that build is an ES module (import statements) and throws
        "Cannot use import statement outside a module" as a classic
@@ -3773,6 +3774,13 @@
       border-color: rgba(46, 125, 50, 0.18);
     }
 
+    /* Public "Create Account" staff application (calye-safe-admins gate) */
+    .verify-meta-tag.role-staff {
+      color: var(--crime);
+      background: var(--crime-light);
+      border-color: rgba(123, 44, 191, 0.22);
+    }
+
     .id-photo {
       width: 100%;
       max-width: 1920px;
@@ -4169,6 +4177,39 @@
     }
     .gate-msg { min-height: 18px; font-size: 12.5px; font-weight: 700; margin: 0 0 10px; }
     .gate-hint { font-size: 11px; color: #8a97ab; font-weight: 700; margin-top: 16px; line-height: 1.5; }
+
+    /* ── Gate: sign-in / create-account views (mirrors panel-register) ── */
+    .gate-view { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    /* The create-account form is taller than the card. The card itself is a
+       flex item of .gate-stage (definite min-height), so without this the
+       view is shrunk to the panel height and then clipped by the card's
+       overflow:hidden — the Create Account button ends up unreachable.
+       min-height:0 lets the item shrink below its content and overflow-y
+       turns the VIEW into the scroll container; the sign-in view is short
+       and never scrolls. */
+    #gate-register-view {
+      flex: 0 1 auto; min-height: 0;
+      overflow-y: auto; overscroll-behavior: contain;
+      scrollbar-width: thin; padding-right: 4px;
+    }
+    .gate-frow { display: flex; flex-direction: column; gap: 5px; }
+    .gate-frow > label { font-size: 11px; font-weight: 800; color: #5b6b82; letter-spacing: .02em; }
+    .gate-frow .field-error { display: none; font-size: 11px; font-weight: 700; color: #e5484d; }
+    .gate-frow.err .field-error { display: flex; align-items: center; gap: 4px; }
+    .gate-frow.err .field-error::before { content: "⚠"; }
+    .gate-frow.err .gate-field { border-color: #e5484d; background: #fff5f5; }
+    select.gate-field {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6b82' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; background-size: 16px 16px;
+      padding-right: 38px; cursor: pointer;
+    }
+    select.gate-field option { font-size: 14px; }
+    .gate-check { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; color: #5b6b82; font-weight: 600; line-height: 1.45; cursor: pointer; }
+    .gate-check input { margin-top: 1px; width: 15px; height: 15px; accent-color: #1d6fe0; flex-shrink: 0; }
+    .gate-switch { text-align: center; font-size: 12.5px; color: #5b6b82; font-weight: 700; }
+    .gate-switch button { background: none; border: none; color: #1d6fe0; font-size: 12.5px; font-weight: 800; font-family: inherit; cursor: pointer; padding: 0; }
+    .gate-switch button:hover { text-decoration: underline; }
   </style>
   <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('calye_theme')||'light');}catch(e){}</script>
 </head>
@@ -4233,22 +4274,76 @@
         </div>
       </div>
       <div class="gate-right">
-        <div><span class="gate-tag">STAFF ONLY</span></div>
-        <div class="gate-title" style="color:#0f1a2b;">Welcome back</div>
-        <div class="gate-sub" style="color:#5b6b82;">Sign in with an admin or staff account</div>
-        <div id="gate-msg" class="gate-msg"></div>
-        <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
-        <div style="position:relative;margin-bottom:10px;">
-          <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:42px;margin-bottom:0;" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
-          <button type="button" class="pw-toggle" onclick="toggleGatePw()" aria-label="Show password">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-          </button>
+        <!-- ── VIEW 1: SIGN IN ─────────────────────────────────────────── -->
+        <div id="gate-signin-view" class="gate-view">
+          <div><span class="gate-tag">STAFF ONLY</span></div>
+          <div class="gate-title" style="color:#0f1a2b;">Welcome back</div>
+          <div class="gate-sub" style="color:#5b6b82;">Sign in with an admin or staff account</div>
+          <div id="gate-msg" class="gate-msg"></div>
+          <input id="gate-email" class="gate-field" type="email" placeholder="Email address" autocomplete="username" onkeydown="if(event.key==='Enter')adminGateLogin()">
+          <div style="position:relative;margin-bottom:10px;">
+            <input id="gate-pass" class="gate-field" type="password" placeholder="Password" autocomplete="current-password" style="padding-right:42px;margin-bottom:0;" oninput="adminGateHint()" onkeydown="if(event.key==='Enter')adminGateLogin()">
+            <button type="button" class="pw-toggle" onclick="toggleGatePw()" aria-label="Show password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <div id="gate-hint" class="gate-msg" style="display:none"></div>
+          <div id="ts-gate" style="margin:2px 0 12px;display:flex;justify-content:center;"></div>
+          <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
+          <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
+          <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
+          <div class="gate-switch">New here? <button type="button" onclick="showGateView('register')">Create a barangay staff account</button></div>
         </div>
-        <div id="gate-hint" class="gate-msg" style="display:none"></div>
-        <div id="ts-gate" style="margin:2px 0 12px;display:flex;justify-content:center;"></div>
-        <button id="gate-btn" class="gate-btn" onclick="adminGateLogin()">Sign In</button>
-        <button id="gate-out" class="gate-link" style="display:none" onclick="adminGateOut()">Sign out and switch account</button>
-        <div class="gate-hint">Restricted to barangay operations staff.<br>Your session must be a real Supabase account with role <b>staff</b> or <b>admin</b>.</div>
+
+        <!-- ── VIEW 2: CREATE ACCOUNT (public form → city-admin approval) ── -->
+        <div id="gate-register-view" class="gate-view" style="display:none;">
+          <div><span class="gate-tag">BARANGAY STAFF APPLICATION</span></div>
+          <div class="gate-title" style="color:#0f1a2b;">Create account</div>
+          <div class="gate-sub" style="color:#5b6b82;">Same form as the resident sign-up. Pick your barangay — the dashboard, its map border and its reports follow that choice.</div>
+          <div id="reg-admin-msg" class="gate-msg"></div>
+
+          <div class="gate-frow">
+            <label for="reg-admin-name">Full name</label>
+            <input id="reg-admin-name" class="gate-field" type="text" placeholder="Juan Dela Cruz" autocomplete="name" oninput="gateFieldErr('reg-admin-name','')">
+            <div class="field-error"></div>
+          </div>
+
+          <div class="gate-frow">
+            <label for="reg-admin-email">Email</label>
+            <input id="reg-admin-email" class="gate-field" type="email" placeholder="staff@email.com" autocomplete="username" oninput="gateFieldErr('reg-admin-email','')">
+            <div class="field-error"></div>
+          </div>
+
+          <div class="gate-frow">
+            <label for="reg-admin-pass">Password</label>
+            <input id="reg-admin-pass" class="gate-field" type="password" placeholder="Create a password" autocomplete="new-password" oninput="gateFieldErr('reg-admin-pass','');adminRegHint()" onkeydown="if(event.key==='Enter')adminGateRegister()">
+            <div class="field-error"></div>
+          </div>
+
+          <div id="reg-admin-hint" class="gate-msg" style="display:none;margin:-4px 0 0;"></div>
+
+          <div class="gate-frow">
+            <label for="reg-admin-pass2">Confirm password</label>
+            <input id="reg-admin-pass2" class="gate-field" type="password" placeholder="Re-enter your password" autocomplete="new-password" oninput="gateFieldErr('reg-admin-pass2','')" onkeydown="if(event.key==='Enter')adminGateRegister()">
+            <div class="field-error"></div>
+          </div>
+
+          <div class="gate-frow">
+            <label for="reg-admin-barangay">Barangay</label>
+            <select id="reg-admin-barangay" class="gate-field" onchange="gateFieldErr('reg-admin-barangay','')"></select>
+            <div class="field-error"></div>
+          </div>
+
+          <label class="gate-check" for="reg-admin-consent">
+            <input id="reg-admin-consent" type="checkbox">
+            <span>I confirm I am authorised by this barangay to operate its Calye-Safe account, and I accept the Privacy Notice.</span>
+          </label>
+
+          <div id="ts-reg-admin" style="margin:2px 0 4px;display:flex;justify-content:center;"></div>
+          <button id="reg-admin-btn" class="gate-btn" onclick="adminGateRegister()">Create Account</button>
+          <div class="gate-switch">Already have an account? <button type="button" onclick="showGateView('signin')">Sign in</button></div>
+          <div class="gate-hint">Applications are reviewed in the Verify-Users queue by the city administrator. Access starts only after approval.</div>
+        </div>
       </div>
     </div>
       <div class="gate-scroll-cue">Scroll to see how it works <span>↓</span></div>
@@ -5915,7 +6010,7 @@
       tbody.innerHTML = data.slice(0, 5).map(r => `
     <tr onclick="openReportDetail('${r.dbId || ''}')" title="Click to view report details" style="cursor:pointer;">
       <td><span class="report-num">${r.id}</span></td>
-      <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div>${r.outsideCity ? '<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA</div>' : ''}</td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div>${r.outsideCity ? '<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA</div>' : ''}${outsideVicinityTag(r)}</td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
@@ -5990,6 +6085,7 @@
           </div>
           <span class="badge ${r.status}">${statusLabel}</span>
         </div>
+        ${(r.outsideVicinity || full.outsideVicinity) ? `<div style="margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;background:#FFEBEE;border:1px solid #E53935;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:700;color:#C62828;line-height:1.5;">⚠ <span>This report's pinned location is outside ${escAdminAttr(adminScope || 'your barangay')}. It is shown for awareness, but is excluded from this barangay's incident counts and heat map.</span></div>` : ''}
         <div class="verify-detail-label">Attached photo</div>
         <div style="margin-bottom:16px;">${photos}</div>
         ${verifyField('Location', full.loc)}
@@ -6191,6 +6287,72 @@
     // instead. Takes a THUNK so the request stays lazy.
     function scopedRpc(call) { return adminScope ? Promise.resolve(null) : call(); }
 
+    // ── OUTSIDE-VICINITY + BARANGAY BORDER ──────────────────────────────────
+    // A staff account's barangay is drawn as a generated zone (see
+    // barangay-boundaries.js — Voronoi cells clipped to the real city
+    // outline). A report whose pin falls in ANOTHER barangay stays visible
+    // with a red warning badge, but it never counts toward this barangay's
+    // totals, alerts, notifications or heat map (vicinityRows()).
+    // Rows without usable coordinates (legacy rows store lat/lng = 0) are
+    // never flagged — there is nothing to judge them against.
+    function outsideVicinity(row) {
+      if (!adminScope || !row) return false;
+      if (typeof isPointInBarangay !== 'function') return false;
+      const lat = row.lat;
+      const lng = typeof row.lng === 'number' ? row.lng : (typeof row.lon === 'number' ? row.lon : NaN);
+      if (typeof lat !== 'number' || !lat || !lng) return false;
+      return !isPointInBarangay(lat, lng, adminScope);
+    }
+    // Stamps the display flag used by the tables / map lists / detail modal.
+    function flagVicinity(rows) {
+      (rows || []).forEach(r => { r.outsideVicinity = outsideVicinity(r); });
+      return rows;
+    }
+    // Counters, summaries, alert strips and heat layers read through this.
+    function vicinityRows(rows) {
+      return adminScope ? (rows || []).filter(r => !outsideVicinity(r)) : (rows || []);
+    }
+    // Red "outside vicinity" chip — same visual language as the existing
+    // "OUTSIDE SANTA ROSA" warning.
+    function outsideVicinityTag(row) {
+      if (!row || !row.outsideVicinity || !adminScope) return '';
+      return `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE VICINITY — ${escAdminAttr(adminScope)}</div>`;
+    }
+    // The dashed barangay border: the per-barangay equivalent of
+    // drawCityBoundary() (which draws the whole of Santa Rosa).
+    function drawScopeBoundary(map) {
+      if (!map || !adminScope || typeof drawBarangayBoundary !== 'function') return null;
+      return drawBarangayBoundary(map, adminScope, {
+        color: '#1E3A5F', weight: 2.5, dashArray: '6 6',
+        fill: true, fillColor: '#1E3A5F', fillOpacity: 0.05
+      });
+    }
+    // The city administrator has no single zone: every barangay border is
+    // drawn faintly so both views share the same look (red = city limits,
+    // blue = the signed-in staff member's zone, grey = all 18 zones).
+    function drawAllBarangayBoundaries(map) {
+      if (!map || adminScope || typeof drawBarangayBoundary !== 'function') return null;
+      return drawBarangayBoundary(map, null, { all: true, color: '#90A4AE', weight: 1, opacity: 0.55, dashArray: '4 6' });
+    }
+    // Frames a map on the signed-in staff member's barangay (falls back to
+    // the caller's default Santa Rosa view for the city admin).
+    function scopeFit(map, opts) {
+      if (!map || !adminScope || typeof barangayBounds !== 'function' || typeof L === 'undefined') return false;
+      const b = barangayBounds(adminScope);
+      if (!b) return false;
+      map.fitBounds(L.latLngBounds(b[0], b[1]), Object.assign({ padding: [18, 18], animate: false }, opts || {}));
+      return true;
+    }
+    // Centre used when a map opens: the barangay centre for staff, the
+    // city reference point for the administrator.
+    function scopeCenter() {
+      if (adminScope && typeof barangayCenter === 'function') {
+        const c = barangayCenter(adminScope);
+        if (c) return c;
+      }
+      return [14.3122, 121.1114];
+    }
+
     function renderReportsGroupTable(bodyId, data) {
       const tbody = document.getElementById(bodyId);
       if (!data || data.length === 0) {
@@ -6200,7 +6362,7 @@
       tbody.innerHTML = data.map(r => `
     <tr onclick="openReportDetail('${r.dbId || ''}')" title="Click to view report details" style="cursor:pointer;">
       <td><span class="report-num">${r.id}</span></td>
-      <td><div class="report-name">${r.type}${photoTag(r.photo || reportPhotoList(r.dbId)[0] || '')}</div></td>
+      <td><div class="report-name">${r.type}${photoTag(r.photo || reportPhotoList(r.dbId)[0] || '')}</div>${outsideVicinityTag(r)}</td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
       <td>${badgeHtml(r.status)}</td>
@@ -6233,7 +6395,8 @@
       } else {
         majorGroup.style.display = 'block';
         renderReportsGroupTable('reports-major-body', majorData);
-        document.getElementById('reports-major-count').textContent = majorData.length + (majorData.length === 1 ? ' report' : ' reports');
+        const majorCount = vicinityRows(majorData).length;
+        document.getElementById('reports-major-count').textContent = majorCount + (majorCount === 1 ? ' report' : ' reports');
       }
 
       if (filter === 'major') {
@@ -6241,42 +6404,47 @@
       } else {
         minorGroup.style.display = 'block';
         renderReportsGroupTable('reports-minor-body', minorData);
-        document.getElementById('reports-minor-count').textContent = minorData.length + (minorData.length === 1 ? ' report' : ' reports');
+        const minorCount = vicinityRows(minorData).length;
+        document.getElementById('reports-minor-count').textContent = minorCount + (minorCount === 1 ? ' report' : ' reports');
       }
     }
 
     function refreshSummaryStats() {
-      const totalMajor = fullReports.filter(r => r.severity === 'major').length;
-      const totalMinor = fullReports.filter(r => r.severity === 'minor').length;
+      // Out-of-vicinity rows are displayed but never counted (vicinityRows).
+      const fr = vicinityRows(fullReports);
+      const rr = vicinityRows(reports);
+      const totalMajor = fr.filter(r => r.severity === 'major').length;
+      const totalMinor = fr.filter(r => r.severity === 'minor').length;
       const totalEl = document.getElementById('reports-total-count');
       const majEl = document.getElementById('reports-major-count-stat');
       const minEl = document.getElementById('reports-minor-count-stat');
-      if (totalEl) totalEl.textContent = fullReports.length;
+      if (totalEl) totalEl.textContent = fr.length;
       if (majEl) majEl.textContent = totalMajor;
       if (minEl) minEl.textContent = totalMinor;
       const dashTotal = document.getElementById('dash-total-reports');
       const dashAvg = document.getElementById('dash-avg-response');
       const dashResolved = document.getElementById('dash-resolved');
       const navCount = document.getElementById('reports-nav-count');
-      if (dashTotal) dashTotal.textContent = fullReports.length;
-      if (dashResolved) dashResolved.textContent = fullReports.filter(r => r.status === 'resolved').length;
+      if (dashTotal) dashTotal.textContent = fr.length;
+      if (dashResolved) dashResolved.textContent = fr.filter(r => r.status === 'resolved').length;
       if (dashAvg) {
-        const resolved = reports.filter(r => r.status === 'resolved' && r.createdAt && r.resolvedAt);
+        const resolved = rr.filter(r => r.status === 'resolved' && r.createdAt && r.resolvedAt);
         if (resolved.length) {
           const avgHrs = resolved.reduce((s, r) => s + ((new Date(r.resolvedAt) - new Date(r.createdAt)) / 3600000), 0) / resolved.length;
           dashAvg.textContent = avgHrs >= 1 ? avgHrs.toFixed(1) + 'h' : Math.max(1, Math.round(avgHrs * 60)) + 'm';
         } else {
-          dashAvg.textContent = reports.length ? '—' : '0m';
+          dashAvg.textContent = rr.length ? '—' : '0m';
         }
       }
-      if (navCount) navCount.textContent = fullReports.length;
+      if (navCount) navCount.textContent = fr.length;
     }
 
     // Initial render of All Reports page + summary stats
     (function initReportsPage() {
-      const totalMajor = fullReports.filter(r => r.severity === 'major').length;
-      const totalMinor = fullReports.filter(r => r.severity === 'minor').length;
-      document.getElementById('reports-total-count').textContent = fullReports.length;
+      const fr = vicinityRows(fullReports);
+      const totalMajor = fr.filter(r => r.severity === 'major').length;
+      const totalMinor = fr.filter(r => r.severity === 'minor').length;
+      document.getElementById('reports-total-count').textContent = fr.length;
       document.getElementById('reports-major-count-stat').textContent = totalMajor;
       document.getElementById('reports-minor-count-stat').textContent = totalMinor;
       refreshSummaryStats();
@@ -6575,7 +6743,8 @@ const pageTitles = {
       const list = document.getElementById('notif-list');
       if (!list) return;
       const dot = document.querySelector('#notif-btn .dot');
-      if (!reports.length) {
+      const nr = vicinityRows(reports);
+      if (!nr.length) {
         list.innerHTML = '<div style="padding:26px 18px;text-align:center;color:var(--text3);font-size:12px;font-weight:600;">No notifications yet.</div>';
         if (dot) dot.style.display = 'none';
         return;
@@ -6586,7 +6755,7 @@ const pageTitles = {
         pending: { bg: 'var(--warning-light)', fg: 'var(--warning)', icon: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />' },
         declined: { bg: 'var(--surface3)', fg: 'var(--text3)', icon: '<line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />' }
       };
-      const items = reports.slice()
+      const items = nr.slice()
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 8)
         .map(r => {
@@ -6611,7 +6780,7 @@ const pageTitles = {
           </div>`;
         });
       list.innerHTML = items.join('');
-      const unreadN = reports.filter(r => r.status === 'pending').length;
+      const unreadN = nr.filter(r => r.status === 'pending').length;
       if (dot) dot.style.display = unreadN ? 'block' : 'none';
     }
 
@@ -7045,6 +7214,8 @@ const pageTitles = {
           attribution: '&copy; OpenStreetMap'
         }).addTo(dashMap);
         drawCityBoundary(dashMap);
+        drawScopeBoundary(dashMap);
+        drawAllBarangayBoundaries(dashMap);
       }
 
       dashMap.setView([lat, lon], 15, { animate: false });
@@ -7097,9 +7268,17 @@ const pageTitles = {
     }
 
     function loadDefaultMap() {
+      document.getElementById('map-search-input').value = '';
+      if (adminScope) {
+        // Barangay staff open the map framed on THEIR zone (border drawn in
+        // loadMapByCoords), instead of the whole of Santa Rosa.
+        const c = scopeCenter();
+        loadMapByCoords(c[0], c[1], 'Barangay ' + adminScope + ', Santa Rosa, Laguna');
+        scopeFit(dashMap);
+        return;
+      }
       // Santa Rosa, Laguna
       loadMapByCoords(14.3122, 121.1114, 'Santa Rosa, Laguna, Philippines');
-      document.getElementById('map-search-input').value = '';
     }
 
     function showIncidentMap() {
@@ -7163,7 +7342,9 @@ const pageTitles = {
         attribution: ''
       }).addTo(analyticsHeatmap);
       drawCityBoundary(analyticsHeatmap);
-      analyticsHeatmap.setView([14.3122, 121.1114], 15);
+      drawScopeBoundary(analyticsHeatmap);
+      drawAllBarangayBoundaries(analyticsHeatmap);
+      if (!scopeFit(analyticsHeatmap)) analyticsHeatmap.setView(scopeCenter(), 15);
       const loading = document.getElementById('analytics-heatmap-loading');
       if (loading) loading.style.display = 'none';
       return true;
@@ -7197,9 +7378,12 @@ const pageTitles = {
             lat: r.lat, lng: r.lng, status: adminStatus(r), created_at: r.created_at, dbId: r.id
           };
         });
-        analyticsRows = rows;
-        const summary = (results[0] && results[0].totals) ? results[0] : computeAnalyticsSummary(rows);
-        renderAnalytics(summary, rows);
+        // Out-of-vicinity rows are dropped here so every analytics figure
+        // (totals, category/month charts, heat, CSV) excludes them, while the
+        // Reports page still lists them with the red warning badge.
+        analyticsRows = vicinityRows(rows);
+        const summary = (results[0] && results[0].totals) ? results[0] : computeAnalyticsSummary(analyticsRows);
+        renderAnalytics(summary, analyticsRows);
       });
     }
 
@@ -7617,7 +7801,9 @@ const pageTitles = {
     function renderAnalyticsHeat(rows) {
       if (!analyticsHeatmap) return;
       const points = [];
-      rows.forEach(function (r) {
+      // Outside-vicinity reports stay on the map as dimmed pins, but they
+      // are excluded from the heat surface (vicinityRows).
+      vicinityRows(rows).forEach(function (r) {
         if (typeof r.lat === 'number' && typeof r.lng === 'number' && r.lat && r.lng) {
           points.push([r.lat, r.lng, r.severity === 'major' ? 1 : 0.55]);
         }
@@ -7626,9 +7812,13 @@ const pageTitles = {
       if (!analyticsHeatOn) return;
       if (points.length && typeof L.heatLayer === 'function') {
         analyticsHeatLayer = L.heatLayer(points, { radius: 30, blur: 22, maxZoom: 17, max: 1.0 }).addTo(analyticsHeatmap);
-        analyticsHeatmap.fitBounds(L.latLngBounds(points.map(function (p) { return [p[0], p[1]]; })), { padding: [30, 30] });
+        // Staff maps stay framed on their own barangay rather than jumping
+        // to wherever the fewest/most points happen to be.
+        if (!scopeFit(analyticsHeatmap, { padding: [30, 30] })) {
+          analyticsHeatmap.fitBounds(L.latLngBounds(points.map(function (p) { return [p[0], p[1]]; })), { padding: [30, 30] });
+        }
       } else {
-        analyticsHeatmap.setView([14.3122, 121.1114], 15);
+        if (!scopeFit(analyticsHeatmap)) analyticsHeatmap.setView(scopeCenter(), 15);
       }
     }
 
@@ -8581,6 +8771,8 @@ const pageTitles = {
         attribution: '&copy; OpenStreetMap'
       }).addTo(pageMap);
       drawCityBoundary(pageMap);
+      drawScopeBoundary(pageMap);
+      drawAllBarangayBoundaries(pageMap);
       pageMapMarkers = L.layerGroup().addTo(pageMap);
       renderPageMapList(incidentPins);
       pageMapFit();
@@ -8592,6 +8784,9 @@ const pageTitles = {
     }
 
     function pageMapFit() {
+      // Staff maps stay framed on their own barangay — fitting to the pins
+      // alone would zoom a lone pin to street level.
+      if (scopeFit(pageMap, { maxZoom: 15 })) return;
       const valid = incidentPins.filter(p => typeof p.lat === 'number' && typeof p.lon === 'number');
       if (valid.length) {
         pageMap.fitBounds(L.latLngBounds(valid.map(p => [p.lat, p.lon])), { padding: [40, 40], maxZoom: 15 });
@@ -8655,7 +8850,8 @@ const pageTitles = {
 
     function pageMapHeatPoints(pins) {
       const pts = [];
-      (pins || []).forEach(p => {
+      // Outside-vicinity pins are drawn dimmed, but never heated.
+      vicinityRows(pins || []).forEach(p => {
         if (typeof p.lat === 'number' && typeof p.lon === 'number') {
           pts.push([p.lat, p.lon, p.severity === 'major' ? 1 : 0.55]);
         }
@@ -8730,14 +8926,19 @@ const pageTitles = {
         pins.forEach(p => {
           if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
           const color = catColors[p.cat] || '#607D8B';
+          // Outside the signed-in staff member's barangay: keep the pin but
+          // hollow it out (red dashed ring, faded fill) so it reads as
+          // "not ours" without disappearing.
+          const out = outsideVicinity(p);
           L.circleMarker([p.lat, p.lon], {
             radius: p.severity === 'major' ? 10 : 7,
-            color: '#fff',
-            weight: 2,
+            color: out ? '#E53935' : '#fff',
+            weight: out ? 2.5 : 2,
+            dashArray: out ? '3 3' : null,
             fillColor: color,
-            fillOpacity: 0.9
+            fillOpacity: out ? 0.3 : 0.9
           }).addTo(pageMapMarkers)
-            .bindPopup('<b>' + p.type + '</b><br>📍 ' + p.loc + '<br>' + p.id + ' · ' + p.status + ' · ' + p.filed);
+            .bindPopup((out ? '<b style="color:#C62828;">⚠ Outside your vicinity</b><br>' : '<b>') + p.type + '</b><br>📍 ' + p.loc + '<br>' + p.id + ' · ' + p.status + ' · ' + p.filed);
         });
       }
       refreshPageMapHeat();
@@ -8748,7 +8949,7 @@ const pageTitles = {
       const statusColor = { pending: 'var(--warning)', responding: 'var(--primary)', resolved: 'var(--success)' };
 
       list.innerHTML = pins.map(p => `
-    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, Barangay Calye')"
+    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, ${adminScope ? 'Barangay ' + adminScope : 'Santa Rosa'}')"
       style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
       onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
@@ -8756,6 +8957,7 @@ const pageTitles = {
         <span style="font-size:13px;font-weight:700;color:var(--text);">${p.type}</span>
         <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${statusBg[p.status]};color:${statusColor[p.status]};">${statusLabels[p.status]}</span>
       </div>
+      ${outsideVicinity(p) ? '<div style="margin-bottom:5px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE VICINITY</div>' : ''}
       <div style="font-size:12.5px;color:var(--text2);font-weight:600;">📍 ${p.loc}</div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
         <span style="font-size:11px;color:var(--text3);font-weight:600;">${p.id}</span>
@@ -8801,7 +9003,7 @@ const pageTitles = {
     function renderPriorityCard() {
       const card = document.getElementById('priority-card');
       if (!card) return;
-      const active = reports.find(r => r.status === 'pending' || r.status === 'responding');
+      const active = vicinityRows(reports).find(r => r.status === 'pending' || r.status === 'responding');
       if (!active) {
         card.innerHTML = `
         <div class="priority-header">
@@ -8832,6 +9034,7 @@ const pageTitles = {
               <h3>${active.type || 'Incident'} — ${active.loc}</h3>
               <p>Filed by <strong style="color:var(--text);">${active.reporterName}</strong> · ${timeAgo(active.createdAt)}</p>
               ${active.outsideCity ? '<div style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA — MAY NEED DECLINE</div>' : ''}
+              ${outsideVicinityTag(active)}
             </div>
           </div>
           <div class="priority-meta">
@@ -8871,9 +9074,10 @@ const pageTitles = {
     // table (kept truthful by DB triggers); only when those rows are
     // missing do we derive states from the report + assignment — never mock.
     function latestReport() {
-      if (!reports || !reports.length) return null;
-      const live = reports.filter(r => r.status !== 'declined');
-      const pool = live.length ? live : reports;
+      const pool0 = vicinityRows(reports);
+      if (!pool0 || !pool0.length) return null;
+      const live = pool0.filter(r => r.status !== 'declined');
+      const pool = live.length ? live : pool0;
       return pool.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
     }
 
@@ -8966,7 +9170,7 @@ const pageTitles = {
       const strip = document.getElementById('alert-strip');
       const txt = document.getElementById('alert-strip-text');
       if (!strip || !txt) return;
-      const actionable = reports.filter(r => r.status === 'pending' || r.status === 'responding');
+      const actionable = vicinityRows(reports).filter(r => r.status === 'pending' || r.status === 'responding');
       if (!actionable.length) { strip.style.display = 'none'; return; }
       const byType = {};
       actionable.forEach(r => { byType[r.type] = (byType[r.type] || 0) + 1; });
@@ -8988,7 +9192,8 @@ const pageTitles = {
       const now = new Date();
       const days = [];
       for (let i = 6; i >= 0; i--) { const d = new Date(now); d.setDate(now.getDate() - i); days.push(d); }
-      const counts = days.map(d => reports.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === d.toDateString()).length);
+      const vr = vicinityRows(reports);
+      const counts = days.map(d => vr.filter(r => r.createdAt && new Date(r.createdAt).toDateString() === d.toDateString()).length);
       const max = Math.max(1, ...counts);
       barsEl.innerHTML = days.map((d, i) => {
         const h = Math.max(4, Math.round(counts[i] / max * 100));
@@ -8998,7 +9203,7 @@ const pageTitles = {
       const weekAgo = new Date(now);
       weekAgo.setDate(now.getDate() - 7);
       const byType = {};
-      reports.filter(r => r.createdAt && new Date(r.createdAt) >= weekAgo).forEach(r => {
+      vr.filter(r => r.createdAt && new Date(r.createdAt) >= weekAgo).forEach(r => {
         const k = r.type || 'Incident';
         if (!byType[k]) byType[k] = { count: 0, category: r.category || 'other' };
         byType[k].count++;
@@ -9053,6 +9258,7 @@ const pageTitles = {
             lat: p.lat, lon: p.lng, filed: fmtDateTime(p.created_at)
           };
         });
+        flagVicinity(incidentPins);
         if (pageMapInited) {
           renderPageMapList(incidentPins);
           pageMapFilter('all', document.getElementById('mf-all'));
@@ -9118,14 +9324,21 @@ const pageTitles = {
               resolutionNotes: asn.resolution_notes || '',
               proofUrl: asn.proof_url || '',
               announceConsent: r.announce_consent === true,
+              lat: typeof r.lat === 'number' ? r.lat : 0,
+              lng: typeof r.lng === 'number' ? r.lng : 0,
               outsideCity: r.outside_city === true
             };
           });
           reports = mapped;
           fullReports = mapped.map(r => ({
             id: r.id, type: r.type, category: r.category, severity: r.severity,
-            loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId
+            loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId,
+            lat: r.lat, lng: r.lng, outsideCity: r.outsideCity
           }));
+          // Stamp the "outside this barangay" flag used by the badges, the
+          // dimmed map pins and every count that must ignore those rows.
+          flagVicinity(reports);
+          flagVicinity(fullReports);
           renderTable(getFilteredData());
           filterReportsPage('all', document.querySelector('#page-reports .ftab'));
           refreshSummaryStats();
@@ -9145,9 +9358,12 @@ const pageTitles = {
     let selectedVerifyId = null;
 
     function verifyCardHtml(r) {
-      const roleCls = r.role === 'responder' ? 'role-responder' : 'role-resident';
-      const roleLabel = r.role === 'responder' ? 'Responder' : 'Resident';
-      const sub = r.role === 'responder' && r.employment_info ? r.employment_info : (r.address || r.email);
+      const isStaff = r.role === 'staff';
+      const roleCls = isStaff ? 'role-staff' : r.role === 'responder' ? 'role-responder' : 'role-resident';
+      const roleLabel = isStaff ? 'Staff application' : r.role === 'responder' ? 'Responder' : 'Resident';
+      const sub = r.role === 'responder' && r.employment_info ? r.employment_info
+        : isStaff ? 'City-admin approval activates this barangay account'
+          : (r.address || r.email);
       return `
         <div class="verify-card ${selectedVerifyId === r.id ? 'selected' : ''}" onclick="openVerifyDetail('${r.id}')">
           <div class="verify-card-top">
@@ -9159,7 +9375,7 @@ const pageTitles = {
           </div>
           <div class="verify-card-meta">
             <span class="verify-meta-tag ${roleCls}">${roleLabel}</span>
-            <span class="verify-meta-tag">${r.id_type || 'ID'}</span>
+            <span class="verify-meta-tag">${isStaff ? escAdminAttr(r.address || 'Barangay') : escAdminAttr(r.id_type || 'ID')}</span>
             <span class="verify-meta-tag">${fmtDateTime(r.submitted_at)}</span>
           </div>
           ${sub ? '<div style="font-size:11px;color:var(--text3);font-weight:600;margin-top:8px;">' + sub + '</div>' : ''}
@@ -9262,7 +9478,9 @@ const pageTitles = {
         ${rejectedNote}
         <div class="verify-detail-label">Valid ID</div>
         <div style="margin-bottom:16px;">${photo}${fallback}</div>
-        ${verifyField('Role', r.role === 'responder' ? 'Responder' : 'Resident')}
+        ${verifyField('Role', r.role === 'staff' ? 'Barangay Staff (application)' : r.role === 'responder' ? 'Responder' : 'Resident')}
+        ${r.role === 'staff' ? verifyField('Requested barangay', (r.address || '').replace(/^Barangay\s+/i, '')) : ''}
+        ${r.role === 'staff' ? '<div style="background:var(--crime-light);border:1px solid rgba(123,44,191,0.25);border-radius:var(--radius-sm);padding:11px 13px;font-size:12.5px;color:var(--crime);font-weight:700;margin-bottom:14px;">Approving promotes this account to <b>staff</b> of that barangay — its dashboard, map border and reports are then scoped to it.</div>' : ''}
         ${verifyField('Email', r.email)}
         ${verifyField('Address', r.address)}
         ${verifyField('Employment', r.employment_info)}
@@ -9612,6 +9830,11 @@ const pageTitles = {
         reports = scopeRows(reports);
         fullReports = scopeRows(fullReports);
       }
+      // Re-stamp the outside-vicinity flag for THIS scope (also clears any
+      // stale flag left behind by a previous session on the same browser).
+      flagVicinity(reports);
+      flagVicinity(fullReports);
+      flagVicinity(incidentPins);
       // Reflect whichever staff/admin account signed in (email, name, chip).
       try {
         const prof = (gs && gs.profile) || {};
@@ -10084,6 +10307,9 @@ const pageTitles = {
     // the auth-gate Edge Function enforces it + rate limits server-side.
     let gateToken = '';
     let tsGateWidget = null;
+    // Create-Account view has its own widget (a hidden one never renders).
+    let regToken = '';
+    let tsRegWidget = null;
     function onTurnstileApiReady() {
       try {
         const key = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.turnstileSiteKey) || '';
@@ -10096,13 +10322,245 @@ const pageTitles = {
             'error-callback': function () { gateToken = ''; }
           });
         }
+        ensureRegTurnstile();
       } catch (e) { /* server still enforces */ }
+    }
+    function ensureRegTurnstile() {
+      try {
+        if (tsRegWidget !== null) return;
+        const box = document.getElementById('ts-reg-admin');
+        if (!box || box.offsetParent === null) return;   // register view hidden
+        const key = (window.CALYE_SUPABASE && window.CALYE_SUPABASE.turnstileSiteKey) || '';
+        if (!key || key.indexOf('PASTE') === 0 || typeof turnstile === 'undefined') return;
+        tsRegWidget = turnstile.render('#ts-reg-admin', {
+          sitekey: key, theme: 'light',
+          callback: function (t) { regToken = t; },
+          'expired-callback': function () { regToken = ''; },
+          'error-callback': function () { regToken = ''; }
+        });
+      } catch (e) { /* server still enforces */ }
+    }
+    function resetRegTurnstile() {
+      try {
+        if (typeof turnstile !== 'undefined' && tsRegWidget !== null) turnstile.reset(tsRegWidget);
+      } catch (e) { }
+      regToken = '';
     }
     function resetGateTurnstile() {
       try {
         if (typeof turnstile !== 'undefined' && tsGateWidget !== null) turnstile.reset(tsGateWidget);
       } catch (e) { }
       gateToken = '';
+    }
+
+    // ── CREATE ACCOUNT (public staff application → city-admin approval) ────
+    // Mirrors panel-register in index.html: same fields, same validation,
+    // same Turnstile check. The account is created as a plain resident —
+    // handle_new_user() never grants a role from client metadata — and a
+    // verification_requests row with role='staff' is filed so the city
+    // administrator can promote it in the Verify-Users queue.
+    const GATE_BARANGAYS = ['Aplaya', 'Balibago', 'Caingin', 'Dila', 'Dita', 'Don Jose',
+      'Ibaba', 'Kanluran', 'Labas', 'Macabling', 'Malitlit', 'Malusak',
+      'Market Area', 'Pook', 'Pulong Santa Cruz', 'Santo Domingo', 'Sinalhan', 'Tagapo'];
+
+    function showGateView(which) {
+      const signin = document.getElementById('gate-signin-view');
+      const reg = document.getElementById('gate-register-view');
+      if (!signin || !reg) return;
+      const toReg = which === 'register';
+      signin.style.display = toReg ? 'none' : 'flex';
+      reg.style.display = toReg ? 'flex' : 'none';
+      if (toReg) {
+        const sel = document.getElementById('reg-admin-barangay');
+        if (sel && !sel.options.length) {
+          // Empty first option: this pick decides the account's whole scope,
+          // so it must be chosen deliberately (same as panel-register).
+          sel.innerHTML = '<option value="">Select barangay…</option>'
+            + GATE_BARANGAYS.map(b => '<option value="' + b + '">' + b + '</option>').join('');
+        }
+        ensureRegTurnstile();
+        const t = document.getElementById('reg-admin-name');
+        if (t) t.focus();
+      } else {
+        gateMsg('');
+        const e = document.getElementById('gate-email');
+        if (e) e.focus();
+      }
+    }
+
+    function gateFieldErr(inputId, msg) {
+      const input = document.getElementById(inputId);
+      if (!input || !input.closest) return;
+      const row = input.closest('.gate-frow');
+      if (!row) return;
+      const err = row.querySelector('.field-error');
+      if (msg) {
+        row.classList.add('err');
+        if (err) err.textContent = msg;
+      } else {
+        row.classList.remove('err');
+        if (err) err.textContent = '';
+      }
+    }
+    function gateRegMsg(msg, ok) {
+      const el = document.getElementById('reg-admin-msg');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = ok ? '#178a5a' : '#e5484d';
+    }
+    function gateRegLoading(on) {
+      const btn = document.getElementById('reg-admin-btn');
+      if (btn) { btn.disabled = on; btn.textContent = on ? 'Creating account…' : 'Create Account'; }
+    }
+    function adminRegHint() {
+      const hint = document.getElementById('reg-admin-hint');
+      if (!hint) return;
+      const pass = document.getElementById('reg-admin-pass').value;
+      if (!pass) { hint.style.display = 'none'; return; }
+      const name = document.getElementById('reg-admin-name').value.trim();
+      const email = document.getElementById('reg-admin-email').value.trim();
+      const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
+      if (!pw.ok) {
+        hint.style.display = 'block';
+        hint.textContent = 'Weak: ' + pw.message;
+      } else {
+        hint.style.display = 'none';
+      }
+    }
+
+    // Files the staff verification request for the freshly created account.
+    // signUp() can resolve a moment before the auth client has persisted the
+    // new session, so "You must be signed in" is retried a few times. An
+    // already-pending request counts as success (one application per user).
+    function fileStaffRequest(name, email, barangay, attempt) {
+      attempt = attempt || 0;
+      return CalyeAuth.submitVerification({
+        role: 'staff',
+        full_name: name || '',
+        email: email || '',
+        address: 'Barangay ' + (barangay || ''),
+        barangay: barangay || '',
+        id_doc_url: '',
+        id_type: ''
+      }).then(res => {
+        if (!res) return { error: 'Could not save your staff request.' };
+        if (!res.error) return res;
+        if (/already have a verification request/i.test(res.error)) return { error: null, row: null, duplicate: true };
+        if (/signed in/i.test(res.error) && attempt < 4) {
+          return new Promise(r => { setTimeout(() => r(fileStaffRequest(name, email, barangay, attempt + 1)), 700); });
+        }
+        return res;
+      }).catch(() => ({ error: 'Could not reach the database. Check your connection and try again.' }));
+    }
+
+    function adminGateRegister() {
+      const name = document.getElementById('reg-admin-name').value.trim();
+      const email = document.getElementById('reg-admin-email').value.trim();
+      const pass = document.getElementById('reg-admin-pass').value;
+      const pass2 = document.getElementById('reg-admin-pass2').value;
+      const barangay = document.getElementById('reg-admin-barangay').value;
+
+      ['reg-admin-name', 'reg-admin-email', 'reg-admin-pass', 'reg-admin-pass2', 'reg-admin-barangay']
+        .forEach(id => gateFieldErr(id, ''));
+      gateRegMsg('');
+
+      let firstBad = null;
+      const flag = (id, msg) => { gateFieldErr(id, msg); if (!firstBad) firstBad = id; };
+      if (!name) flag('reg-admin-name', 'Please enter your full name.');
+      if (!email) flag('reg-admin-email', 'Please enter your email.');
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) flag('reg-admin-email', 'That email address does not look right.');
+      if (!pass) flag('reg-admin-pass', 'Please enter a password.');
+      else {
+        const pw = CalyeAuth.passwordPolicy(pass, { full_name: name, email: email });
+        if (!pw.ok) flag('reg-admin-pass', pw.message);
+      }
+      if (!pass2) flag('reg-admin-pass2', 'Please re-enter your password.');
+      else if (pass2 !== pass) flag('reg-admin-pass2', 'Passwords do not match.');
+      if (!barangay) flag('reg-admin-barangay', 'Please select your barangay.');
+      if (firstBad) { document.getElementById(firstBad).focus(); return; }
+      if (!document.getElementById('reg-admin-consent').checked) {
+        gateRegMsg('Please accept the Privacy Notice to create an account.', false);
+        return;
+      }
+      if (!regToken) { gateRegMsg('Please complete the human verification check below.', false); return; }
+
+      gateRegLoading(true);
+      gateRegMsg('Creating account…', true);
+      CalyeAuth.turnstileCheck(regToken).then(chk => {
+        if (chk.error) { gateRegLoading(false); resetRegTurnstile(); gateRegMsg(chk.error, false); return; }
+        CalyeAuth.signUp({ role: 'resident', full_name: name, email: email, password: pass, staff: true, barangay: barangay }).then(reg => {
+          if (reg.error) {
+            gateRegLoading(false); resetRegTurnstile();
+            gateFieldErr('reg-admin-email', reg.error);
+            document.getElementById('reg-admin-email').focus();
+            return;
+          }
+          resetRegTurnstile();
+          // Email confirmation enabled → no session yet. The intent is in the
+          // user metadata, so the gate files the request on first sign-in.
+          if (!reg.session) {
+            gateRegLoading(false);
+            gateRegMsg('Check your email to confirm your account, then sign in here — your ' + barangay + ' staff request is filed automatically.', true);
+            return;
+          }
+          fileStaffRequest(name, email, barangay, 0).then(res => {
+            gateRegLoading(false);
+            if (!res.error) {
+              document.getElementById('reg-admin-pass').value = '';
+              document.getElementById('reg-admin-pass2').value = '';
+              gateRegMsg('Account created. Your ' + barangay + ' staff request is now pending approval by the city administrator — sign in here once it is approved.', true);
+            } else if (/signed in/i.test(res.error)) {
+              gateRegMsg('Account created, but the staff request could not be filed (' + res.error + '). Sign in and it will be filed for you.', false);
+            } else {
+              gateRegMsg('Account created, but the staff request failed: ' + res.error, false);
+            }
+          });
+        });
+      }).catch(() => { gateRegLoading(false); gateRegMsg('Verification failed to run. Please try again.', false); });
+    }
+
+    // A signed-in account that is NOT staff/admin: show the barangay staff
+    // application that is still awaiting approval (or file it, when sign-up
+    // could not), instead of the flat "admin access required" denial.
+    function handleNonStaffGate(gs) {
+      const prof = (gs && gs.profile) || {};
+      const sessUser = (gs && gs.session && gs.session.user) || {};
+      const meta = sessUser.user_metadata || {};
+      const uid = sessUser.id;
+      const deny = () => showAccessDenied(gs);
+      if (!uid) { deny(); return; }
+      const finish = req => {
+        if (req) { showStaffPending(req, prof, meta); return; }
+        if (meta.staff) {
+          // Intent recorded at sign-up but no row yet (the email-confirmation
+          // path: there is no session until the first sign-in).
+          fileStaffRequest(prof.full_name || meta.full_name || '', prof.email || '',
+            meta.barangay || prof.barangay || '', 0).then(res => {
+              if (!res.error) { showStaffPending(res.row || {}, prof, meta); return; }
+              deny();
+            });
+          return;
+        }
+        deny();
+      };
+      if (!CalyeDB.isOnline()) { finish(null); return; }
+      CalyeDB.fetch('verification_requests', {
+        filters: [['user_id', 'eq', uid], ['status', 'eq', 'pending']], limit: 10
+      }).then(rows => {
+        finish((rows || []).find(r => r.role === 'staff') || null);
+      }).catch(() => finish(null));
+    }
+
+    function showStaffPending(req, prof, meta) {
+      document.getElementById('gate-email').style.display = 'none';
+      document.getElementById('gate-pass').style.display = 'none';
+      document.getElementById('gate-btn').style.display = 'none';
+      const ts = document.getElementById('ts-gate');
+      if (ts) ts.style.display = 'none';
+      document.getElementById('gate-out').style.display = 'inline-block';
+      const brgy = (req && (req.barangay || req.address)) || (prof && prof.barangay)
+        || (meta && meta.barangay) || 'your barangay';
+      gateMsg('Your ' + brgy + ' staff account is pending approval by the city administrator. You will get access as soon as it is approved.', true);
     }
 
     function adminGateLogin() {
@@ -10121,7 +10579,7 @@ const pageTitles = {
             maybeMfa(gs);
           } else {
             gateLoading(false);
-            showAccessDenied(gs);
+            handleNonStaffGate(gs);
           }
         });
       }).catch(e => { gateLoading(false); gateMsg((e && e.message) || 'Sign-in failed.', false); });
@@ -10139,7 +10597,10 @@ const pageTitles = {
         document.getElementById('gate-email').style.display = 'block';
         document.getElementById('gate-pass').style.display = 'block';
         document.getElementById('gate-btn').style.display = 'block';
+        const ts = document.getElementById('ts-gate');
+        if (ts) ts.style.display = 'flex';          // hidden by showStaffPending
         document.getElementById('gate-out').style.display = 'none';
+        showGateView('signin');
         gateMsg('Signed out.');
       });
     }
@@ -10148,7 +10609,7 @@ const pageTitles = {
         if (gs.session && gs.profile && (gs.profile.role === 'admin' || gs.profile.role === 'staff')) {
           maybeMfa(gs);
         } else if (gs.session) {
-          showAccessDenied(gs);
+          handleNonStaffGate(gs);
         } else {
           gateMsg('');
         }
