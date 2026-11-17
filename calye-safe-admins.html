@@ -6265,21 +6265,139 @@
     let fullReports = loadStoredData(LS_KEY_FULL_REPORTS, []);
 
     // ── BARANGAY SCOPE ──────────────────────────────────────────────────────
-    // A `staff` account only ever sees ONE barangay (profiles.barangay); the
-    // `admin` account is city-wide. Set in bootAdmin() from the signed-in
-    // profile. RLS enforces this server-side (supabase-brgy-scoping.sql) —
-    // these helpers mirror it in the UI and also scrub the localStorage cache
-    // so a barangay account never renders another area's rows from a previous
-    // city-wide session on the same browser.
+    // A `staff` account only ever sees ONE barangay; the `admin` account is
+    // city-wide. adminScope is set in bootAdmin() from the signed-in profile
+    // (then sign-up metadata, then the staff application). RLS is supposed to
+    // enforce this server-side (supabase-brgy-scoping.sql — still unapplied),
+    // so these helpers mirror it in the UI: every list is filtered HERE.
     let adminScope = null;
-    function scopeOf(row) { return (row && row.barangay) || 'Barangay Calye'; }
-    function inScope(row) { return !adminScope || scopeOf(row) === adminScope; }
-    function scopeRows(rows) { return (rows || []).filter(inScope); }
-    function scopeFilters(filters) {
-      const f = (filters || []).slice();
-      if (adminScope) f.push(['barangay', 'eq', adminScope]);
-      return f;
+
+    // ── BARANGAY KEYS ──────────────────────────────────────────────────────
+    // profiles.barangay is written by three different paths and arrives as
+    //   'Pulong Santa Cruz'           — submitVerification (gate / Create Account)
+    //   'Barangay Pulong Santa Cruz'  — address-style strings
+    //   'Barangay Calye' or ''        — the COLUMN DEFAULT (supabase-schema.sql
+    //                                   line 99): nobody has said yet
+    // The zone table in barangay-boundaries.js is keyed by the BARE name, so
+    // every compare and every border lookup normalises through zoneKeyOf().
+    // Only the 18 real zones count as "registered to a barangay".
+    function stripBrgy(v) {
+      return String(v == null ? '' : v).trim().replace(/^(barangay|brgy)\.?\s+/i, '').trim();
     }
+    function zoneKeyOf(v) {
+      const bare = stripBrgy(v);
+      if (!bare) return '';
+      if (typeof BRGY_CENTERS === 'object' && BRGY_CENTERS) {
+        const hit = Object.keys(BRGY_CENTERS).find(k => k.toLowerCase() === bare.toLowerCase());
+        if (hit) return hit;
+      }
+      return bare;
+    }
+    function isKnownZone(v) {
+      const k = zoneKeyOf(v);
+      return !!k && typeof BRGY_CENTERS === 'object' && !!BRGY_CENTERS &&
+        Object.keys(BRGY_CENTERS).indexOf(k) !== -1;
+    }
+    // Finds a real zone inside a free-text address. Both writers are covered:
+    // fileStaffRequest stores "Barangay Dita" and composeAddress() stores
+    // "123 Main St, Village: X, Brgy. Dita" (barangay LAST), so every
+    // comma-separated part is tried. Returns '' when the address names none.
+    function zoneInAddress(addr) {
+      const segs = String(addr == null ? '' : addr).split(',');
+      for (let i = 0; i < segs.length; i++) {
+        if (isKnownZone(segs[i])) return zoneKeyOf(segs[i]);
+      }
+      return '';
+    }
+    // The zone this session may read, or null when the account's barangay is
+    // not one of the 18. A null here never means "everything": every helper
+    // below fails CLOSED, so a staff account with a broken barangay sees an
+    // empty dashboard instead of the whole city.
+    function scopeZone() {
+      return adminScope && isKnownZone(adminScope) ? zoneKeyOf(adminScope) : null;
+    }
+
+    // ── THE THREE SCOPE RULES ───────────────────────────────────────────────
+    // REPORTS. The live `reports` / `map_incidents` tables have NO barangay
+    // column (supabase-brgy-scoping.sql has never been applied), so a report's
+    // barangay can only be derived from its pin: a scoped account sees a
+    // report only when the pin lands inside its own zone. Rows with no usable
+    // coordinates (legacy rows store lat/lng = 0) cannot be judged and are
+    // hidden rather than guessed. The city administrator sees everything.
+    function reportInScope(row) {
+      if (!adminScope) return true;
+      const zone = scopeZone();
+      if (!zone || !row) return false;
+      if (typeof isPointInBarangay !== 'function') return false;
+      const lat = typeof row.lat === 'number' ? row.lat : NaN;
+      const lng = typeof row.lng === 'number' ? row.lng
+        : (typeof row.lon === 'number' ? row.lon : NaN);
+      if (!isFinite(lat) || !isFinite(lng) || !lat || !lng) return false;
+      return isPointInBarangay(lat, lng, zone);
+    }
+    function scopeReportRows(rows) {
+      return adminScope ? (rows || []).filter(reportInScope) : (rows || []);
+    }
+
+    // ACCOUNTS. `responders` has no barangay column either — responders are
+    // joined to a barangay through their PROFILE (profiles.unit_id ↔
+    // responders.unit_id), so an account is visible only when it is
+    // REGISTERED to this barangay: real zone on the profile, same zone.
+    // The 'Barangay Calye' placeholder and an empty value mean "not
+    // registered" and are hidden from scoped staff.
+    function inScope(row) {
+      if (!adminScope) return true;
+      const zone = scopeZone();
+      if (!zone) return false;
+      const own = zoneKeyOf(row && row.barangay);
+      return !!own && isKnownZone(own) && own === zone;
+    }
+    function userInScope(u) { return inScope(u); }
+    // Performance / duty rows: keep a row only when an in-scope responder
+    // profile claims the same unit (units with no registered in-scope
+    // profile cannot be attributed to this barangay → hidden for staff).
+    // Returns BOTH lists so callers never paint unscoped profiles.
+    function scopePerf(perfData, profiles) {
+      const duty = (profiles || []).filter(inScope);
+      if (!adminScope) return { perf: perfData || [], profiles: duty };
+      const units = {};
+      duty.forEach(p => { units[unitKey(p.unit_id)] = true; });
+      return {
+        perf: (perfData || []).filter(r => units[unitKey(r && r.unit_id)] === true),
+        profiles: duty
+      };
+    }
+    function unitKey(u) {
+      const k = String(u == null ? '' : u).trim();
+      return (!k || k === 'Unknown') ? 'Unassigned' : k;
+    }
+
+    // Assignments carry no barangay either: keep only the ones whose report
+    // this account may read. `ids === null` means city-wide (no filtering).
+    function keepScopedAssignments(rows, ids) {
+      if (!adminScope || !ids) return rows || [];
+      return (rows || []).filter(a => a && a.report_id && ids[a.report_id] === 1);
+    }
+    // { reportId: 1 } for every report in scope — null when city-wide,
+    // {} (read everything as out-of-scope) when the read fails.
+    function scopedReportIds() {
+      if (!adminScope) return Promise.resolve(null);
+      return CalyeDB.fetch('reports', { select: 'id,lat,lng', limit: 5000 })
+        .then(function (rows) {
+          const ids = {};
+          scopeReportRows(rows || []).forEach(function (r) { if (r && r.id) ids[r.id] = 1; });
+          return ids;
+        })
+        .catch(function () { return {}; });
+    }
+
+    // scopeFilters() used to push `barangay=eq.…` into the query. The live
+    // reports / map_incidents tables have no such column, PostgREST answered
+    // 42703, CalyeDB.fetch resolved null and EVERY scoped read failed with
+    // "Could not reach the database". The filter now happens on the rows
+    // (scopeReportRows / inScope) instead — this only passes the caller's
+    // own filters through, and keeps the name so the call sites read the same.
+    function scopeFilters(filters) { return (filters || []).slice(); }
     // The definer-RPCs (fn_incident_summary, fn_monthly_summary,
     // fn_responder_monthly_performance) bypass RLS and would hand a scoped
     // account city-wide totals — so when a scope is active the call is never
@@ -6290,18 +6408,21 @@
     // ── OUTSIDE-VICINITY + BARANGAY BORDER ──────────────────────────────────
     // A staff account's barangay is drawn as a generated zone (see
     // barangay-boundaries.js — Voronoi cells clipped to the real city
-    // outline). A report whose pin falls in ANOTHER barangay stays visible
-    // with a red warning badge, but it never counts toward this barangay's
-    // totals, alerts, notifications or heat map (vicinityRows()).
+    // outline). Reports from other barangays are now dropped BEFORE they
+    // reach any list (scopeReportRows), so this flag is a second line of
+    // defence for a row that got in before the scope was known — it still
+    // drives the red badge, the dimmed pins and every count that must
+    // ignore such a row (vicinityRows()).
     // Rows without usable coordinates (legacy rows store lat/lng = 0) are
     // never flagged — there is nothing to judge them against.
     function outsideVicinity(row) {
       if (!adminScope || !row) return false;
-      if (typeof isPointInBarangay !== 'function') return false;
+      const zone = scopeZone();
+      if (!zone || typeof isPointInBarangay !== 'function') return false;
       const lat = row.lat;
       const lng = typeof row.lng === 'number' ? row.lng : (typeof row.lon === 'number' ? row.lon : NaN);
       if (typeof lat !== 'number' || !lat || !lng) return false;
-      return !isPointInBarangay(lat, lng, adminScope);
+      return !isPointInBarangay(lat, lng, zone);
     }
     // Stamps the display flag used by the tables / map lists / detail modal.
     function flagVicinity(rows) {
@@ -6316,13 +6437,14 @@
     // "OUTSIDE SANTA ROSA" warning.
     function outsideVicinityTag(row) {
       if (!row || !row.outsideVicinity || !adminScope) return '';
-      return `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE VICINITY — ${escAdminAttr(adminScope)}</div>`;
+      return `<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE VICINITY — ${escAdminAttr(scopeZone() || adminScope)}</div>`;
     }
     // The dashed barangay border: the per-barangay equivalent of
     // drawCityBoundary() (which draws the whole of Santa Rosa).
     function drawScopeBoundary(map) {
-      if (!map || !adminScope || typeof drawBarangayBoundary !== 'function') return null;
-      return drawBarangayBoundary(map, adminScope, {
+      const zone = scopeZone();
+      if (!map || !zone || typeof drawBarangayBoundary !== 'function') return null;
+      return drawBarangayBoundary(map, zone, {
         color: '#1E3A5F', weight: 2.5, dashArray: '6 6',
         fill: true, fillColor: '#1E3A5F', fillOpacity: 0.05
       });
@@ -6337,8 +6459,9 @@
     // Frames a map on the signed-in staff member's barangay (falls back to
     // the caller's default Santa Rosa view for the city admin).
     function scopeFit(map, opts) {
-      if (!map || !adminScope || typeof barangayBounds !== 'function' || typeof L === 'undefined') return false;
-      const b = barangayBounds(adminScope);
+      const zone = scopeZone();
+      if (!map || !zone || typeof barangayBounds !== 'function' || typeof L === 'undefined') return false;
+      const b = barangayBounds(zone);
       if (!b) return false;
       map.fitBounds(L.latLngBounds(b[0], b[1]), Object.assign({ padding: [18, 18], animate: false }, opts || {}));
       return true;
@@ -6346,8 +6469,9 @@
     // Centre used when a map opens: the barangay centre for staff, the
     // city reference point for the administrator.
     function scopeCenter() {
-      if (adminScope && typeof barangayCenter === 'function') {
-        const c = barangayCenter(adminScope);
+      const zone = scopeZone();
+      if (zone && typeof barangayCenter === 'function') {
+        const c = barangayCenter(zone);
         if (c) return c;
       }
       return [14.3122, 121.1114];
@@ -7269,11 +7393,14 @@ const pageTitles = {
 
     function loadDefaultMap() {
       document.getElementById('map-search-input').value = '';
-      if (adminScope) {
+      const zone = scopeZone();
+      if (zone) {
         // Barangay staff open the map framed on THEIR zone (border drawn in
-        // loadMapByCoords), instead of the whole of Santa Rosa.
+        // loadMapByCoords), instead of the whole of Santa Rosa. An account
+        // whose barangay could not be resolved falls through to the city view
+        // — it has no pins to show either way.
         const c = scopeCenter();
-        loadMapByCoords(c[0], c[1], 'Barangay ' + adminScope + ', Santa Rosa, Laguna');
+        loadMapByCoords(c[0], c[1], 'Barangay ' + zone + ', Santa Rosa, Laguna');
         scopeFit(dashMap);
         return;
       }
@@ -7371,16 +7498,16 @@ const pageTitles = {
         scopedRpc(() => CalyeDB.rpc('fn_incident_summary', { p_from: from ? from.toISOString() : null, p_to: to.toISOString() })),
         CalyeDB.fetch('reports', { filters: scopeFilters(filters), order: 'created_at', asc: false, limit: 500 })
       ]).then(function (results) {
-        const rows = (results[1] || []).map(function (r) {
+        // Other barangays' reports never reach this page: they are dropped
+        // here, so every analytics figure (totals, category/month charts,
+        // heat, CSV) is this barangay's alone.
+        const rows = scopeReportRows(results[1] || []).map(function (r) {
           return {
             report_no: r.report_no || r.id, type: r.type, category: r.category || 'other',
             severity: r.severity || 'minor', location: r.location || 'Barangay Calye',
             lat: r.lat, lng: r.lng, status: adminStatus(r), created_at: r.created_at, dbId: r.id
           };
         });
-        // Out-of-vicinity rows are dropped here so every analytics figure
-        // (totals, category/month charts, heat, CSV) excludes them, while the
-        // Reports page still lists them with the red warning badge.
         analyticsRows = vicinityRows(rows);
         const summary = (results[0] && results[0].totals) ? results[0] : computeAnalyticsSummary(analyticsRows);
         renderAnalytics(summary, analyticsRows);
@@ -7610,13 +7737,13 @@ const pageTitles = {
       // instead — the same math fn_incident_summary uses for avg_resolution_hrs.
       Promise.all([
         CalyeDB.fetch('assignments', { order: 'resolved_at', asc: false, limit: 500 }),
-        CalyeDB.fetch('reports', { filters: scopeFilters(), limit: 500 })
+        CalyeDB.fetch('reports', { filters: scopeFilters(), limit: 500 }).then(scopeReportRows)
       ]).then(function (results) {
         if (analyticsDrill !== 'res') return;
         const createdById = {};
         (results[1] || []).forEach(function (r) { if (r && r.id) createdById[r.id] = r.created_at; });
-        // Scoped accounts only get in-scope report ids in createdById, so the
-        // assignment rows below are implicitly limited to the same barangay.
+        // Only in-scope report ids land in createdById, so the assignment
+        // rows below are implicitly limited to this barangay.
         const withDur = (results[0] || []).map(function (a) {
           if (!a || !a.resolved_at || !a.report_id || !createdById[a.report_id]) return null;
           const start = new Date(createdById[a.report_id]).getTime();
@@ -7923,17 +8050,12 @@ const pageTitles = {
         CalyeDB.fetch('responders', { limit: 100 }),
         // assignments carries no barangay column, so a scoped account first
         // pulls the ids of the reports it is allowed to see and keeps only
-        // the assignments that point at one of them.
-        adminScope ? CalyeDB.fetch('reports', { select: 'id', limit: 1000 }) : Promise.resolve(null)
+        // the assignments that point at one of them (null = city-wide).
+        scopedReportIds()
       ]).then(function (results) {
         const rpc = results[0];
-        let assignments = results[1] || [];
+        let assignments = keepScopedAssignments(results[1] || [], results[3]);
         const responders = results[2] || [];
-        if (adminScope) {
-          const okIds = {};
-          (results[3] || []).forEach(function (r) { if (r && r.id) okIds[r.id] = 1; });
-          assignments = assignments.filter(function (a) { return a && a.report_id && okIds[a.report_id]; });
-        }
 
         // Build responder lookup
         const responderMap = {};
@@ -7950,9 +8072,13 @@ const pageTitles = {
         // Real duty status from responder profiles (unit_id ↔ responders
         // link). Non-fatal: if profiles are unreadable, duty stays off.
         // Also appends any registered responder missing from the RPC/fallback
-        // rows so EVERY role='responder' profile is always listed.
+        // rows so EVERY in-scope role='responder' profile is always listed —
+        // scopePerf() drops the other barangays' responders and their rows
+        // before anything is painted.
         const applyDutyAndRender = function (dutyProfiles) {
-          finalizePerfData(perfData, dutyProfiles);
+          const scoped = scopePerf(perfData, dutyProfiles);
+          perfData = scoped.perf;
+          finalizePerfData(perfData, scoped.profiles);
         };
         if (CalyeDB.isOnline()) {
           CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 }).then(
@@ -7985,9 +8111,10 @@ const pageTitles = {
       Promise.all([
         CalyeDB.fetch('assignments', { filters: filters, order: 'created_at', asc: false, limit: 500 }),
         CalyeDB.fetch('responders', { limit: 100 }),
-        CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 })
+        CalyeDB.fetch('profiles', { filters: [['role', 'eq', 'responder']], limit: 200 }),
+        scopedReportIds()
       ]).then(function (results) {
-        let assignments = results[0] || [];
+        let assignments = keepScopedAssignments(results[0] || [], results[3]);
         const responders = results[1] || [];
         const dutyProfiles = results[2] || [];
         const responderMap = {};
@@ -7996,7 +8123,11 @@ const pageTitles = {
           if (wantSev) {
             assignments = assignments.filter(a => (sevByReport[a.report_id] || 'minor') === wantSev);
           }
-          finalizePerfData(computeResponderPerformancePage(assignments, responderMap), dutyProfiles);
+          // Other barangays' responders never reach the table: only rows an
+          // in-scope responder profile claims survive, and only in-scope
+          // profiles are merged in for duty/zero-job rows.
+          const scoped = scopePerf(computeResponderPerformancePage(assignments, responderMap), dutyProfiles);
+          finalizePerfData(scoped.perf, scoped.profiles);
         };
         if (wantSev && assignments.length && CalyeDB.isOnline()) {
           const repIds = [...new Set(assignments.map(a => a.report_id).filter(Boolean))];
@@ -8337,7 +8468,9 @@ const pageTitles = {
             CalyeDB.fetch('reports', { filters: [['id', 'in', repIds]], limit: 20 }).then(
               function (reps) {
                 const repMap = {};
-                (reps || []).forEach(r => { repMap[r.id] = r; });
+                // Only reports of THIS barangay are put in the map: the ids
+                // came from the responder's assignments, which span zones.
+                (reps || []).forEach(r => { if (reportInScope(r)) repMap[r.id] = r; });
                 paintPerfDetailJobs(list, repMap);
               },
               function () { paintPerfDetailJobs(list, {}); }
@@ -8422,7 +8555,10 @@ const pageTitles = {
         scopedRpc(() => CalyeDB.rpc('fn_monthly_summary', { p_year: firstPrevMonth.getFullYear(), p_month: firstPrevMonth.getMonth() + 1 })),
         CalyeDB.fetch('reports', { filters: scopeFilters([['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]]), order: 'created_at', asc: false, limit: 500 })
       ]).then(function (results) {
-        const rows = (results[1] || []).map(function (r) {
+        // The monthly report is this barangay's own: other zones' rows are
+        // dropped before the summary is computed (the definer-RPC above is
+        // not even sent for a scoped account — see scopedRpc).
+        const rows = scopeReportRows(results[1] || []).map(function (r) {
           return {
             report_no: r.report_no || r.id, type: r.type, category: r.category || 'other',
             severity: r.severity || 'minor', location: r.location || 'Barangay Calye',
@@ -8540,12 +8676,16 @@ const pageTitles = {
       document.querySelector('#modal-responder-performance .modal-head h3').textContent = 'Responder Monthly Performance · ' + responderPerfLabel;
 
       Promise.all([
-        CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month }),
+        // The definer-RPC bypasses RLS and would hand a scoped account
+        // city-wide totals — it is never even sent when a scope is active,
+        // and the assignments below are aggregated client-side instead.
+        scopedRpc(() => CalyeDB.rpc('fn_responder_monthly_performance', { p_year: year, p_month: month })),
         CalyeDB.fetch('assignments', { filters: [['created_at', 'gte', pFrom], ['created_at', 'lte', pTo]], order: 'created_at', asc: false, limit: 500 }),
-        CalyeDB.fetch('responders', { limit: 100 })
+        CalyeDB.fetch('responders', { limit: 100 }),
+        scopedReportIds()
       ]).then(function (results) {
         const rpc = results[0];
-        const assignments = results[1] || [];
+        const assignments = keepScopedAssignments(results[1] || [], results[3]);
         const responders = results[2] || [];
 
         // Build responder lookup
@@ -8560,11 +8700,14 @@ const pageTitles = {
           perfData = computeResponderPerformance(assignments, responderMap);
         }
 
-        // Append any registered responder missing from the rows so EVERY
-        // role='responder' profile is always listed — including extra accounts
-        // that share a unit_id (non-fatal).
+        // Append any registered IN-SCOPE responder missing from the rows so
+        // every profile of this barangay is listed — including extra accounts
+        // that share a unit_id (non-fatal). scopePerf() drops the other
+        // barangays' responders and their rows first.
         const finishModalRender = function (profList) {
-          appendMissingProfilePerfRows(perfData, profList);
+          const scoped = scopePerf(perfData, profList);
+          perfData = scoped.perf;
+          appendMissingProfilePerfRows(perfData, scoped.profiles);
           responderPerfRows = perfData;
           renderResponderPerformance(perfData);
         };
@@ -8949,7 +9092,7 @@ const pageTitles = {
       const statusColor = { pending: 'var(--warning)', responding: 'var(--primary)', resolved: 'var(--success)' };
 
       list.innerHTML = pins.map(p => `
-    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, ${adminScope ? 'Barangay ' + adminScope : 'Santa Rosa'}')"
+    <div onclick="pageMapLoadCoords(${p.lat},${p.lon},'${p.loc}, ${scopeZone() ? 'Barangay ' + escAdminAttr(scopeZone()) : 'Santa Rosa'}')"
       style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;cursor:pointer;transition:background 0.16s,color 0.16s,border-color 0.16s;border-left:3px solid ${catColors[p.cat]};"
       onmouseover="this.style.background='var(--surface3)';this.style.borderColor='var(--border2)'"
       onmouseout="this.style.background='var(--surface)';this.style.borderColor='var(--border)'">
@@ -9238,6 +9381,8 @@ const pageTitles = {
         renderAnnouncements();
       });
       CalyeDB.fetch('map_incidents', { filters: scopeFilters(), limit: 200 }).then(rows => {
+        // Pins from other barangays are dropped before they are mapped.
+        rows = scopeReportRows(rows);
         if (!rows || !rows.length) return;
         // Resident mapKeys → closed admin cats (+ real severity). Keeps pins,
         // legend, filters and heat in sync instead of lumping minors as gray.
@@ -9281,6 +9426,11 @@ const pageTitles = {
           showToastMsg('Could not reach the database — reports may be out of date.', 'error');
           return;
         }
+        // THE "ALL REPORTS" LIST: a barangay account only ever sees the
+        // reports whose pin is inside its own barangay. Everything else is
+        // dropped here — not merely badged — so no table, count, alert,
+        // notification or export on this page can leak another zone.
+        rows = scopeReportRows(rows);
         if (!rows.length) {
           reports = [];
           fullReports = [];
@@ -9335,8 +9485,9 @@ const pageTitles = {
             loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId,
             lat: r.lat, lng: r.lng, outsideCity: r.outsideCity
           }));
-          // Stamp the "outside this barangay" flag used by the badges, the
-          // dimmed map pins and every count that must ignore those rows.
+          // Everything above is already inside this barangay, so the
+          // "outside vicinity" flag below stays false — it is only a guard
+          // for a row that slipped in before the scope was known.
           flagVicinity(reports);
           flagVicinity(fullReports);
           renderTable(getFilteredData());
@@ -9574,12 +9725,16 @@ const pageTitles = {
         if (role === 'staff' || role === 'admin') { ok(); return; }   // RPC already did it
 
         const patch = { role: 'staff', verification_status: 'approved' };
-        // A staff row with an empty barangay scopes to the WHOLE city, so
-        // backfill it from the application (bare name — the zone lookup keys
-        // are 'Balibago', not 'Barangay Balibago').
-        const brgy = String((prof && prof.barangay) || '').trim().replace(/^Barangay\s+/i, '');
-        const fromAddr = String(r.address || '').trim().replace(/^Barangay\s+/i, '');
-        if (!brgy) patch.barangay = fromAddr || 'Barangay Calye';
+        // profiles.barangay defaults to the placeholder 'Barangay Calye'
+        // (supabase-schema.sql line 99), which is NOT one of the 18 zones:
+        // a staff row left on it fails closed and shows an empty dashboard.
+        // Backfill it from the application address — but only ever with a
+        // REAL zone, and never with the placeholder again.
+        const cur = zoneKeyOf(prof && prof.barangay);
+        if (!isKnownZone(cur)) {
+          const fromAddr = zoneInAddress(r.address);
+          if (fromAddr) patch.barangay = fromAddr;
+        }
 
         CalyeDB.update('profiles', { id: r.user_id }, patch).then(rows => {
           if (!rows || !rows.length) {
@@ -9714,9 +9869,14 @@ const pageTitles = {
     function loadUsers() {
       if (!CalyeDB.isOnline()) return;
       // Non-staff accounts only (staff/admin manage themselves via SQL). The
-      // profiles_staff_select policy lets staff read all non-self profiles.
+      // profiles_staff_select policy lets staff read all non-self profiles,
+      // so the barangay limit is applied HERE: a scoped account only ever
+      // lists residents and responders REGISTERED to its own barangay
+      // (inScope). The 'Barangay Calye' placeholder and an empty value mean
+      // "not registered to any barangay" and are hidden from scoped staff;
+      // the city administrator (adminScope === null) sees every account.
       CalyeDB.fetch('profiles', { order: 'created_at', asc: false, limit: 500 }).then(rows => {
-        allUsers = (rows || []).filter(u => u.role !== 'staff' && u.role !== 'admin');
+        allUsers = (rows || []).filter(u => u.role !== 'staff' && u.role !== 'admin' && userInScope(u));
         const count = document.getElementById('users-count-label');
         if (count) count.textContent = allUsers.length + ' accounts';
         renderUsersList();
@@ -9883,17 +10043,73 @@ const pageTitles = {
       adminBooted = true;      // Pin the identity this dashboard session claims, so privileged actions
       // can later detect when another tab overwrites the shared auth token.
       adminSessionUid = (gs && gs.session && gs.session.user && gs.session.user.id) || null;
-      // Barangay scope: `staff` is confined to profiles.barangay, `admin`
-      // keeps the whole of Santa Rosa. Set before anything renders, then used
-      // to scrub any city-wide rows left in localStorage by a prior session.
+      // Barangay scope is resolved BEFORE anything renders (assignAdminScope):
+      // `staff` is confined to its own barangay, `admin` keeps the whole of
+      // Santa Rosa. When the account does not name one of the 18 zones the
+      // lookup continues on the staff application; if that fails too,
+      // scopeZone() stays null and every list fails CLOSED rather than
+      // quietly showing the whole city.
+      const scopeReady = assignAdminScope(gs);
+      if (scopeReady) scopeReady.then(function () { finishBootAdmin(gs); });
+      else finishBootAdmin(gs);
+    }
+
+    // Profile → sign-up metadata → raw value. Returns a Promise when a
+    // scoped account still has no known zone and the staff application must
+    // be consulted, or null when the scope is already settled.
+    function assignAdminScope(gs) {
+      const sp = (gs && gs.profile) || {};
+      const sessUser = (gs && gs.session && gs.session.user) || {};
+      const meta = sessUser.user_metadata || {};
       try {
-        const sp = (gs && gs.profile) || {};
-        adminScope = (sp.role === 'staff' && sp.barangay) ? sp.barangay : null;
-      } catch (e) { adminScope = null; }
+        if (sp.role !== 'staff') { adminScope = null; return null; }
+        const cands = [sp.barangay, meta.barangay];
+        let raw = '';
+        for (let i = 0; i < cands.length; i++) {
+          if (isKnownZone(cands[i])) { adminScope = zoneKeyOf(cands[i]); return null; }
+          if (!raw) raw = stripBrgy(cands[i]);
+        }
+        adminScope = raw || null;   // unknown → fails closed, never city-wide
+      } catch (e) { adminScope = null; return null; }
+      if (scopeZone() || !sessUser.id || !CalyeDB.isOnline()) return null;
+      return scopeFromStaffRequest(sessUser.id);
+    }
+
+    // Last resort for accounts created before the barangay was kept on the
+    // profile / sign-up metadata: read it back off their newest staff
+    // application (address is written as "Barangay <zone>, house…" by
+    // fileStaffRequest). No server-side ORDER — CalyeDB.fetch resolves null
+    // on any PostgREST error, so the rows are sorted here instead.
+    function scopeFromStaffRequest(uid) {
+      return CalyeDB.fetch('verification_requests', {
+        filters: [['user_id', 'eq', uid], ['role', 'eq', 'staff']], limit: 100
+      }).then(function (rows) {
+        if (!rows || !rows.length || scopeZone()) return;
+        const newest = rows.slice().sort(function (a, b) {
+          return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0);
+        });
+        for (let i = 0; i < newest.length; i++) {
+          const zone = zoneInAddress(newest[i] && newest[i].address);
+          if (zone) { adminScope = zone; return; }
+        }
+      }).catch(function () { });
+    }
+
+    function finishBootAdmin(gs) {
       if (adminScope) {
-        reports = scopeRows(reports);
-        fullReports = scopeRows(fullReports);
+        reports = scopeReportRows(reports);
+        fullReports = scopeReportRows(fullReports);
       }
+      // A scoped account whose barangay could not be resolved must say so
+      // instead of silently showing an empty dashboard.
+      try {
+        const prof0 = (gs && gs.profile) || {};
+        if (prof0.role === 'staff' && !scopeZone()) {
+          showToastMsg('This account has no recognised barangay'
+            + (adminScope ? ' («' + adminScope + '»)' : '')
+            + ' — reports, users and responders stay hidden until the city administrator sets the right barangay in Verify-Users.', 'error');
+        }
+      } catch (e) { }
       // Re-stamp the outside-vicinity flag for THIS scope (also clears any
       // stale flag left behind by a previous session on the same browser).
       flagVicinity(reports);
@@ -9914,8 +10130,10 @@ const pageTitles = {
         }
         const chipRole = document.querySelector('.admin-chip .admin-info .role');
         if (chipRole && prof.role) {
+          const zone = scopeZone();
           chipRole.textContent = prof.role === 'admin' ? 'Administrator'
-            : (adminScope ? 'Staff · ' + adminScope : 'Staff');
+            : (zone ? 'Staff · ' + zone
+              : (adminScope ? 'Staff · barangay not set' : 'Staff'));
         }
       } catch (e) { }
       document.getElementById('admin-gate').classList.add('hidden');
@@ -9982,7 +10200,7 @@ const pageTitles = {
         CalyeDB.fetch('reports', { filters: scopeFilters(), order: 'created_at', asc: false, limit: 100 }).then(function (rows) {
           var box = document.getElementById('gate-ticker-text');
           if (!box) return;
-          var majors = (rows || [])
+          var majors = (scopeReportRows(rows) || [])
             .filter(function (r) { return r.severity === 'major' && r.status !== 'resolved' && r.status !== 'declined'; })
             .slice(0, 6);
           var html = majors.length
