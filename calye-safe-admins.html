@@ -10602,6 +10602,11 @@ const pageTitles = {
       if (!uid) { deny(); return; }
 
       const finish = rows => {
+        // An ACTIVATED account is never blocked by its own application
+        // history: a stale pending/rejected row (or a read that went wrong)
+        // must not talk a staff/admin out of the dashboard they already own.
+        if (prof.role === 'staff' || prof.role === 'admin') { bootAdmin(gs); return; }
+
         const staffReqs = (rows || []).filter(r => r && r.role === 'staff')
           .sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0));
         const newest = staffReqs[0];
@@ -10640,6 +10645,12 @@ const pageTitles = {
           return;
         }
         if (newest.status === 'rejected') { showStaffRejected(newest, prof, meta); return; }
+        // The PROFILE already says verified — the review RPC writes it in the
+        // same transaction as the request — yet no staff application shows as
+        // approved. Reporting "pending approval by the city administrator"
+        // here is what made a verified account look permanently stuck, so say
+        // what is actually left instead: the staff application itself.
+        if (prof.verification_status === 'approved') { showStaffVerifiedUnapproved(pending || newest, prof, meta); return; }
         showStaffPending(pending || newest, prof, meta);
       };
 
@@ -10647,9 +10658,21 @@ const pageTitles = {
         gateMsg('You are offline — connect to check your application status.', false);
         return;
       }
+      // No server-side ORDER: CalyeDB.fetch resolves null on ANY PostgREST
+      // error, so a bad column in `order` would look identical to "no rows" —
+      // and finish() sorts by submitted_at itself anyway. A null result is a
+      // READ FAILURE, never "no applications": treating it as empty used to
+      // re-file a request and report "pending approval" forever, even when an
+      // approved application was already on file.
       CalyeDB.fetch('verification_requests', {
-        filters: [['user_id', 'eq', uid]], order: 'submitted_at', asc: false, limit: 20
-      }).then(rows => finish(rows))
+        filters: [['user_id', 'eq', uid]], limit: 200
+      }).then(rows => {
+        if (rows === null) {
+          gateMsg('Could not check your application status — check your connection and sign in again.', false);
+          return;
+        }
+        finish(rows);
+      })
         // Never fall back to "file a new request" on a read error: that is
         // exactly what created duplicate applications after approval.
         .catch(() => gateMsg('Could not check your application status — check your connection and sign in again.', false));
@@ -10677,6 +10700,15 @@ const pageTitles = {
     function showStaffPending(req, prof, meta) {
       hideGateSignin();
       gateMsg('Your ' + staffBrgy(req, prof, meta) + ' staff account is pending approval by the city administrator. You will get access as soon as it is approved.', true);
+    }
+
+    // Verified at the profile level, but no approved STAFF application behind
+    // it: the administrator still has to approve the barangay staff
+    // application (or press "Re-run activation" on the approved one).
+    function showStaffVerifiedUnapproved(req, prof, meta) {
+      hideGateSignin();
+      gateMsg('Your account is verified, but your ' + staffBrgy(req, prof, meta)
+        + ' staff application has not been approved yet. Ask the city administrator to open it in Verify-Users and approve it, then sign in again.', false);
     }
 
     function showStaffRejected(req, prof, meta) {
