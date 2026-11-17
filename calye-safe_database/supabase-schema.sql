@@ -415,6 +415,17 @@ drop policy if exists "responders_select" on responders;
 create policy "responders_select"
   on responders for select using (auth_is_responder());
 
+-- a resident may read the ONE responder assigned to their own report
+-- (name + vehicle on the community tracker — supabase-resident-responder-name.sql)
+drop policy if exists "responders_assigned_select" on responders;
+create policy "responders_assigned_select"
+  on responders for select using (
+    exists (
+      select 1 from assignments a join reports r on r.id = a.report_id
+      where a.responder_id = responders.id and r.reporter_id = auth.uid()
+    )
+  );
+
 drop policy if exists "responders_update" on responders;
 create policy "responders_update"
   on responders for update using (auth_is_staff());
@@ -423,6 +434,14 @@ create policy "responders_update"
 drop policy if exists "assignments_staff_select" on assignments;
 create policy "assignments_staff_select"
   on assignments for select using (auth_is_responder());
+
+-- a resident may read the assignment on their OWN report (so the community
+-- tracker can name the responding unit — supabase-resident-responder-name.sql)
+drop policy if exists "assignments_owner_select" on assignments;
+create policy "assignments_owner_select"
+  on assignments for select using (
+    exists (select 1 from reports r where r.id = assignments.report_id and r.reporter_id = auth.uid())
+  );
 
 drop policy if exists "assignments_staff_insert" on assignments;
 create policy "assignments_staff_insert"

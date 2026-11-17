@@ -13,6 +13,7 @@
  *   CalyeDB.update('reports', { id: '...' }, { status: 'resolved' })
  *   CalyeDB.remove('reports', { id: '...' })
  *   CalyeDB.cached('announcements', cacheKey, () => Promise<rows>)
+ *   CalyeDB.respondersById(['uuid']) -> Promise<{id: {name, vehicle, agency}}>
  *   CalyeDB.uploadStorage('evidence', 'proofs/asn-xxx.jpg', dataUrl) -> public URL
  */
 window.CalyeDB = (function () {
@@ -228,6 +229,32 @@ window.CalyeDB = (function () {
     });
   }
 
+  // ---- responder names (assignments.responder_id → responders.id) ----------
+
+  /**
+   * respondersById(ids) -> Promise<{ [responderId]: { name, vehicle, agency } }>
+   *   Resolves WHO is going to respond to a report: an assignment only
+   *   carries responder_id, and that id is written when a unit claims the
+   *   job (Start → En Route) — an unclaimed dispatch has no id to look up.
+   *   NEVER rejects and NEVER resolves null: a failed or empty read gives
+   *   {} so the caller only loses the name label, never the page (same
+   *   contract as fetch(), which resolves null on any PostgREST error).
+   */
+  function respondersById(ids) {
+    var uniq = [];
+    (ids || []).forEach(function (id) { if (id && uniq.indexOf(id) === -1) uniq.push(id); });
+    if (!uniq.length) return Promise.resolve({});
+    return fetch('responders', { filters: [['id', 'in', uniq]], limit: 200 })
+      .then(function (rows) {
+        var map = {};
+        (rows || []).forEach(function (r) {
+          if (r && r.id) map[r.id] = { name: r.name || '', vehicle: r.vehicle || '', agency: r.agency || '' };
+        });
+        return map;
+      })
+      .catch(function () { return {}; });
+  }
+
   // ---- localStorage cache with fallback ------------------------------------
 
   function lsGet(key) {
@@ -285,6 +312,7 @@ window.CalyeDB = (function () {
     update: update,
     remove: remove,
     rpc: rpc,
+    respondersById: respondersById,
     cached: cached,
     clearCache: clearCache,
     uploadStorage: uploadStorage,

@@ -5296,6 +5296,7 @@
           <div style="font-size:11px;color:var(--text3);">Tap to view full photo</div>
         </div>
       </div>` : '')}
+      ${responderLineHtml(r)}
       <div class="report-footer">
         <span class="report-date">${r.date}</span>
         <span style="font-size:11px;color:var(--primary-text);font-weight:600;">${r.id}</span>
@@ -5318,6 +5319,25 @@
       </div>
     </div>
   `).join('');
+    }
+
+    // ── ASSIGNED RESPONDER — who is going to respond ───────────────────────
+    // assignments.responder_id → responders.id gives the name of the unit or
+    // person on the way (syncMyReports attaches it as responderName /
+    // responderVehicle). Printed as soon as a dispatch exists:
+    //   no assignment           → nothing (nobody dispatched yet)
+    //   dispatched, not claimed → "dispatching a responder…" (no name yet)
+    //   claimed                 → the responder's real name
+    function responderLineHtml(r) {
+      if (!r || !r.asnStatus) return '';
+      const icon = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+      const row = (inner, color) => `<div style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:${color};line-height:1.4;">${inner}</div>`;
+      if (!r.responderName) {
+        return row('<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="flex:none;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Dispatching a responder…</span>', 'var(--text2)');
+      }
+      return row(icon + '<span>' + r.responderName + '</span>'
+        + (r.responderVehicle ? `<span style="font-weight:600;color:var(--text2);">· ${r.responderVehicle}</span>` : ''),
+        'var(--text)');
     }
 
     function renderTimeline(timeline) {
@@ -6619,52 +6639,69 @@
                 (mediaByReport[m.report_id] = mediaByReport[m.report_id] || []).push(m.url);
               }
             });
-            CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], limit: 250 }).then(asnRows => {
-              const asnByReport = (asnRows || []).reduce((acc, a) => {
-                if (a.report_id && !acc[a.report_id]) acc[a.report_id] = a;
+            CalyeDB.fetch('assignments', { filters: [['report_id', 'in', ids]], order: 'created_at', asc: false, limit: 250 }).then(asnRows => {
+              const asnList = (asnRows || []).filter(a => a && a.report_id);
+              const asnByReport = asnList.reduce((acc, a) => {
+                if (!acc[a.report_id]) acc[a.report_id] = a;   // newest first
                 return acc;
               }, {});
-              const mapped = dbReports.map(r => {
-                const asn = asnByReport[r.id] || {};
-                const active = r.status === 'responding' || r.status === 'on_site';
-                return {
-                  id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
-                  ownerUid: uid,
-                  type: r.type,
-                  loc: r.location || 'Barangay Calye',
-                  date: fmtDate(r.created_at),
-                  status: active ? 'responding' : r.status === 'resolved' ? 'resolved' : r.status === 'declined' ? 'declined' : 'pending',
-                  source: r.source && r.source.toUpperCase() || 'BRGY',
-                  lat: r.lat, lng: r.lng,
-                  timeline: mapDbTimeline(tlByReport[r.id], fmtDate(r.created_at)),
-                  photos: mediaByReport[r.id] || [],
-                  photo: (mediaByReport[r.id] || [])[0] || '',
-                  resolutionNotes: asn.resolution_notes || '',
-                  proofUrl: asn.proof_url || '',
-                  responder: active ? {
-                    name: asn.responder_name || 'Barangay Responder Unit',
-                    vehicle: 'Patrol Vehicle',
-                    lat: (r.lat || BRGY_CENTER[0]) + 0.004,
-                    lng: (r.lng || BRGY_CENTER[1]) + 0.004,
-                    etaMin: 12
-                  } : undefined
-                };
+              // WHO IS GOING TO RESPOND: the assignment only carries
+              // responder_id, so the name comes from the responders table —
+              // the unit/person that claimed the job (Start → En Route). A
+              // dispatched-but-unclaimed report has no id to look up, so it
+              // says so instead of inventing a responder. A failed lookup
+              // (RLS, network) resolves {} and only loses the label.
+              const respIds = asnList.map(a => a.responder_id).filter(Boolean);
+              CalyeDB.respondersById(respIds).then(respMap => {
+                const mapped = dbReports.map(r => {
+                  const asn = asnByReport[r.id] || {};
+                  const active = r.status === 'responding' || r.status === 'on_site';
+                  const rr = asn.responder_id ? respMap[asn.responder_id] : null;
+                  const responderName = (rr && rr.name) || '';
+                  const responderVehicle = (rr && rr.vehicle) || '';
+                  return {
+                    id: r.report_no || '#BRGY-' + r.id.slice(0, 4).toUpperCase(),
+                    ownerUid: uid,
+                    type: r.type,
+                    loc: r.location || 'Barangay Calye',
+                    date: fmtDate(r.created_at),
+                    status: active ? 'responding' : r.status === 'resolved' ? 'resolved' : r.status === 'declined' ? 'declined' : 'pending',
+                    source: r.source && r.source.toUpperCase() || 'BRGY',
+                    lat: r.lat, lng: r.lng,
+                    timeline: mapDbTimeline(tlByReport[r.id], fmtDate(r.created_at)),
+                    photos: mediaByReport[r.id] || [],
+                    photo: (mediaByReport[r.id] || [])[0] || '',
+                    resolutionNotes: asn.resolution_notes || '',
+                    proofUrl: asn.proof_url || '',
+                    // '' = never dispatched (no assignment row at all).
+                    asnStatus: asn.id ? (asn.status || 'assigned') : '',
+                    responderName: responderName,
+                    responderVehicle: responderVehicle,
+                    responder: active ? {
+                      name: responderName || 'Barangay Responder Unit',
+                      vehicle: responderVehicle || 'Patrol Vehicle',
+                      lat: (r.lat || BRGY_CENTER[0]) + 0.004,
+                      lng: (r.lng || BRGY_CENTER[1]) + 0.004,
+                      etaMin: 12
+                    } : undefined
+                  };
+                });
+                if (mapped.length) {
+                  // Merge — DB wins on conflict, but local-only reports
+                  // (filed offline / not yet synced) are kept so a sync can
+                  // never wipe what the user sees after logout/login.
+                  // Ownership guard: never retain another account's rows that
+                  // may linger from an earlier fetch-all while RLS was off.
+                  const isMine = r => !r || !r.ownerUid || r.ownerUid === uid || r.ownerUid === 'local';
+                  const byId = {};
+                  mapped.forEach(r => { byId[r.id] = r; });
+                  (reports || []).forEach(r => { if (r && r.id && !byId[r.id] && isMine(r)) byId[r.id] = r; });
+                  reports = Object.values(byId).filter(isMine);
+                  saveStoredData(reportsKey(), reports);
+                  renderReports();
+                  refreshCommunityStats();
+                }
               });
-              if (mapped.length) {
-                // Merge — DB wins on conflict, but local-only reports
-                // (filed offline / not yet synced) are kept so a sync can
-                // never wipe what the user sees after logout/login.
-                // Ownership guard: never retain another account's rows that
-                // may linger from an earlier fetch-all while RLS was off.
-                const isMine = r => !r || !r.ownerUid || r.ownerUid === uid || r.ownerUid === 'local';
-                const byId = {};
-                mapped.forEach(r => { byId[r.id] = r; });
-                (reports || []).forEach(r => { if (r && r.id && !byId[r.id] && isMine(r)) byId[r.id] = r; });
-                reports = Object.values(byId).filter(isMine);
-                saveStoredData(reportsKey(), reports);
-                renderReports();
-                refreshCommunityStats();
-              }
             });
           });
         });

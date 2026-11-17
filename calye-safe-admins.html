@@ -5990,6 +5990,38 @@
       return `<span class="badge ${status}">${labels[status] || status}</span>`;
     }
 
+    // ── ASSIGNED RESPONDER — who is going to respond ───────────────────────
+    // assignments.responder_id → responders.id is the unit/person name
+    // (loadReports() attaches it as responderName / responderVehicle).
+    // asnStatus is null ONLY when the report was never dispatched, so:
+    //   no assignment          → nothing printed (nobody dispatched yet)
+    //   dispatched, not claimed → "awaiting a unit" (there is no name yet)
+    //   claimed                 → the responder's real name
+    function responderNameOf(r) { return (r && r.responderName) || ''; }
+    function responderValueOf(r) {
+      if (!r || !r.asnStatus) return '';
+      const name = responderNameOf(r);
+      return name
+        ? name + (r.responderVehicle ? ' · ' + r.responderVehicle : '')
+        : 'Dispatched — waiting for a unit to claim it';
+    }
+    const RESPONDER_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+    const RESPONDER_WAIT_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="flex:none;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+    // Small line under the status badge in BOTH report tables.
+    function responderCellHtml(r) {
+      if (!r || !r.asnStatus) return '';
+      const name = responderNameOf(r);
+      if (!name) {
+        return `<div title="Dispatched — no unit has claimed this report yet" style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--text3);letter-spacing:0.03em;">${RESPONDER_WAIT_ICON}AWAITING A UNIT</div>`;
+      }
+      return `<div title="${escAdminAttr(responderValueOf(r))}" style="margin-top:5px;display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--primary-text);letter-spacing:0.03em;">${RESPONDER_ICON}${escAdminAttr(name)}</div>`;
+    }
+    // The "Responder" row in the report detail modal.
+    function responderDetailField(r) {
+      if (!r || !r.asnStatus) return '';
+      return verifyField('Responder', escAdminAttr(responderValueOf(r)));
+    }
+
     function reportActionsCell(r) {
       if (r.status === 'resolved') {
         return `<span style="font-size:12.5px;color:var(--text3);font-weight:600;">Done</span>`;
@@ -6013,7 +6045,7 @@
       <td><div class="report-name">${r.type}${photoTag(r.photo)}${resolutionTag(r)}</div>${r.outsideCity ? '<div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:#FFEBEE;border:1px solid #E53935;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;color:#C62828;letter-spacing:0.02em;">⚠ OUTSIDE SANTA ROSA</div>' : ''}${outsideVicinityTag(r)}</td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
-      <td>${badgeHtml(r.status)}</td>
+      <td>${badgeHtml(r.status)}${responderCellHtml(r)}</td>
       <td>
         ${reportActionsCell(r)}
       </td>
@@ -6090,6 +6122,7 @@
         <div style="margin-bottom:16px;">${photos}</div>
         ${verifyField('Location', full.loc)}
         ${verifyField('Filed by', full.reporterName)}
+        ${responderDetailField(full)}
         ${verifyField('Category', full.category)}
         ${verifyField('Severity', full.severity)}
         ${verifyField('Description', full.description)}
@@ -6489,7 +6522,7 @@
       <td><div class="report-name">${r.type}${photoTag(r.photo || reportPhotoList(r.dbId)[0] || '')}</div>${outsideVicinityTag(r)}</td>
       <td><div class="report-loc">${r.loc}</div></td>
       <td><span class="report-time">${r.filed}</span></td>
-      <td>${badgeHtml(r.status)}</td>
+      <td>${badgeHtml(r.status)}${responderCellHtml(r)}</td>
       <td>
         ${reportActionsCell(r)}
       </td>
@@ -7117,6 +7150,10 @@ const pageTitles = {
               <span class="badge ${statusBadge}">${statusLabel}</span>
             </div>
           </div>
+          ${target.asnStatus ? `<div class="dispatch-report-row">
+            <div class="dispatch-report-row-label">Responder</div>
+            <div class="dispatch-report-row-val">${escAdminAttr(responderValueOf(target))}</div>
+          </div>` : ''}
           <div class="dispatch-report-row">
             <div class="dispatch-report-row-label">Category</div>
             <div class="dispatch-report-row-val">${severityLabel}</div>
@@ -9189,6 +9226,7 @@ const pageTitles = {
               <div class="meta-label">Reported At</div>
               <div class="meta-val">${active.filed}</div>
             </div>
+            ${active.asnStatus ? `<div class="meta-item"><div class="meta-label">Responder</div><div class="meta-val" title="${escAdminAttr(responderValueOf(active))}">${escAdminAttr(responderValueOf(active))}</div></div>` : ''}
           </div>
           ${active.description ? `<div class="priority-desc">
             <div class="desc-label">Description</div>
@@ -9445,7 +9483,9 @@ const pageTitles = {
           return;
         }
         const reportIds = rows.map(r => r.id);
-        CalyeDB.fetch('assignments', { filters: [['report_id', 'in', reportIds]], limit: 250 }).then(asnRows => {
+        // Newest assignment wins: a report can be re-dispatched, and only the
+        // latest one says WHO is going to respond right now.
+        CalyeDB.fetch('assignments', { filters: [['report_id', 'in', reportIds]], order: 'created_at', asc: false, limit: 250 }).then(asnRows => {
           const asnByReport = (asnRows || []).reduce((m, a) => {
             if (a.report_id && !m[a.report_id]) m[a.report_id] = a;
             return m;
@@ -9479,25 +9519,41 @@ const pageTitles = {
               outsideCity: r.outside_city === true
             };
           });
-          reports = mapped;
-          fullReports = mapped.map(r => ({
-            id: r.id, type: r.type, category: r.category, severity: r.severity,
-            loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId,
-            lat: r.lat, lng: r.lng, outsideCity: r.outsideCity
-          }));
-          // Everything above is already inside this barangay, so the
-          // "outside vicinity" flag below stays false — it is only a guard
-          // for a row that slipped in before the scope was known.
-          flagVicinity(reports);
-          flagVicinity(fullReports);
-          renderTable(getFilteredData());
-          filterReportsPage('all', document.querySelector('#page-reports .ftab'));
-          refreshSummaryStats();
-          renderPriorityCard();
-          renderAlertStrip();
-          renderResponseTimeline();
-          renderDashCategory();
-          renderNotifList();
+          // WHO IS GOING TO RESPOND: the assignment only carries
+          // responder_id, so the name comes from the responders table (the
+          // unit or person that claimed the job). A blank map — unreadable
+          // table, RLS, nothing claimed — just leaves the label off; the
+          // lists say "awaiting a unit" instead of inventing a responder.
+          const respIds = mapped.map(r => r.responderId).filter(Boolean);
+          CalyeDB.respondersById(respIds).then(respMap => {
+            mapped.forEach(r => {
+              const rr = r.responderId ? respMap[r.responderId] : null;
+              if (rr && rr.name) {
+                r.responderName = rr.name;
+                r.responderVehicle = rr.vehicle || '';
+              }
+            });
+            reports = mapped;
+            fullReports = mapped.map(r => ({
+              id: r.id, type: r.type, category: r.category, severity: r.severity,
+              loc: r.loc, filed: r.filed, status: r.status, urgent: r.urgent, dbId: r.dbId,
+              lat: r.lat, lng: r.lng, outsideCity: r.outsideCity,
+              asnStatus: r.asnStatus, responderName: r.responderName || '', responderVehicle: r.responderVehicle || ''
+            }));
+            // Everything above is already inside this barangay, so the
+            // "outside vicinity" flag below stays false — it is only a guard
+            // for a row that slipped in before the scope was known.
+            flagVicinity(reports);
+            flagVicinity(fullReports);
+            renderTable(getFilteredData());
+            filterReportsPage('all', document.querySelector('#page-reports .ftab'));
+            refreshSummaryStats();
+            renderPriorityCard();
+            renderAlertStrip();
+            renderResponseTimeline();
+            renderDashCategory();
+            renderNotifList();
+          });
         });
       });
     }
